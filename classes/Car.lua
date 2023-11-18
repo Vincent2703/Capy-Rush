@@ -1,12 +1,12 @@
 Car = class("Car")
 
-function Car:init(x, y, textureName, speed)
+function Car:init(x, y, textureName, speed, consumptionFactor)
     self.textureName = textureName
     self.spriteSheet = love.graphics.newImage("assets/textures/cars/"..self.textureName..".png")
     self.widthCar, self.heightCar = 32, 35
     self.x, self.y = x-self.widthCar/2, y-self.heightCar/2
     self.speed = speed
-    self.boostSpeed = speed*1.5
+    self.consumptionFactor = consumptionFactor
     self.health = 5
 
     self.grid = anim8.newGrid(self.widthCar, self.heightCar, self.spriteSheet:getWidth(), self.spriteSheet:getHeight(), 0, 0, 0)

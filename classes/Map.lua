@@ -73,7 +73,6 @@ function Map:manageMapChunks()
     self:removeOlderChunksFromLayers()
     self:addRandomChunksToLayers()
     self.map = self:updateMap()
-    print(#self.layers)
 end
 
 function Map:createLayer(chunkName) 

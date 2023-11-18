@@ -1,5 +1,6 @@
 function love.load()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
+    widthRes, heightRes = 352, 626
     widthWindow, heightWindow = 350, 622
 
     pause = false
@@ -9,6 +10,9 @@ function love.load()
 
     initScreen()
 
+    local font = love.graphics.newFont("assets/fonts/FFFFORWA.ttf", 14)
+    love.graphics.setFont(font)
+
     world = wf.newWorld(0, 0)
     lvl = Map(32, 32, 
     "assets/textures/roads/tileset.png",
@@ -17,15 +21,23 @@ function love.load()
         chunk2 = {path="assets/maps/chunk2.lua", ratio=0.4}
     }, 5)
 
-    push.setupScreen(352, 626, {upscale = "normal"})
+    push.setupScreen(widthRes, heightRes, {upscale = "normal"})
 
-    player = Player(push.getWidth()/2, 50, "car1", 400)
+    player = Player(push.getWidth()/2, 50, "car1", 400, 3)
 
     input = Input()  
+
+    createUI()
 end
 
 function love.update(dt)
     input:update()
+
+    for key, ui in pairs(UIElements) do 
+        if ui.visible then
+            ui:update()
+        end
+    end
 
     if input.state.actions.newPress.eject then
 
@@ -47,11 +59,9 @@ function love.update(dt)
         cameraX = math.max(0, math.min(cameraX, lvl.mapWidth - push.getWidth()))
         cameraY = math.max(0, math.min(cameraY, lvl.map.height*lvl.tileHeight - push.getHeight()))
 
-        if player.y >= lvl.map.height*lvl.tileHeight - heightWindow*1.5 then
+        if player.y >= lvl.map.height*lvl.tileHeight - heightRes*1.5 then
             lvl:manageMapChunks()
-            print("new")
         end
-
     end
 end
 
@@ -75,6 +85,13 @@ function love.draw()
     love.graphics.scale(1, -1)
     love.graphics.setCanvas()
     love.graphics.draw(preRenderCanvas)
+    -- To fix when resize
+    love.graphics.origin()
+    for key, ui in pairs(UIElements) do 
+        if ui.visible then
+            ui:draw()
+        end
+    end
 end
 
 function love.resize(width, height)
@@ -93,8 +110,16 @@ end
 
 function loadClasses()
     require("classes/Map")
+
     require("classes/Car")
     require("classes/CarSubclasses/Player")
+
+    require("classes/UI")
+    require("classes/UISubclasses/FuelGauge")
+    require("classes/UISubclasses/Button")
+    require("classes/UISubclasses/ButtonSubclasses/RectangleButton")
+    require("classes/UISubclasses/ButtonSubclasses/CircleButton")
+
     require("classes/Input")
 end
 
@@ -105,4 +130,51 @@ function initScreen()
 	
 	canvas, preRenderCanvas = love.graphics.newCanvas(widthWindow, heightWindow)
     preRenderCanvas = love.graphics.newCanvas(widthWindow, heightWindow)
+end
+
+function createUI()
+    UICanvas = love.graphics.newCanvas(widthRes, heightRes)
+    UIElements = {}
+
+    UIElements["fuelGauge"] = FuelGauge(
+        10, 
+        heightRes-30, 
+        widthRes-20, 
+        20, 
+        true, 
+        player
+    )
+    UIElements["brakeBtn"] = RectangleButton(
+        UIElements["fuelGauge"].x, 
+        UIElements["fuelGauge"].y-55, 
+        math.floor(widthRes/3), 
+        50, 
+        true, 
+        "BRAKE", 
+        nil,
+        nil,
+        function() input.state.actions.brake = true end
+    )
+    UIElements["boostBtn"] = RectangleButton(
+        widthRes-widthRes/3,
+        UIElements["brakeBtn"].y, 
+        math.floor(widthRes/3),
+        50,
+        true,
+        "BOOST",
+        nil,
+        nil,
+        function() input.state.actions.boost = true end
+    )
+    UIElements["ejectBtn"] = CircleButton(
+        widthRes/2-25,-- min(width, height)/2
+        UIElements["brakeBtn"].y,
+        math.floor(widthRes/3),
+        50,
+        true,
+        "!!",
+        {255, 0, 0},
+        nil,
+        function() print("eject !") end
+    )
 end
