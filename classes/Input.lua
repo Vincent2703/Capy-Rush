@@ -38,7 +38,7 @@ function Input:init()
 end
 
 function Input:update()
-	self.prevState = self:deepCopy(self.state)
+	self.prevState = self:copyState(self.state)
 
 	-- Mouse
 	self.state.mouse.x, self.state.mouse.y = love.mouse.getPosition()
@@ -66,17 +66,29 @@ function Input:update()
 	self.state.actions.newPress.pause = self.state.actions.pause and not self.prevState.actions.pause
 end
 
-function Input:deepCopy(orig) -- http://lua-users.org/wiki/CopyTable
-    local orig_type = type(orig)
-    local copy
-    if orig_type == "table" then
-        copy = {}
-        for orig_key, orig_value in pairs(orig) do
-            copy[self:deepCopy(orig_key)] = self:deepCopy(orig_value)
-        end
-        setmetatable(copy, self:deepCopy(getmetatable(orig)))
-    else
-        copy = orig
-    end
-    return copy
+function Input:copyState(state)
+	local copyState = {}
+	copyState.mouse = {
+		x = state.mouse.x,
+		y = state.mouse.y
+	}
+    copyState.actions = {
+        right = state.actions.right,
+        brake = state.actions.brake,
+        left = state.actions.left,
+        boost = state.actions.boost,
+        eject = state.actions.eject,
+        click = state.actions.click,
+        pause = state.actions.pause,
+        newPress = {
+            right = state.actions.newPress.right,
+            brake = state.actions.newPress.brake,
+            left = state.actions.newPress.left,
+            boost = state.actions.newPress.boost,
+            eject = state.actions.newPress.eject,
+            click = state.actions.newPress.click,
+            pause = state.actions.newPress.pause,
+        }
+    }
+	return copyState
 end

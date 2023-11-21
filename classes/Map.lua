@@ -1,11 +1,11 @@
 Map = class("Map")
 
-function Map:init(tileWidth, tileHeight, tilesetPath, chunks, nbChunksPerIter)
+function Map:init(tileWidth, tileHeight, tilesetPath, predefinedChunks, nbChunksPerIter)
     self.tileWidth, self.tileHeight = tileWidth, tileHeight
     self.tilesetPath = tilesetPath
-    self.chunks = chunks 
+    self.predefinedChunks = predefinedChunks 
     self.nbChunksPerIter = 3
-    self.layers = {}
+    self.mapChunks = {}
 
     self.map = {
         orientation = "orthogonal",
@@ -32,73 +32,87 @@ function Map:init(tileWidth, tileHeight, tilesetPath, chunks, nbChunksPerIter)
     tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(tileWidth*tileHeight))
     table.insert(self.map.tilesets, tileset)
 
-    table.insert(self.layers, self:createLayer("chunk1")) -- Starting chunk
+    self:addChunk("chunk1") -- Starting chunk
     self.map = self:updateMap()
 
 	self.mapWidth, self.mapHeight = self.map.width*tileWidth, self.map.height*tileHeight
-
-
-	--[[if map.layers["Walls"] then
-		for i, obj in pairs(map.layers["Walls"].objects) do
-			local wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
-			wall:setType("static")
-		end
-	end--]]
 end
 
-function Map:addRandomChunksToLayers()
+function Map:addRandomChunks()
     for i=1, self.nbChunksPerIter do
         local randomValue = math.random()
         local cumulativeRatio = 0
 
-        for chunkName, chunk in pairs(self.chunks) do
+        for chunkName, chunk in pairs(self.predefinedChunks) do
             cumulativeRatio = cumulativeRatio + chunk.ratio
             if randomValue <= cumulativeRatio then
-                table.insert(self.layers, self:createLayer(chunkName))
+                self:addChunk(chunkName)
                 break
             end
         end
     end
 end
 
-function Map:removeOlderChunksFromLayers()
-    if #self.layers > self.nbChunksPerIter then
-        for i=1, #self.layers-self.nbChunksPerIter do 
-            table.remove(self.layers, i)
+function Map:removeOldChunks()
+    if #self.mapChunks > self.nbChunksPerIter then
+        for i=1, #self.mapChunks-self.nbChunksPerIter do 
+            table.remove(self.mapChunks, i)
         end
+        -- Need to remove the old colliders
     end
 end
 
-function Map:manageMapChunks()
-    self:removeOlderChunksFromLayers()
-    self:addRandomChunksToLayers()
+function Map:manageChunks()
+    self:removeOldChunks()
+    self:addRandomChunks()
     self.map = self:updateMap()
 end
 
-function Map:createLayer(chunkName) 
-    local chunk = require("assets/maps/"..chunkName)
+function Map:addChunk(chunkName)
+    local chunkAsset = require("assets/maps/"..chunkName)
+    local chunkMap = {
+        sprites = {},
+        obstacles = {},
+        paths = {}
+    }
     local y = 0 
 
-    if #self.layers > 0 then
-        self.map.height = self.map.height + chunk.height
-        y = (self.map.height-chunk.height)*self.map.tileheight
+    if #self.mapChunks > 0 then
+        self.map.height = self.map.height + chunkAsset.height
+        y = (self.map.height-chunkAsset.height)*self.map.tileheight
     end
-    local layer = {
-        type = "tilelayer", 
-        name = chunkName,
-        x = 0,
-        y = y,
-        width = chunk.width,
-        height = chunk.height,
-        visible = true,
-        opacity = 1,
-        offsetx = 0,
-        offsety = 0,
-        properties = {},
-        encoding = "lua",
-        data = chunk.data
-    }
-    return layer
+    
+    for _, data in pairs(chunkAsset.layers.sprites) do
+        local spriteLayer = {
+            type = "tilelayer", 
+            name = chunkName,
+            x = 0,
+            y = y,
+            width = chunkAsset.width,
+            height = chunkAsset.height,
+            visible = true,
+            opacity = 1,
+            offsetx = 0,
+            offsety = 0,
+            properties = {},
+            encoding = "lua",
+            data = data
+        }
+        table.insert(chunkMap.sprites, spriteLayer)
+    end
+
+    for _, obs in ipairs(chunkAsset.layers.objects.obstacles) do
+        table.insert(chunkMap.obstacles, obs)
+        local wall = world:newRectangleCollider(obs.x, obs.y+y, obs.width, obs.height) -- A modif
+        wall:setType("static")
+    end
+
+    for _, path in ipairs(chunkAsset.layers.objects.paths) do
+        path.y = path.y + y
+        table.insert(chunkMap.paths, path)
+    end
+
+    table.insert(self.mapChunks, chunkMap)
 end
 
 
@@ -124,28 +138,30 @@ function Map:updateMap()
         tileoffset = {x = 0, y = 0},
         tiles = {}
       }
-    tileset.imagewidth, tileset.imageheight = love.graphics.newImage(self.tilesetPath):getDimensions()
+    tileset.imagewidth, tileset.imageheight = love.graphics.newImage(self.tilesetPath):getDimensions() -- Definir ça une fois dans l'init
     tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(self.tileWidth*self.tileHeight))
     table.insert(m.tilesets, tileset)
 
-    for _, layer in ipairs(self.layers) do
-        table.insert(m.layers,
-        {
-            type = "tilelayer", 
-            name = layer.name,
-            x = 0,
-            y = layer.y,
-            width = layer.width,
-            height = layer.height,
-            visible = true,
-            opacity = 1,
-            offsetx = 0,
-            offsety = 0,
-            properties = {},
-            encoding = "lua",
-            data = layer.data
-        }
-    )
+    for _, chunk in ipairs(self.mapChunks) do
+        for _, spriteLayer in pairs(chunk.sprites) do
+            table.insert(m.layers,
+                {
+                    type = "tilelayer", 
+                    name = spriteLayer.name,
+                    x = 0,
+                    y = spriteLayer.y,
+                    width = spriteLayer.width,
+                    height = spriteLayer.height,
+                    visible = true,
+                    opacity = 1,
+                    offsetx = 0,
+                    offsety = 0,
+                    properties = {},
+                    encoding = "lua",
+                    data = spriteLayer.data
+                }
+            )
+        end
     end
 
     return sti(m)

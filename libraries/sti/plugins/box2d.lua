@@ -52,8 +52,8 @@ return {
 			local fixture = love.physics.newFixture(currentBody, shape)
 			fixture:setUserData(userdata)
 
-			-- Set some custom properties from userdata (or use default set by box2d)
-			fixture:setFriction(userdata.properties.friction       or 0.2)
+			-- Set some custom properties from userdata (or use 1 because faster apparently)
+			fixture:setFriction(userdata.properties.friction       or 1)
 			fixture:setRestitution(userdata.properties.restitution or 0.0)
 			fixture:setSensor(userdata.properties.sensor           or false)
 			fixture:setFilterData(

@@ -1,7 +1,7 @@
 function love.load()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
     widthRes, heightRes = 352, 626
-    widthWindow, heightWindow = 350, 622
+    widthWindow, heightWindow = 352, 626
 
     pause = false
 
@@ -21,9 +21,13 @@ function love.load()
         chunk2 = {path="assets/maps/chunk2.lua", ratio=0.4}
     }, 5)
 
-    push.setupScreen(widthRes, heightRes, {upscale = "normal"})
+    player = Player(widthRes/2, 50, "car1", 150, 3) --400
 
-    player = Player(push.getWidth()/2, 50, "car1", 400, 3)
+    roadUsers = {}
+
+    for _, chunk in pairs(lvl.mapChunks) do
+        addRandomCars(chunk)
+    end
 
     input = Input()  
 
@@ -39,63 +43,97 @@ function love.update(dt)
         end
     end
 
-    if input.state.actions.newPress.eject then
-
-    end
-
     if input.state.actions.newPress.pause then
 		pause = not pause
 	end
 
     if not pause then
         player:move(dt)
+        for _, roadUser in pairs(roadUsers) do
+            roadUser:move(dt)
+        end
         world:update(dt)
 
-        -- Adjust the camera to follow the player
-        cameraX = player.x - push.getWidth()/2 + player.widthCar/2
-        cameraY = player.y - player.heightCar-64
-
-        -- Ensure the camera doesn't go outside the map boundaries
-        cameraX = math.max(0, math.min(cameraX, lvl.mapWidth - push.getWidth()))
-        cameraY = math.max(0, math.min(cameraY, lvl.map.height*lvl.tileHeight - push.getHeight()))
+        manageCamera()
 
         if player.y >= lvl.map.height*lvl.tileHeight - heightRes*1.5 then
-            lvl:manageMapChunks()
+            lvl:manageChunks()
+            for _, chunk in pairs(lvl.mapChunks) do
+                addRandomCars(chunk)
+            end
         end
     end
 end
 
 function love.draw()
+    -- Set the canvas as the render target
     love.graphics.setCanvas(preRenderCanvas)
 
-    push.start()
-    love.graphics.translate(-cameraX, -cameraY)
+    love.graphics.translate(0, (-cameraY)+camYOffset)
 
-    for i=1, #lvl.map.layers do 
+    -- Draw the map layers
+    for i = 1, #lvl.map.layers do
         local layer = lvl.map.layers[i]
         if layer.type == "tilelayer" then
             lvl.map:drawLayer(layer)
         end
     end
 
+    -- Draw the player and collision boxes
     player.anim:draw(player.spriteSheet, player.x, player.y, math.pi, 1, 1, player.widthCar, player.heightCar)
-    world:draw()
-    push.finish()
-    love.graphics.translate(0, heightWindow)
-    love.graphics.scale(1, -1)
-    love.graphics.setCanvas()
-    love.graphics.draw(preRenderCanvas)
-    -- To fix when resize
+    for _, roadUser in pairs(roadUsers) do
+        roadUser.anim:draw(roadUser.spriteSheet, roadUser.x, roadUser.y, math.pi, 1, 1, roadUser.widthCar, roadUser.heightCar)
+    end
+    world:draw() 
+    
+    -- Reset transformations
     love.graphics.origin()
-    for key, ui in pairs(UIElements) do 
+
+    -- Flip horizontally and scale the canvas
+    love.graphics.translate(offsetXCanvas, heightWindow)
+    love.graphics.scale(ratioScale, -ratioScale)
+
+    -- Set the default canvas
+    love.graphics.setCanvas()
+
+    -- Draw the preRenderCanvas to the screen
+    love.graphics.draw(preRenderCanvas)
+
+    -- Reset transformations
+    love.graphics.origin()
+    
+
+    love.graphics.translate(offsetXCanvas, camYOffset)
+    love.graphics.scale(ratioScale, ratioScale)
+
+    -- Draw UI elements
+    --love.graphics.rectangle("line", 0, 0, widthRes, heightRes)
+
+    for key, ui in pairs(UIElements) do
         if ui.visible then
             ui:draw()
         end
     end
 end
 
+
+
 function love.resize(width, height)
-	push.resize(width, height)
+    -- Update window dimensions
+    widthWindow, heightWindow = width, height
+
+    -- Resize canvas
+    canvas = love.graphics.newCanvas(widthWindow, heightWindow)
+
+    ratioScale = math.min(widthWindow/widthRes, heightWindow/heightRes)
+    offsetXCanvas = widthWindow/2-(widthRes/2)*ratioScale
+
+    if heightWindow/heightRes > widthWindow/widthRes then
+        camYOffset = heightWindow-heightRes*ratioScale
+        preRenderCanvas = love.graphics.newCanvas(widthRes, heightRes+camYOffset)
+    else
+        camYOffset = 0
+    end
 end
 
 --
@@ -113,6 +151,7 @@ function loadClasses()
 
     require("classes/Car")
     require("classes/CarSubclasses/Player")
+    require("classes/CarSubclasses/RoadUser")
 
     require("classes/UI")
     require("classes/UISubclasses/FuelGauge")
@@ -128,12 +167,16 @@ function initScreen()
     love.window.setMode(widthWindow, heightWindow, windowFlags)
 	love.graphics.setDefaultFilter("nearest", "nearest")
 	
-	canvas, preRenderCanvas = love.graphics.newCanvas(widthWindow, heightWindow)
-    preRenderCanvas = love.graphics.newCanvas(widthWindow, heightWindow)
+	canvas = love.graphics.newCanvas(widthWindow, heightWindow)
+    preRenderCanvas = love.graphics.newCanvas(widthRes, heightRes)
+    ratioScale = math.min(widthWindow/widthRes, heightWindow/heightRes)
+    offsetXCanvas = widthWindow/2-(widthRes/2)*ratioScale
+
+    camYOffset = 0
 end
 
 function createUI()
-    UICanvas = love.graphics.newCanvas(widthRes, heightRes)
+    --UICanvas = love.graphics.newCanvas(widthRes, heightRes)
     UIElements = {}
 
     UIElements["fuelGauge"] = FuelGauge(
@@ -156,7 +199,7 @@ function createUI()
         function() input.state.actions.brake = true end
     )
     UIElements["boostBtn"] = RectangleButton(
-        widthRes-widthRes/3,
+        widthRes-widthRes/3-UIElements["fuelGauge"].x,
         UIElements["brakeBtn"].y, 
         math.floor(widthRes/3),
         50,
@@ -177,4 +220,22 @@ function createUI()
         nil,
         function() print("eject !") end
     )
+end
+
+function manageCamera()
+    cameraY = math.max(0, math.min(player.y - player.heightCar-64, lvl.map.height*lvl.tileHeight - heightRes)) --Or heightWindow
+end
+
+
+function addRandomCars(chunk)
+    local nbCars = math.random(1, 5)
+    
+    for i=1, nbCars do
+        local randomPath = chunk.paths[math.random(1, #chunk.paths)]
+
+        carY = math.random(randomPath.y, randomPath.y+randomPath.height)
+        local car = RoadUser(randomPath.x+16, carY, "car2", 100, 1) -- + 16 temp
+        table.insert(roadUsers, car)
+    end
+
 end

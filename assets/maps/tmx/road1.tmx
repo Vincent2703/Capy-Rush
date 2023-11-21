@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="11" height="50" tilewidth="32" tileheight="32" infinite="0" nextlayerid="2" nextobjectid="1">
+<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="11" height="50" tilewidth="32" tileheight="32" infinite="0" nextlayerid="11" nextobjectid="9">
  <editorsettings>
   <chunksize width="32" height="32"/>
+  <export target="../road1Test.lua" format="custom"/>
  </editorsettings>
- <tileset firstgid="1" name="Roads" tilewidth="32" tileheight="32" tilecount="8" columns="4">
-  <image source="../../textures/roads/tileset.png" width="128" height="64"/>
+ <tileset firstgid="1" name="Roads" tilewidth="32" tileheight="32" tilecount="16" columns="4">
+  <image source="../../textures/roads/tileset.png" width="128" height="128"/>
  </tileset>
- <layer id="1" name="Chunk1" width="11" height="50">
-  <data encoding="csv">
+ <group id="10" name="sprites">
+  <layer id="1" name="road" width="11" height="50">
+   <data encoding="csv">
 7,7,7,1,5,5,5,2,7,7,7,
 7,7,7,1,5,5,5,2,7,7,7,
 7,7,7,1,4,6,3,2,7,7,7,
@@ -40,11 +42,11 @@
 7,7,7,1,4,6,3,2,7,7,7,
 7,7,7,1,5,5,5,2,7,7,7,
 7,7,7,1,5,5,5,2,7,7,7,
-7,7,7,1,4,6,3,2,7,7,7,
-7,7,7,1,5,5,5,2,7,7,7,
-7,7,7,1,5,5,5,2,7,7,7,
-7,7,7,1,4,6,3,2,7,7,7,
-7,7,7,1,5,5,5,2,7,7,7,
+7,7,7,8,4,6,3,9,7,7,7,
+7,7,7,8,5,5,5,9,7,7,7,
+7,7,7,8,5,5,5,9,7,7,7,
+7,7,7,8,4,6,3,9,7,7,7,
+7,7,7,8,5,5,5,9,7,7,7,
 7,7,7,1,5,5,5,2,7,7,7,
 7,7,7,1,4,6,3,2,7,7,7,
 7,7,7,1,5,5,5,2,7,7,7,
@@ -59,5 +61,21 @@
 7,7,7,1,5,5,5,2,7,7,7,
 7,7,7,1,5,5,5,2,7,7,7
 </data>
- </layer>
+  </layer>
+ </group>
+ <group id="9" name="objects">
+  <objectgroup id="5" name="obstacles">
+   <object id="7" x="119.063" y="1024.06" width="4.94141" height="159.93"/>
+   <object id="8" x="228" y="1024" width="5" height="159.996"/>
+  </objectgroup>
+  <objectgroup id="2" name="paths">
+   <object id="2" x="128" y="0" width="32" height="1600"/>
+   <object id="3" x="160" y="0" width="32" height="1600"/>
+   <object id="4" x="192" y="0" width="32" height="1600"/>
+  </objectgroup>
+  <objectgroup id="3" name="grass">
+   <object id="5" x="229" y="0" width="123" height="1600"/>
+   <object id="6" x="0" y="0" width="123" height="1599.91"/>
+  </objectgroup>
+ </group>
 </map>

@@ -2,7 +2,7 @@ Player = Car:extend("Player")
 
 function Player:init(x, y, textureName, speed, consumptionFactor)
     Player.super.init(self, x, y, textureName, speed, consumptionFactor)
-    self.boostSpeed = speed*1.5
+    self.boostSpeedMult = 1.5
     self.fuel = 100
 
     self.currentSpeed = speed
@@ -12,9 +12,11 @@ function Player:move(dt)
     local speed = self.currentSpeed
     
     if self.fuel >= 1 and input.state.actions.boost and not input.state.actions.brake then
-        speed = self.boostSpeed
+        speed = speed*self.boostSpeedMult
     elseif self.fuel < 1 then
-        self.currentSpeed = math.max(0, math.floor(speed - 80*dt))
+        local vx, vy = self.collider:getLinearVelocity()
+        self.currentSpeed = math.max(0, math.floor(vy - 80*dt))
+        speed = self.currentSpeed
     end
 
     self.fuel = math.max(0, tonumber(string.format("%.2f", self.fuel - (speed/10000)*self.consumptionFactor)))

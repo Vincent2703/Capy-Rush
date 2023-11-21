@@ -1,5 +1,0 @@
-return { 
-  width = , 
-  height = , 
-  data = , 
-} 
