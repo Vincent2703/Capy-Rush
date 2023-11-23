@@ -1,9 +1,8 @@
 Player = Car:extend("Player")
 
-function Player:init(x, y, textureName, speed, consumptionFactor)
-    Player.super.init(self, x, y, textureName, speed, consumptionFactor)
+function Player:init(textureName, widthCar, heightCar, speed, consumptionFactor)
+    Player.super.init(self, textureName, widthCar, heightCar, speed, consumptionFactor)
     self.boostSpeedMult = 1.5
-    self.fuel = 100
 
     self.currentSpeed = speed
 end

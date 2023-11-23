@@ -1,7 +1,7 @@
 RoadUser = Car:extend("RoadUser")
 
-function RoadUser:init(x, y, textureName, speed, consumptionFactor)
-    RoadUser.super.init(self, x, y, textureName, speed, consumptionFactor)
+function RoadUser:init(textureNameOrModel, widthCar, heightCar, speed, consumptionFactor)
+    RoadUser.super.init(self, textureNameOrModel, widthCar, heightCar, speed, consumptionFactor)
 end
 
 function RoadUser:move(dt)

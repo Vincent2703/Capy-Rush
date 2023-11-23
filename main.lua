@@ -21,9 +21,12 @@ function love.load()
         chunk2 = {path="assets/maps/chunk2.lua", ratio=0.4}
     }, 5)
 
-    player = Player(widthRes/2, 50, "car1", 150, 3) --400
+    createCarModels()
+
+    player = carModels.car1:castToPlayer(widthRes/2, 50)
 
     roadUsers = {}
+    table.insert(roadUsers, car)
 
     for _, chunk in pairs(lvl.mapChunks) do
         addRandomCars(chunk)
@@ -36,6 +39,10 @@ end
 
 function love.update(dt)
     input:update()
+
+    if input.state.actions.newPress.eject then
+        print(lvl:getLayerAtPos(player.y))
+    end
 
     for key, ui in pairs(UIElements) do 
         if ui.visible then
@@ -226,15 +233,21 @@ function manageCamera()
     cameraY = math.max(0, math.min(player.y - player.heightCar-64, lvl.map.height*lvl.tileHeight - heightRes)) --Or heightWindow
 end
 
+function createCarModels()
+    carModels = {
+        car1 = Car("car1", 32, 35, 400, 1),
+        car2 = Car("car2", 32, 35, 0, 3.2)
+    }
+end
 
 function addRandomCars(chunk)
-    local nbCars = math.random(1, 5)
+    local nbCars = 1--math.random(1, lvl.nbChunksPerIter*3)
     
     for i=1, nbCars do
-        local randomPath = chunk.paths[math.random(1, #chunk.paths)]
-
+        local rand = math.random(1, #chunk.paths)
+        local randomPath = chunk.paths[rand]
         carY = math.random(randomPath.y, randomPath.y+randomPath.height)
-        local car = RoadUser(randomPath.x+16, carY, "car2", 100, 1) -- + 16 temp
+        local car = carModels.car2:castToRoadUser(randomPath.x+randomPath.width/2, carY)
         table.insert(roadUsers, car)
     end
 

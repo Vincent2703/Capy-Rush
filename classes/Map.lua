@@ -54,6 +54,7 @@ function Map:addRandomChunks()
 end
 
 function Map:removeOldChunks()
+
     if #self.mapChunks > self.nbChunksPerIter then
         for i=1, #self.mapChunks-self.nbChunksPerIter do 
             table.remove(self.mapChunks, i)
@@ -138,7 +139,7 @@ function Map:updateMap()
         tileoffset = {x = 0, y = 0},
         tiles = {}
       }
-    tileset.imagewidth, tileset.imageheight = love.graphics.newImage(self.tilesetPath):getDimensions() -- Definir ça une fois dans l'init
+    tileset.imagewidth, tileset.imageheight = self.map.tilesets[1].imagewidth, self.map.tilesets[1].imageheight
     tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(self.tileWidth*self.tileHeight))
     table.insert(m.tilesets, tileset)
 
@@ -165,4 +166,13 @@ function Map:updateMap()
     end
 
     return sti(m)
+end
+
+function Map:getLayerAtPos(y)
+    for _, layer in ipairs(self.map.layers) do
+        print(y, layer.y*self.map.tileheight, (layer.y+layer.height)*self.map.tileheight)
+        if y >= layer.y*self.map.tileheight and y <= (layer.y+layer.height)*self.map.tileheight then
+            return _
+        end
+    end
 end
