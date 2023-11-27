@@ -389,9 +389,6 @@ function Map:setTileData(layer)
 			local gid = layer.data[i]
 
 			-- NOTE: Empty tiles have a GID of 0
-			if type(gid) ~= "number" then
-				print(layer.name)
-			end
 			if gid > 0 then
 				map[y][x] = self.tiles[gid] or self:setFlippedGID(gid)
 			end

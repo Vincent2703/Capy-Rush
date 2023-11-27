@@ -3,7 +3,7 @@ RectangleButton = Button:extend("RectangleButton")
 function RectangleButton:init(x, y, width, height, visible, text, colorA, colorB, callback)
     RectangleButton.super.init(self, x, y, width, height, visible, text, colorA, colorB, callback)
 
-    self.textX, self.textY = self.x+self.widthText/2, self.y+self.heightText
+    self.textX, self.textY = self.x+(self.width-self.widthText)/2, self.y+self.heightText
 end
 
 function RectangleButton:update()

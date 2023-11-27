@@ -2,19 +2,16 @@ Player = Car:extend("Player")
 
 function Player:init(textureName, widthCar, heightCar, speed, consumptionFactor)
     Player.super.init(self, textureName, widthCar, heightCar, speed, consumptionFactor)
-    self.boostSpeedMult = 1.5
-
-    self.currentSpeed = speed
 end
 
-function Player:move(dt)
+function Player:move(args)
     local speed = self.currentSpeed
     
     if self.fuel >= 1 and input.state.actions.boost and not input.state.actions.brake then
         speed = speed*self.boostSpeedMult
     elseif self.fuel < 1 then
         local vx, vy = self.collider:getLinearVelocity()
-        self.currentSpeed = math.max(0, math.floor(vy - 80*dt))
+        self.currentSpeed = math.max(0, math.floor(vy - 80*args.dt))
         speed = self.currentSpeed
     end
 
@@ -36,7 +33,7 @@ function Player:move(dt)
 
     self.collider:setLinearVelocity(vx, vy)
 
-    self.x, self.y = math.floor(self.collider:getX()-self.widthCar/2), math.floor(self.collider:getY()-self.heightCar/2)
+    self.x, self.y = math.floor(self.collider:getX()-self.widthCar/2), math.floor(self.collider:getY()-self.heightCar/2+vy/80) -- Mwerf
 
-    self.anim:update(dt)
+    self.anim:update(args.dt)
 end

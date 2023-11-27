@@ -560,28 +560,28 @@ return
 		objects = {
 			obstacles = {
 				{
-					x = 196.031,
-					y = 800.125,
-					width = 4.97656,
-					height = 63.875,
+					x = 196,
+					y = 800,
+					width = 5,
+					height = 64,
 				},
 			},
 			grass = {
 				{
-					x = 229.004,
-					y = 0.0078125,
-					width = 122.996,
-					height = 1599.99,
+					x = 229,
+					y = 0,
+					width = 123,
+					height = 1600,
 				},
 				{
 					x = 0,
 					y = 0,
 					width = 123,
-					height = 1599.98,
+					height = 1600,
 				},
 				{
-					x = 197.125,
-					y = 800.25,
+					x = 197,
+					y = 800,
 					width = 32,
 					height = 800,
 				},

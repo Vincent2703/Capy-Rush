@@ -560,16 +560,16 @@ return
 		objects = {
 			obstacles = {
 				{
-					x = 119.063,
-					y = 1024.06,
-					width = 4.94141,
-					height = 159.93,
+					x = 119,
+					y = 1024,
+					width = 5,
+					height = 160,
 				},
 				{
 					x = 228,
 					y = 1024,
 					width = 5,
-					height = 159.996,
+					height = 160,
 				},
 			},
 			paths = {
@@ -603,7 +603,7 @@ return
 					x = 0,
 					y = 0,
 					width = 123,
-					height = 1599.91,
+					height = 1600,
 				},
 			},
 		},

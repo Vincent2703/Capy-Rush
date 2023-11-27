@@ -32,8 +32,8 @@ function Map:init(tileWidth, tileHeight, tilesetPath, predefinedChunks, nbChunks
     tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(tileWidth*tileHeight))
     table.insert(self.map.tilesets, tileset)
 
-    self:addChunk("chunk1") -- Starting chunk
-    self.map = self:updateMap()
+   self:addChunk("chunk1") -- Starting chunk
+   self.map = self:updateMap()
 
 	self.mapWidth, self.mapHeight = self.map.width*tileWidth, self.map.height*tileHeight
 end
@@ -54,12 +54,13 @@ function Map:addRandomChunks()
 end
 
 function Map:removeOldChunks()
-
     if #self.mapChunks > self.nbChunksPerIter then
         for i=1, #self.mapChunks-self.nbChunksPerIter do 
+            for _, obstacle in ipairs(self.mapChunks[i].obstacles) do
+                obstacle:destroy()
+            end
             table.remove(self.mapChunks, i)
         end
-        -- Need to remove the old colliders
     end
 end
 
@@ -79,8 +80,8 @@ function Map:addChunk(chunkName)
     local y = 0 
 
     if #self.mapChunks > 0 then
+        y = self.map.height*self.map.tileheight
         self.map.height = self.map.height + chunkAsset.height
-        y = (self.map.height-chunkAsset.height)*self.map.tileheight
     end
     
     for _, data in pairs(chunkAsset.layers.sprites) do
@@ -103,14 +104,19 @@ function Map:addChunk(chunkName)
     end
 
     for _, obs in ipairs(chunkAsset.layers.objects.obstacles) do
-        table.insert(chunkMap.obstacles, obs)
-        local wall = world:newRectangleCollider(obs.x, obs.y+y, obs.width, obs.height) -- A modif
-        wall:setType("static")
+        local obstacle = gameState.currentState.world:newRectangleCollider(obs.x, obs.y+y, obs.width, obs.height)
+        obstacle:setType("static")
+        table.insert(chunkMap.obstacles, obstacle)
     end
 
     for _, path in ipairs(chunkAsset.layers.objects.paths) do
-        path.y = path.y + y
-        table.insert(chunkMap.paths, path)
+        local p = {
+            x = path.x,
+            y = path.y+y,
+            width = path.width,
+            height = path.height
+        }
+        table.insert(chunkMap.paths, p)
     end
 
     table.insert(self.mapChunks, chunkMap)
@@ -168,11 +174,11 @@ function Map:updateMap()
     return sti(m)
 end
 
-function Map:getLayerAtPos(y)
-    for _, layer in ipairs(self.map.layers) do
-        print(y, layer.y*self.map.tileheight, (layer.y+layer.height)*self.map.tileheight)
-        if y >= layer.y*self.map.tileheight and y <= (layer.y+layer.height)*self.map.tileheight then
-            return _
+function Map:getNbChunkAtPos(y)
+    for i, chunk in ipairs(self.mapChunks) do
+        local layer = chunk.sprites[1] -- Whatever the layer, same pos/dim
+        if y >= layer.y and y <= layer.y+layer.height*self.map.tileheight then
+            return i
         end
     end
 end
