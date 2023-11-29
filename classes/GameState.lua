@@ -2,14 +2,18 @@ GameState = class("GameState")
 
 function GameState:init()
     self.states = {
-        inGame = InGame(),
-        pause = Pause(),
+        InGame = InGame(),
+        Pause = Pause(),
+        GameOver = GameOver()
     }
     self.currentState = nil
 end
 
-function GameState:setState(stateName)
+function GameState:setState(stateName, start)
     self.currentState = self.states[stateName]
+    if start then
+        self.currentState:start()
+    end
 end
 
 function GameState:getCurrentStateClassName()

@@ -12,7 +12,6 @@ function Car:init(textureName, widthCar, heightCar, speed, consumptionFactor)
     self.grid = anim8.newGrid(widthCar, heightCar, self.spriteSheet:getWidth(), self.spriteSheet:getHeight(), 0, 0, 0)
     self.collider = gameState.currentState.world:newBSGRectangleCollider(self.x, self.y, widthCar, heightCar, 5)
     self.collider:setFixedRotation(true)
-    --self.collider:setCollisionClass(self.className)
 
     local animationSpeed = 1
     self.animations = {}
@@ -29,9 +28,14 @@ function Car:update(args)
 end
 
 function Car:manageCollisions()
-    if self.className == "RoadUser" and self.collider:enter("Player") or self.className == "Player" and self.collider:enter("RoadUser") then
+    if self.className == "RoadUser" and self.collider:enter("Player") then
         self.health = self.health-1
-        print(self.class, self.health)
+    end
+    if self.className == "Player" and self.collider:enter("RoadUser") then
+        self.health = self.health-1
+        if self.health == 0 then
+            gameState:setState("GameOver", true)
+        end
     end
 end
 
@@ -46,32 +50,21 @@ function Car:castToPlayer(x, y)
     player.boostSpeedMult = 1.5
 
     player.currentSpeed = self.speed
+    player.collider:setCollisionClass("Player")
     return player
 end
 
-function Car:castToRoadUser(x, y)
-    local roadUser = RoadUser(self.textureName, self.widthCar, self.heightCar, self.speed, self.consumptionFactor)
+function Car:castToRoadUser(x, y, direction)
+    local roadUser = RoadUser(self.textureName, self.widthCar, self.heightCar, self.speed, self.consumptionFactor, direction)
     roadUser:updatePosition(x, y)
+    roadUser.collider:setCollisionClass("RoadUser")
     return roadUser
-end
-
-function Car:addRandomRoadUsers(chunk)
-    local maxNbCars = math.floor(chunk.sprites[1].height/6)
-    local nbCars = math.random(1, maxNbCars)
-    
-    for i=1, nbCars do
-        local rand = math.random(1, #chunk.paths)
-        local randomPath = chunk.paths[rand]
-        local carY = randomPath.y + randomPath.height/nbCars*i + math.random(-40, 40)
-        local car = gameState.currentState.carModels.car2:castToRoadUser(randomPath.x+randomPath.width/2, carY)
-        table.insert(gameState.currentState.roadUsers, car)
-    end
 end
 
 function Car:addRandomRoadUser(chunk, posY)
     local rand = math.random(1, #chunk.paths)
     local randomPath = chunk.paths[rand]
-    local car = gameState.currentState.carModels.car2:castToRoadUser(randomPath.x+randomPath.width/2, posY)
+    local car = gameState.currentState.carModels.car2:castToRoadUser(randomPath.x+randomPath.width/2, posY, randomPath.direction)
     table.insert(gameState.currentState.roadUsers, car)
 end
 

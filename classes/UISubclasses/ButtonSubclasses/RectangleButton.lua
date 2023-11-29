@@ -1,19 +1,28 @@
 RectangleButton = Button:extend("RectangleButton")
 
-function RectangleButton:init(x, y, width, height, visible, text, colorA, colorB, callback)
-    RectangleButton.super.init(self, x, y, width, height, visible, text, colorA, colorB, callback)
+function RectangleButton:init(x, y, width, height, visible, text, colorA, colorB, callback, clickEvent)
+    RectangleButton.super.init(self, x, y, width, height, visible, text, colorA, colorB, callback, clickEvent)
 
     self.textX, self.textY = self.x+(self.width-self.widthText)/2, self.y+self.heightText
+    self.event = clickEvent or "press"
 end
 
 function RectangleButton:update()
-    if input.state.actions.click and 
-       input.state.mouse.x >= self.x and input.state.mouse.x <= self.x+self.width and
-       input.state.mouse.y >= self.y and input.state.mouse.y <= self.y+self.height then
-        self.pressed = true
-        self.callback()
-    else
-        self.pressed = false
+    local mouseX, mouseY = input.state.mouse.x, input.state.mouse.y
+    local inBounds = mouseX >= self.x and mouseX <= self.x + self.width and mouseY >= self.y and mouseY <= self.y + self.height
+
+    if self.visible then
+        if input.state.actions.click and inBounds then
+            self.pressed = true
+            if self.event == "press" then
+                self.callback()
+            end
+        else
+            if self.event == "release" and self.pressed and inBounds then
+                self.callback()
+            end
+            self.pressed = false
+        end
     end
 end
 

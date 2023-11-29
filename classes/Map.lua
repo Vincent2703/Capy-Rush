@@ -104,17 +104,28 @@ function Map:addChunk(chunkName)
     end
 
     for _, obs in ipairs(chunkAsset.layers.objects.obstacles) do
-        local obstacle = gameState.currentState.world:newRectangleCollider(obs.x, obs.y+y, obs.width, obs.height)
+        local obstacle = gameState.states["InGame"].world:newRectangleCollider(obs.x, obs.y+y, obs.width, obs.height)
         obstacle:setType("static")
         table.insert(chunkMap.obstacles, obstacle)
     end
 
-    for _, path in ipairs(chunkAsset.layers.objects.paths) do
+    for _, path in ipairs(chunkAsset.layers.objects.rightPaths) do
         local p = {
             x = path.x,
             y = path.y+y,
             width = path.width,
-            height = path.height
+            height = path.height,
+            direction = "right"
+        }
+        table.insert(chunkMap.paths, p)
+    end
+    for _, path in ipairs(chunkAsset.layers.objects.leftPaths) do
+        local p = {
+            x = path.x,
+            y = path.y+y,
+            width = path.width,
+            height = path.height,
+            direction = "left"
         }
         table.insert(chunkMap.paths, p)
     end
@@ -181,4 +192,13 @@ function Map:getNbChunkAtPos(y)
             return i
         end
     end
+end
+
+function Map:reset()
+    for _, chunk in ipairs(self.mapChunks) do 
+        for _, obstacle in ipairs(chunk.obstacles) do
+            obstacle:destroy()
+        end
+    end
+    self.mapChunks = {}
 end

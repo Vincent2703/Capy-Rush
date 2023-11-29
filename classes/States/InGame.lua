@@ -11,8 +11,6 @@ function InGame:init()
 
     self.world = createWorld()
 
-    self.roadUsers = {}
-
     self.cameraY = 0
 
     self.difficulties = {
@@ -24,15 +22,11 @@ function InGame:init()
         {rate = 0.8, nbMaxCars = 3},
         {rate = 0.8, nbMaxCars = 4}
     }
-    self.difficulty = self.difficulties[1]
-
-    self.distanceCount = 0
-    self.prevYPos = 0
 end
 
 function InGame:start() -- Because need gameState.currentState.world variable
     local function createMap()
-        lvl = Map(32, 32, 
+        local lvl = Map(48, 48, 
         "assets/textures/roads/tileset.png",
         {
             chunk1 = {path="assets/maps/chunk1.lua", ratio=0.6},
@@ -60,7 +54,7 @@ function InGame:start() -- Because need gameState.currentState.world variable
             widthRes-20, 
             20, 
             true, 
-            gameState.currentState.player
+            self.player
         )
         UIElements["brakeBtn"] = RectangleButton(
             UIElements["fuelGauge"].x, 
@@ -103,9 +97,16 @@ function InGame:start() -- Because need gameState.currentState.world variable
 
     self.carModels = createCarsModels()
 
-    self.player = self.carModels.car1:castToPlayer(widthRes/2, 50)
+    self.player = self.carModels.car1:castToPlayer(self.lvl.mapChunks[1].paths[1].x-self.carModels.car1.widthCar/2+self.lvl.tileWidth/2, 50)
 
     self.UI = createUI()
+
+    self.difficulty = self.difficulties[1]
+
+    self.distanceCount = 0
+    self.prevYPos = 0
+
+    self.roadUsers = {}
 end
 
 function InGame:update(dt)
@@ -120,35 +121,39 @@ function InGame:update(dt)
         return math.max(0, math.min(self.player.y - self.player.heightCar-64, self.lvl.map.height*self.lvl.tileHeight - heightRes))
     end
 
-    self.distanceCount = self.distanceCount + self.player.y-self.prevYPos
-    self.prevYPos = self.player.y
-
-    for key, ui in pairs(self.UI) do 
-        if ui.visible then
-            ui:update()
-        end
-    end
-
     if gameState:isCurrentState("InGame") then
-        updateAllCars(dt)
-        gameState.currentState.world:update(dt)
-
-        self.cameraY = manageCamera()
-
-        if self.player.y >= self.lvl.map.height*self.lvl.tileHeight - heightRes*1.5 then
-            self.lvl:manageChunks()
-            Car:deleteOldRoadUsers(self.player.y-heightRes)
+        if input.state.actions.newPress.pause then
+            gameState:setState("Pause", true)
         end
-    end
 
-    if self.distanceCount >= 500 then
-        self.distanceCount = 0
-        local rand = math.random()
-        if rand <= self.difficulty.rate then
-            local chunk = self.lvl.mapChunks[self.lvl:getNbChunkAtPos(self.player.y)]
-            local nbCars = math.random(1, self.difficulty.nbMaxCars)
-            for i=1, nbCars do
-                Car:addRandomRoadUser(chunk, self.player.y+heightRes+math.random(0, heightRes))
+        self.distanceCount = self.distanceCount + self.player.y-self.prevYPos
+        self.prevYPos = self.player.y
+
+        for key, ui in pairs(self.UI) do 
+            if ui.visible then
+                ui:update()
+            end
+        end
+
+            updateAllCars(dt)
+            self.world:update(dt)
+
+            self.cameraY = manageCamera()
+
+            if self.player.y >= self.lvl.map.height*self.lvl.tileHeight - heightRes*1.5 then
+                self.lvl:manageChunks()
+                Car:deleteOldRoadUsers(self.player.y-heightRes)
+            end
+
+        if self.distanceCount >= 500 then
+            self.distanceCount = 0
+            local rand = math.random()
+            if rand <= self.difficulty.rate then
+                local chunk = self.lvl.mapChunks[self.lvl:getNbChunkAtPos(self.player.y)]
+                local nbCars = math.random(1, self.difficulty.nbMaxCars)
+                for i=1, nbCars do
+                    Car:addRandomRoadUser(chunk, self.player.y+heightRes+math.random(0, heightRes))
+                end
             end
         end
     end
@@ -159,7 +164,7 @@ function InGame:render()
         local player = self.player
         player.anim:draw(player.spriteSheet, player.x, player.y, math.pi, 1, 1, player.widthCar, player.heightCar)
         for _, roadUser in pairs(self.roadUsers) do
-            roadUser.anim:draw(roadUser.spriteSheet, roadUser.x, roadUser.y, math.pi, 1, 1, roadUser.widthCar, roadUser.heightCar)
+            roadUser.anim:draw(roadUser.spriteSheet, roadUser.x, roadUser.y, -math.pi, 1, 1, roadUser.widthCar, roadUser.heightCar)
         end
     end
 
@@ -179,7 +184,7 @@ function InGame:render()
     -- Draw the player and collision boxes
     drawAllCars()
 
-    gameState.currentState.world:draw() 
+    self.world:draw() 
     
     -- Reset transformations
     love.graphics.origin()
@@ -207,6 +212,9 @@ function InGame:render()
             ui:draw()
         end
     end
+
+    -- Temp life count
+    love.graphics.print(self.player.health.."/10", 250, 10)
 end
 
 function InGame:setDifficulty(indexDifficulty)

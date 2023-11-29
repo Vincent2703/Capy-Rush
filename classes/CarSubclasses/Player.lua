@@ -33,7 +33,7 @@ function Player:move(args)
 
     self.collider:setLinearVelocity(vx, vy)
 
-    self.x, self.y = math.floor(self.collider:getX()-self.widthCar/2), math.floor(self.collider:getY()-self.heightCar/2+vy/80) -- Mwerf
+    self.x, self.y = math.floor(self.collider:getX()-self.widthCar/2+vx/80), math.floor(self.collider:getY()-self.heightCar/2+vy/80) -- Mwerf
 
     self.anim:update(args.dt)
 end

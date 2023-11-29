@@ -1,7 +1,7 @@
 function love.load()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
-    widthRes, heightRes = 352, 626
-    widthWindow, heightWindow = 352, 626
+    widthRes, heightRes = 432, 650
+    widthWindow, heightWindow = 480, 720
 
     loadLibraries()
     loadClasses()
@@ -12,28 +12,13 @@ function love.load()
     love.graphics.setFont(font)
 
     gameState = GameState()
-    gameState:setState("inGame")
-    --for _, state in pairs(gameState.states) do
-    --    state:start()
-    --end
-    gameState.currentState:start()
+    gameState:setState("InGame", true)
 
     input = Input()  
 end
 
 function love.update(dt)
     input:update()
-
-    if input.state.actions.newPress.eject then
-        --print(lvl:getLayerAtPos(player.y))
-    end
-
-    if gameState:isCurrentState("InGame") and input.state.actions.newPress.pause then  --Move to GameState
-		gameState:setState("pause")
-        gameState.currentState:start()
-    elseif gameState:isCurrentState("Pause") and input.state.actions.newPress.pause then
-        gameState:setState("inGame")
-    end
 
     gameState.currentState:update(dt)
 
@@ -88,6 +73,7 @@ function loadClasses()
     require("classes/GameState")
     require("classes/States/InGame")
     require("classes/States/Pause")
+    require("classes/States/GameOver")
 
     require("classes/Input")
 end

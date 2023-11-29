@@ -1,18 +1,18 @@
 RoadUser = Car:extend("RoadUser")
 
-function RoadUser:init(textureNameOrModel, widthCar, heightCar, speed, consumptionFactor)
+function RoadUser:init(textureNameOrModel, widthCar, heightCar, speed, consumptionFactor, direction)
     RoadUser.super.init(self, textureNameOrModel, widthCar, heightCar, speed, consumptionFactor)
-    
-    self.startMoving = false
+
+    self.direction = direction
 end
 
 function RoadUser:move(args)
     local vx, vy = 0, 0
-
-    --if self.startMoving or self.y <= args.yStartMoving then
+    if self.direction == "right" then
         vy = self.speed/2
-        self.startMoving = true
-    --end
+    else
+        vy = -(self.speed/2)
+    end
 
     self.collider:setLinearVelocity(vx, vy)
 
