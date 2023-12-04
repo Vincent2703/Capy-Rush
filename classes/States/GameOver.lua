@@ -4,7 +4,7 @@ function GameOver:init()
     local function replay()
         lvl:reset()
         for _, roadUser in ipairs(gameState.states["InGame"].roadUsers) do
-            roadUser.collider:destroy()
+            gameState.states["InGame"].world:remove(roadUser)
         end
         gameState:setState("InGame", true)
     end

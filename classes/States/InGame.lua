@@ -2,9 +2,7 @@ InGame = class("InGame")
 
 function InGame:init()
     local function createWorld()
-        local world = wf.newWorld(0, 0)
-        world:addCollisionClass("Player")
-        world:addCollisionClass("RoadUser")    
+        local world = bump.newWorld()
 
         return world
     end
@@ -38,7 +36,7 @@ function InGame:start() -- Because need gameState.currentState.world variable
 
     local function createCarsModels()
         local carModels = {
-            car1 = Car("car1", 32, 35, 400, 1),
+            car1 = Car("car1", 32, 35, 400, 0.1),
             car2 = Car("car2", 32, 35, 450, 3.2)
         }
 
@@ -56,7 +54,7 @@ function InGame:start() -- Because need gameState.currentState.world variable
             true, 
             self.player
         )
-        UIElements["brakeBtn"] = RectangleButton(
+        --[[UIElements["brakeBtn"] = RectangleButton(
             UIElements["fuelGauge"].x, 
             UIElements["fuelGauge"].y-55, 
             math.floor(widthRes/3), 
@@ -77,14 +75,14 @@ function InGame:start() -- Because need gameState.currentState.world variable
             nil,
             nil,
             function() input.state.actions.boost = true end
-        )
+        )--]]
         UIElements["ejectBtn"] = CircleButton(
             widthRes/2-25,-- min(width, height)/2
-            UIElements["brakeBtn"].y,
+            UIElements["fuelGauge"].y-55,
             math.floor(widthRes/3),
             50,
             true,
-            "!!",
+            "Eject",
             {255, 0, 0},
             nil,
             function() print("eject !") end
@@ -111,9 +109,12 @@ end
 
 function InGame:update(dt)
     local function updateAllCars(dt)
-        self.player:update({dt = dt})
+        self.player:update(dt)
+        if self.player.health <= 0 then
+            gameState:setState("GameOver", true)
+        end
         for _, roadUser in pairs(self.roadUsers) do
-            roadUser:update({dt = dt, yStartMoving = self.player.y+heightRes})
+            roadUser:update(dt)
         end
     end
 
@@ -135,15 +136,14 @@ function InGame:update(dt)
             end
         end
 
-            updateAllCars(dt)
-            self.world:update(dt)
+        updateAllCars(dt)
 
-            self.cameraY = manageCamera()
+        self.cameraY = manageCamera()
 
-            if self.player.y >= self.lvl.map.height*self.lvl.tileHeight - heightRes*1.5 then
-                self.lvl:manageChunks()
-                Car:deleteOldRoadUsers(self.player.y-heightRes)
-            end
+        if self.player.y >= self.lvl.map.height*self.lvl.tileHeight - heightRes*1.5 then
+            self.lvl:manageChunks()
+            Car:deleteOldRoadUsers(self.player.y-heightRes)
+        end
 
         if self.distanceCount >= 500 then
             self.distanceCount = 0
@@ -164,7 +164,11 @@ function InGame:render()
         local player = self.player
         player.anim:draw(player.spriteSheet, player.x, player.y, math.pi, 1, 1, player.widthCar, player.heightCar)
         for _, roadUser in pairs(self.roadUsers) do
-            roadUser.anim:draw(roadUser.spriteSheet, roadUser.x, roadUser.y, -math.pi, 1, 1, roadUser.widthCar, roadUser.heightCar)
+            local flipH = 1
+            if roadUser.direction == "left" then
+                flipH = -1
+            end
+            roadUser.anim:draw(roadUser.spriteSheet, roadUser.x, roadUser.y, math.pi, 1, flipH, roadUser.widthCar, roadUser.heightCar)
         end
     end
 
@@ -183,8 +187,6 @@ function InGame:render()
 
     -- Draw the player and collision boxes
     drawAllCars()
-
-    self.world:draw() 
     
     -- Reset transformations
     love.graphics.origin()

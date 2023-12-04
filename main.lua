@@ -54,7 +54,8 @@ function loadLibraries()
 	anim8 = require("libraries/anim8/anim8")
 	class = require("libraries/30log/30log-clean")
 	sti = require("libraries/sti")
-	wf = require("libraries/windfield")
+	--wf = require("libraries/windfield")
+    bump = require("libraries/bump/bump")
 end
 
 function loadClasses()

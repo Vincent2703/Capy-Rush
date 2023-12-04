@@ -32,10 +32,10 @@ function Map:init(tileWidth, tileHeight, tilesetPath, predefinedChunks, nbChunks
     tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(tileWidth*tileHeight))
     table.insert(self.map.tilesets, tileset)
 
-   self:addChunk("chunk1") -- Starting chunk
-   self.map = self:updateMap()
+    self:addChunk("chunk1") -- Starting chunk
+    self.map = self:updateMap()
 
-	self.mapWidth, self.mapHeight = self.map.width*tileWidth, self.map.height*tileHeight
+    self.mapWidth, self.mapHeight = self.map.width*tileWidth, self.map.height*tileHeight
 end
 
 function Map:addRandomChunks()
@@ -57,7 +57,7 @@ function Map:removeOldChunks()
     if #self.mapChunks > self.nbChunksPerIter then
         for i=1, #self.mapChunks-self.nbChunksPerIter do 
             for _, obstacle in ipairs(self.mapChunks[i].obstacles) do
-                obstacle:destroy()
+                gameState.states["InGame"].world:remove(obstacle)
             end
             table.remove(self.mapChunks, i)
         end
@@ -104,8 +104,8 @@ function Map:addChunk(chunkName)
     end
 
     for _, obs in ipairs(chunkAsset.layers.objects.obstacles) do
-        local obstacle = gameState.states["InGame"].world:newRectangleCollider(obs.x, obs.y+y, obs.width, obs.height)
-        obstacle:setType("static")
+        local obstacle = {x=obs.x, y=obs.y+y, width=obs.width, height=obs.height, isObstacle=true}
+        gameState.states["InGame"].world:add(obstacle, obstacle.x, obstacle.y, obstacle.width, obstacle.height)
         table.insert(chunkMap.obstacles, obstacle)
     end
 
@@ -197,7 +197,7 @@ end
 function Map:reset()
     for _, chunk in ipairs(self.mapChunks) do 
         for _, obstacle in ipairs(chunk.obstacles) do
-            obstacle:destroy()
+            gameState.states["InGame"].world:remove(obstacle)
         end
     end
     self.mapChunks = {}

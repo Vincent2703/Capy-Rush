@@ -12,8 +12,10 @@ function Input:init()
 				   
 	self.state = {}
 	self.state.mouse = {
-						x = nil, 
-						y = nil, 
+						absX = nil, 
+						absY = nil, 
+						relX = nil,
+						relY = nil
 						}					
 	self.state.actions = {
 						right = false,
@@ -41,7 +43,8 @@ function Input:update()
 	self.prevState = self:copyState(self.state)
 
 	-- Mouse
-	self.state.mouse.x, self.state.mouse.y = love.mouse.getPosition()
+	local mouseX, mouseY = love.mouse.getPosition()
+	self.state.mouse = {absX=mouseX, absY=mouseY, relX=mouseX/ratioScale, relY=mouseY/ratioScale}
 	
 	self.state.actions.click = love.mouse.isDown(1, 2)
 	self.state.actions.newPress.click = self.state.actions.click and not self.prevState.actions.click
@@ -69,8 +72,10 @@ end
 function Input:copyState(state)
 	local copyState = {}
 	copyState.mouse = {
-		x = state.mouse.x,
-		y = state.mouse.y
+		absX = state.mouse.absX,
+		absY = state.mouse.absY,
+		relX = state.mouse.relX,
+		relY = state.mouse.relY
 	}
     copyState.actions = {
         right = state.actions.right,
