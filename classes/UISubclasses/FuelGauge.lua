@@ -1,9 +1,9 @@
 FuelGauge = UI:extend("FuelGauge")
 
-function FuelGauge:init(x, y, width, height, visible, player)
-    FuelGauge.super.init(self, x, y, width, height, visible, player)
-    self.player = player
-    self.fuel = player.fuel
+function FuelGauge:init(x, y, width, height, visible)
+    FuelGauge.super.init(self, x, y, width, height, visible)
+    self.player = gameState.states["InGame"].player
+    self.fuel = self.player.fuel
 end
 
 function FuelGauge:update()

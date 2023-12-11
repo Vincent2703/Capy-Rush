@@ -1,7 +1,7 @@
 function love.load()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
     widthRes, heightRes = 432, 650
-    widthWindow, heightWindow = 480, 720
+    widthWindow, heightWindow = 432, 650--480, 720
 
     loadLibraries()
     loadClasses()
@@ -54,7 +54,6 @@ function loadLibraries()
 	anim8 = require("libraries/anim8/anim8")
 	class = require("libraries/30log/30log-clean")
 	sti = require("libraries/sti")
-	--wf = require("libraries/windfield")
     bump = require("libraries/bump/bump")
 end
 
@@ -64,6 +63,10 @@ function loadClasses()
     require("classes/Car")
     require("classes/CarSubclasses/Player")
     require("classes/CarSubclasses/RoadUser")
+
+    require("classes/Ejection")
+
+    require("classes/Stats")
 
     require("classes/UI")
     require("classes/UISubclasses/FuelGauge")

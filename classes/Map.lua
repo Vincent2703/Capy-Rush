@@ -56,8 +56,11 @@ end
 function Map:removeOldChunks()
     if #self.mapChunks > self.nbChunksPerIter then
         for i=1, #self.mapChunks-self.nbChunksPerIter do 
-            for _, obstacle in ipairs(self.mapChunks[i].obstacles) do
-                gameState.states["InGame"].world:remove(obstacle)
+            for _, obj in ipairs(self.mapChunks[i].obstacles) do
+                gameState.states["InGame"].world:remove(obj)
+            end
+            for _, obj in ipairs(self.mapChunks[i].paths) do --Merge works ?
+                gameState.states["InGame"].world:remove(obj)
             end
             table.remove(self.mapChunks, i)
         end
@@ -77,10 +80,10 @@ function Map:addChunk(chunkName)
         obstacles = {},
         paths = {}
     }
-    local y = 0 
+    local currentHeight = 0 
 
     if #self.mapChunks > 0 then
-        y = self.map.height*self.map.tileheight
+        currentHeight = self.map.height*self.map.tileheight
         self.map.height = self.map.height + chunkAsset.height
     end
     
@@ -89,7 +92,7 @@ function Map:addChunk(chunkName)
             type = "tilelayer", 
             name = chunkName,
             x = 0,
-            y = y,
+            y = currentHeight,
             width = chunkAsset.width,
             height = chunkAsset.height,
             visible = true,
@@ -104,31 +107,28 @@ function Map:addChunk(chunkName)
     end
 
     for _, obs in ipairs(chunkAsset.layers.objects.obstacles) do
-        local obstacle = {x=obs.x, y=obs.y+y, width=obs.width, height=obs.height, isObstacle=true}
+        local obstacle = {x=obs.x, y=obs.y+currentHeight, width=obs.width, height=obs.height, isObstacle=true}
         gameState.states["InGame"].world:add(obstacle, obstacle.x, obstacle.y, obstacle.width, obstacle.height)
         table.insert(chunkMap.obstacles, obstacle)
     end
 
-    for _, path in ipairs(chunkAsset.layers.objects.rightPaths) do
+for _, pathGroup in ipairs({chunkAsset.layers.objects.rightPaths, chunkAsset.layers.objects.leftPaths}) do
+    for _, path in ipairs(pathGroup) do
+        local direction = (pathGroup == chunkAsset.layers.objects.rightPaths) and "right" or "left"
         local p = {
             x = path.x,
-            y = path.y+y,
+            y = path.y + currentHeight,
             width = path.width,
             height = path.height,
-            direction = "right"
+            direction = direction,
+            isPath = true
         }
+
+        gameState.states["InGame"].world:add(p, p.x, p.y, p.width, p.height)
         table.insert(chunkMap.paths, p)
     end
-    for _, path in ipairs(chunkAsset.layers.objects.leftPaths) do
-        local p = {
-            x = path.x,
-            y = path.y+y,
-            width = path.width,
-            height = path.height,
-            direction = "left"
-        }
-        table.insert(chunkMap.paths, p)
-    end
+end
+
 
     table.insert(self.mapChunks, chunkMap)
 end
@@ -195,10 +195,10 @@ function Map:getNbChunkAtPos(y)
 end
 
 function Map:reset()
-    for _, chunk in ipairs(self.mapChunks) do 
-        for _, obstacle in ipairs(chunk.obstacles) do
-            gameState.states["InGame"].world:remove(obstacle)
-        end
+    local world = gameState.states["InGame"].world
+    local items, len = world:getItems()
+    for i=1, len do
+        world:remove(items[i])
     end
     self.mapChunks = {}
 end

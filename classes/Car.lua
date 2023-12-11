@@ -11,7 +11,7 @@ function Car:init(textureName, widthCar, heightCar, maxSpeed, consumptionFactor)
     self.accY = 0.02
     self.fuel = 100
     self.consumptionFactor = consumptionFactor
-    self.health = 10
+    self.health = 5
     self.lastCollision = 0
     self.delayDamage = 2
     self.grid = anim8.newGrid(widthCar, heightCar, self.spriteSheet:getWidth(), self.spriteSheet:getHeight(), 0, 0, 0)
@@ -25,14 +25,22 @@ function Car:init(textureName, widthCar, heightCar, maxSpeed, consumptionFactor)
     self.anim = self.animations.up
 end
 
-function Car:manageCollisions(velX, velY, dt) 
+function Car:preMove(velX, velY, dt) 
     self.lastCollision = self.lastCollision+dt
-    local goalX, goalY = self.x + velX*dt, self.y + velY*dt
-    local actualX, actualY, cols, len = gameState.states["InGame"].world:check(self, goalX, goalY, function() return "bounce" end)
+    local goalX, goalY = tonumber(string.format("%.2f", self.x + velX*dt)), tonumber(string.format("%.2f", self.y + velY*dt))
+    local filter = function(item, other)
+        if other.isObstacle then 
+            return "slide" 
+        else
+            return nil
+        end
+    end
+    local filter = function(item, other) return self:filterColliders(item, other) end
+    local actualX, actualY, cols, len = gameState.states["InGame"].world:check(self, goalX, goalY, filter)
     local health = self.health
 
     if len > 0 then
-        if self.lastCollision >= self.delayDamage and velY > 0 then
+        if self.lastCollision >= self.delayDamage and velY >= 0.15*self.maxSpeed then
             self.lastCollision = 0
             health = health-1
         end
@@ -66,13 +74,12 @@ function Car:manageCollisions(velX, velY, dt)
 end
 
 function Car:updatePosition(x, y)
-    self.x, self.y = x-self.widthCar/2, y-self.heightCar/2
+    self.x, self.y = x, y
     gameState.states["InGame"].world:update(self, x, y)
 end
 
 function Car:castToPlayer(x, y)
     local player = self:cast(Player)
-    player.boostSpeedMult = 1.5
 
     player.currentSpeed = self.maxSpeed
     gameState.states["InGame"].world:add(player, player.x, player.y, player.widthCar, player.heightCar)
@@ -90,7 +97,7 @@ end
 function Car:addRandomRoadUser(chunk, posY)
     local rand = math.random(1, #chunk.paths)
     local randomPath = chunk.paths[rand]
-    local car = gameState.states["InGame"].carModels.car2:castToRoadUser(randomPath.x+randomPath.width/2, posY, randomPath.direction)
+    local car = gameState.states["InGame"].carModels.car2:castToRoadUser(randomPath.x+randomPath.width/2-gameState.states["InGame"].carModels.car2.widthCar/2, posY, randomPath.direction)
     table.insert(gameState.states["InGame"].roadUsers, car)
 end
 
@@ -101,5 +108,47 @@ function Car:deleteOldRoadUsers(posYStartingRemoving)
             gameState.states["InGame"].world:remove(car)
             table.remove(roadUsers, i)
         end
+    end
+end
+
+function Car:destroy()
+    local posX, posY = self.y, self.x
+
+    if self.className == "Player" then
+        gameState.states["InGame"].player = nil
+    elseif self.className == "RoadUser" then
+        local roadUsers = gameState.states["InGame"].roadUsers
+        for i, v in ipairs(roadUsers) do
+            if v == self then
+                table.remove(roadUsers, i)
+                break
+            end
+        end
+    end
+
+    gameState.states["InGame"].world:remove(self) 
+end
+
+function Car:switchCar()
+    local player = self:cast(Player)
+    gameState.states["InGame"].UI["fuelGauge"].player = player
+    local roadUsers = gameState.states["InGame"].roadUsers
+    for i, v in ipairs(roadUsers) do
+        if v == self then
+            table.remove(roadUsers, i)
+            break
+        end
+    end
+    return player
+end
+
+
+function Car:filterColliders(item, other)
+    if other.isObstacle then 
+        return "slide" 
+    elseif other.className == "RoadUser" or other.className == "Player" then
+        return "bounce"
+    else
+        return nil
     end
 end

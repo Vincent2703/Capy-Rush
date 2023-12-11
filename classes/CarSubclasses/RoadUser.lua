@@ -25,12 +25,13 @@ function RoadUser:update(dt)
     -- Update y-velocity
     velY = accY * self.maxSpeedRoadUser + (1 - accY) * velY
 
-    local velX, velY, goalX, goalY, health = self:manageCollisions(velX, velY, dt)
+    local velX, velY, goalX, goalY, health = self:preMove(velX, velY, dt)
     self.health = health
 
     -- Move player using the velocity
 
-    local actualX, actualY, cols, len = gameState.states["InGame"].world:move(self, goalX, goalY)
+    local filter = function(item, other) return self:filterColliders(item, other) end
+    local actualX, actualY, cols, len = gameState.states["InGame"].world:move(self, goalX, goalY, filter)
     
     self.x, self.y = actualX, actualY
 

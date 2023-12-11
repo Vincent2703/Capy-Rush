@@ -2,10 +2,7 @@ GameOver = class("GameOver")
 
 function GameOver:init()
     local function replay()
-        lvl:reset()
-        for _, roadUser in ipairs(gameState.states["InGame"].roadUsers) do
-            gameState.states["InGame"].world:remove(roadUser)
-        end
+        gameState.states["InGame"].lvl:reset()
         gameState:setState("InGame", true)
     end
 
@@ -34,7 +31,7 @@ function GameOver:init()
             "EXIT",
             nil,
             nil,
-            function() print("exit") end,
+            function() love.event.quit(0) end,
             "release"
         )
 
@@ -61,26 +58,20 @@ function GameOver:update()
 end
 
 function GameOver:render()
-    love.graphics.setCanvas(preRenderCanvas)
-    love.graphics.clear()
 
-    love.graphics.draw(self.inGameCanvas)
     love.graphics.translate(offsetXCanvas, heightWindow)
     love.graphics.scale(ratioScale, -ratioScale)
-
-    love.graphics.setColor(0, 0, 0, 0.2)
-    
+    love.graphics.draw(preRenderCanvas)
+    love.graphics.setColor(0, 0, 0, 0.4)
     love.graphics.rectangle("fill", 0, 0, widthRes, heightRes)
-
     love.graphics.setColor(255, 255, 255, 1)
 
+    love.graphics.origin()
+    love.graphics.translate(offsetXCanvas, camYOffset)
+    love.graphics.scale(ratioScale, ratioScale)
     for key, ui in pairs(self.UI) do
         if ui.visible then
             ui:draw()
         end
     end
-
-    love.graphics.setCanvas()
-
-    love.graphics.draw(preRenderCanvas)
 end

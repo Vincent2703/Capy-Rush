@@ -3,7 +3,8 @@ Input = class("Input")
 function Input:init()
 	self.config = {
 					right = "right",
-					brake = "down",
+					down = "down",
+					up = "up",
 					left = "left",
 					boost = "lshift",
 					eject = "space",
@@ -19,7 +20,8 @@ function Input:init()
 						}					
 	self.state.actions = {
 						right = false,
-						brake = false,
+						down = false,
+						up = false,
 						left = false,
 						boost = false,
 						eject = false,
@@ -27,7 +29,7 @@ function Input:init()
 						pause = false,
 						newPress = {
 							right = false,
-							brake = false,
+							down = false,
 							left = false,
 							boost = false,
 							eject = false,
@@ -44,7 +46,7 @@ function Input:update()
 
 	-- Mouse
 	local mouseX, mouseY = love.mouse.getPosition()
-	self.state.mouse = {absX=mouseX, absY=mouseY, relX=mouseX/ratioScale, relY=mouseY/ratioScale}
+	self.state.mouse = {absX=mouseX, absY=mouseY, relX=(mouseX-offsetXCanvas)/ratioScale, relY=(mouseY-camYOffset)/ratioScale}
 	
 	self.state.actions.click = love.mouse.isDown(1, 2)
 	self.state.actions.newPress.click = self.state.actions.click and not self.prevState.actions.click
@@ -53,8 +55,11 @@ function Input:update()
 	self.state.actions.right = love.keyboard.isDown(self.config.right)
 	self.state.actions.newPress.right = self.state.actions.right and not self.prevState.actions.right
 	
-	self.state.actions.brake = love.keyboard.isDown(self.config.brake)
-	self.state.actions.newPress.brake = self.state.actions.brake and not self.prevState.actions.brake
+	self.state.actions.down = love.keyboard.isDown(self.config.down)
+	self.state.actions.newPress.down = self.state.actions.down and not self.prevState.actions.down
+
+	self.state.actions.up = love.keyboard.isDown(self.config.up)
+	self.state.actions.newPress.up = self.state.actions.up and not self.prevState.actions.up
 	
 	self.state.actions.left = love.keyboard.isDown(self.config.left)
 	self.state.actions.newPress.left = self.state.actions.left and not self.prevState.actions.left
@@ -79,7 +84,8 @@ function Input:copyState(state)
 	}
     copyState.actions = {
         right = state.actions.right,
-        brake = state.actions.brake,
+        down = state.actions.down,
+		up = state.actions.up,
         left = state.actions.left,
         boost = state.actions.boost,
         eject = state.actions.eject,
@@ -87,7 +93,8 @@ function Input:copyState(state)
         pause = state.actions.pause,
         newPress = {
             right = state.actions.newPress.right,
-            brake = state.actions.newPress.brake,
+            down = state.actions.newPress.down,
+			up = state.actions.newPress.up,
             left = state.actions.newPress.left,
             boost = state.actions.newPress.boost,
             eject = state.actions.newPress.eject,

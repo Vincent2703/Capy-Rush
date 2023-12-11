@@ -1,6 +1,8 @@
 Pause = class("Pause")
 
 function Pause:init()
+    self.inGameCanvas = love.graphics.newCanvas(widthRes, heightRes)
+
     local function createUI()
         local UIElements = {}
 
@@ -24,13 +26,7 @@ function Pause:init()
 end
 
 function Pause:start()
-    self.inGameCanvas = love.graphics.newCanvas(preRenderCanvas:getDimensions())
-    self.inGameCanvas:renderTo(function()
-    --    love.graphics.setColor(255, 255, 255)
-    love.graphics.setCanvas(self.inGameCanvas)
-        love.graphics.draw(preRenderCanvas)
-        love.graphics.setCanvas()
-    end)
+
 end
 
 function Pause:update()
@@ -46,24 +42,21 @@ function Pause:update()
 end
 
 function Pause:render()
-    love.graphics.setCanvas(preRenderCanvas)
-    love.graphics.clear()
+    --love.graphics.clear()
 
-    love.graphics.draw(self.inGameCanvas, offsetXCanvas, heightRes, 0, ratioScale, -ratioScale)
-
-    love.graphics.setColor(0, 0, 0, 0.2)
-    
+    love.graphics.translate(offsetXCanvas, heightWindow)
+    love.graphics.scale(ratioScale, -ratioScale)
+    love.graphics.draw(preRenderCanvas)
+    love.graphics.setColor(0, 0, 0, 0.4)
     love.graphics.rectangle("fill", 0, 0, widthRes, heightRes)
-
     love.graphics.setColor(255, 255, 255, 1)
 
+    love.graphics.origin()
+    love.graphics.translate(offsetXCanvas, camYOffset)
+    love.graphics.scale(ratioScale, ratioScale)
     for key, ui in pairs(self.UI) do
         if ui.visible then
             ui:draw()
         end
     end
-
-    love.graphics.setCanvas()
-
-    love.graphics.draw(preRenderCanvas)
 end
