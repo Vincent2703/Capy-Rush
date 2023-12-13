@@ -14,10 +14,10 @@ function Player:update(dt)
 
     -- Update velocity based on input
     local targetVelX = 0
-    if input.state.actions.right or (input.state.actions.click and input.state.mouse.absX > widthWindow/2 and input.state.mouse.absY <= heightWindow*0.80) then
+    if input.state.actions.right then
         targetVelX = self.maxSpeed
         self.anim = self.animations.right
-    elseif input.state.actions.left or (input.state.actions.click and input.state.mouse.absX < widthWindow/2 and input.state.mouse.absY <= heightWindow*0.80) then
+    elseif input.state.actions.left then
         targetVelX = -self.maxSpeed
         self.anim = self.animations.left
     end

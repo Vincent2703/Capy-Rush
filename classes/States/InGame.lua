@@ -42,11 +42,13 @@ end
 
 function InGame:update(dt)
     if gameState:isCurrentState("InGame") then
-        local achv = self.stats.achievements
-
-        if input.state.actions.newPress.eject and not self.eject then
+        if input.state.actions.newPress.eject 
+        or input.state.actions.newPress.click and input.state.mouse.absY <= 0.9*heightWindow and input.state.mouse.absY >= 0.1*heightWindow 
+        and not self.eject then
             self:manageEjection(true)
-        elseif input.state.actions.newPress.eject and self.eject and not self.landingStatus then
+        elseif input.state.actions.newPress.eject 
+        or input.state.actions.newPress.click and input.state.mouse.absY <= 0.9*heightWindow and input.state.mouse.absY >= 0.1*heightWindow 
+        and self.eject and not self.landingStatus then
             self:manageEjection(false)
         elseif input.state.actions.newPress.pause then
             gameState:setState("Pause", true)
@@ -67,18 +69,22 @@ function InGame:update(dt)
                 else 
                     local roadUser = self.roadUsers[self.ejection.landOn]
                     self.UI["fuelGauge"].visible = true
+                    if roadUser.direction == "left" then
+                        self.stats.multipliers.glob = 2
+                    else
+                        self.stats.multipliers.glob = 1
+                    end
                     self.player = roadUser:switchCar()
                     self.inCar = true
-                    achv.ejections = achv.ejections+1
+                    self.stats:addPoints("ejections")
                 end
             end
         else
-            if self.player.currPathDir == "left" then
+            if self.player.currPathDir == "left" and self.stats.multipliers.glob == 1 then
                 self.stats.multipliers.glob = 2
-            else
+            elseif self.player.currPathDir == "right" and self.stats.multipliers.glob == 2 then
                 self.stats.multipliers.glob = 1
             end
-            self.stats:update()
         end
 
         for key, ui in pairs(self.UI) do 
@@ -100,7 +106,7 @@ function InGame:update(dt)
             end
 
             local dist = self.player.y-self.prevYPos
-            achv.distSinceLastFrame = dist
+            self.stats:addPoints("distance", dist)
             self.distanceCount = self.distanceCount + dist
             self.prevYPos = self.player.y
             if self.distanceCount >= 500 then
@@ -175,8 +181,9 @@ function InGame:render()
     -- Temp life count and score
     if self.inCar then
         love.graphics.print(self.player.health .. "/5", 100, 10)
-        love.graphics.print(self.stats.scores.current, 250, 10)
+        love.graphics.print(math.abs(math.ceil(self.stats.scores.current-0.5)), 250, 10)
 
+        love.graphics.print('x: '..input.state.joystick.x..'\ny: '..input.state.joystick.y..'\nz: '..input.state.joystick.z, 5, 60)
     end
 
 end
@@ -221,44 +228,6 @@ function InGame:createUI()
         widthRes-20, 
         20, 
         true
-    )
-
-    UIElements["ejectBtn"] = CircleButton(
-        widthRes/2-25,-- min(width, height)/2
-        UIElements["fuelGauge"].y-55,
-        math.floor(widthRes/3),
-        50,
-        true,
-        "Eject",
-        {255, 0, 0},
-        nil,
-        function()     
-            self.UI["landBtn"]:toggleVisibility()    
-            self.UI["ejectBtn"]:toggleVisibility() 
-            self.eject = true
-            self.inCar = false
-            self.UI["fuelGauge"].visible = false
-            self.ejection = Ejection(self.player.x+self.player.widthCar/2, self.player.y+self.player.heightCar/2)
-            self.player:destroy() 
-        end
-    )
-
-    UIElements["landBtn"] = CircleButton(
-        widthRes/2-25,
-        UIElements["fuelGauge"].y-55,
-        math.floor(widthRes/3),
-        50,
-        false,
-        "Land",
-        {255, 0, 0},
-        nil,
-        function()
-            self.UI["ejectBtn"]:toggleVisibility()   
-            self.UI["landBtn"]:toggleVisibility()    
-            self.ejection.land = true
-            self.ejection.velocity.x, self.ejection.velocity.y = self.ejection.velocity.x/2.5, self.ejection.velocity.y/2.5
-            self.ejection.maxSpeed = self.ejection.maxSpeed/2.5
-        end
     )
 
     return UIElements
@@ -307,17 +276,13 @@ end
 function InGame:manageEjection(ejection)
     if ejection then
         self.landingStatus = false
-        self.UI["landBtn"]:toggleVisibility()    
-        self.UI["ejectBtn"]:toggleVisibility() 
         self.eject = true
         self.inCar = false
-        self.UI["fuelGauge"].visible = false
+        self.UI["fuelGauge"]:toggleVisibility()
         self.ejection = Ejection(self.player.x+self.player.widthCar/2, self.player.y+self.player.heightCar/2)
         self.player:destroy()
     else
         self.landingStatus = true
-        self.UI["landBtn"]:toggleVisibility()    
-        self.UI["ejectBtn"]:toggleVisibility() 
         self.ejection.velocity.x, self.ejection.velocity.y = self.ejection.velocity.x/2, self.ejection.velocity.y/2
         self.ejection.maxSpeed = self.ejection.maxSpeed/2
     end
