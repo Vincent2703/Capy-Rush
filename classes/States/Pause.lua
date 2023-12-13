@@ -48,7 +48,7 @@ function Pause:render()
     love.graphics.scale(ratioScale, -ratioScale)
     love.graphics.draw(preRenderCanvas)
     love.graphics.setColor(0, 0, 0, 0.4)
-    love.graphics.rectangle("fill", 0, 0, widthRes, heightRes)
+    love.graphics.rectangle("fill", 0, 0, canvas:getDimensions())
     love.graphics.setColor(255, 255, 255, 1)
 
     love.graphics.origin()

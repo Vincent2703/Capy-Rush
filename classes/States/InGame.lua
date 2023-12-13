@@ -42,12 +42,12 @@ end
 
 function InGame:update(dt)
     if gameState:isCurrentState("InGame") then
-        if input.state.actions.newPress.eject 
-        or input.state.actions.newPress.click and input.state.mouse.absY <= 0.9*heightWindow and input.state.mouse.absY >= 0.1*heightWindow 
+        if (input.state.actions.newPress.eject 
+        or (input.state.actions.newPress.click and input.state.mouse.absY <= 0.9*heightWindow and input.state.mouse.absY >= 0.1*heightWindow)) 
         and not self.eject then
             self:manageEjection(true)
-        elseif input.state.actions.newPress.eject 
-        or input.state.actions.newPress.click and input.state.mouse.absY <= 0.9*heightWindow and input.state.mouse.absY >= 0.1*heightWindow 
+        elseif (input.state.actions.newPress.eject 
+        or (input.state.actions.newPress.click and input.state.mouse.absY <= 0.9*heightWindow and input.state.mouse.absY >= 0.1*heightWindow)) 
         and self.eject and not self.landingStatus then
             self:manageEjection(false)
         elseif input.state.actions.newPress.pause then
@@ -181,11 +181,11 @@ function InGame:render()
     -- Temp life count and score
     if self.inCar then
         love.graphics.print(self.player.health .. "/5", 100, 10)
-        love.graphics.print(math.abs(math.ceil(self.stats.scores.current-0.5)), 250, 10)
-
-        love.graphics.print('x: '..input.state.joystick.x..'\ny: '..input.state.joystick.y..'\nz: '..input.state.joystick.z, 5, 60)
     end
 
+    love.graphics.print(math.abs(math.ceil(self.stats.scores.current-0.5)), 250, 10)
+
+    love.graphics.print('x: '..input.state.joystick.x..' \n('..math.abs(math.ceil(input.state.joystick.inclinXRatio*100-0.5))..'%)\n\nz: '..input.state.joystick.z..'\n('..math.abs(math.ceil(input.state.joystick.inclinZRatio*100-0.5))..'%)', 5, 60)
 end
 
 

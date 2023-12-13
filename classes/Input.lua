@@ -21,9 +21,11 @@ function Input:init()
 						relY = nil
 						}			
 	self.state.joystick = {
-						x = 0,
-						y = 0,
-						z = 0
+						x = 1,
+						y = 1,
+						z = 1,
+						inclinXRatio = 1,
+						inclinZRatio = 1
 	}
 	self.state.actions = {
 						right = false,
@@ -48,15 +50,6 @@ end
 
 function Input:update()
 	self.prevState = self:copyState(self.state)
-
-	-- Joystick
-	if self.config.joystick ~= nil then
-		self.state.joystick.x, self.state.joystick.y, self.state.joystick.z = self.config.joystick:getAxes()
-
-		--self.state.actions.right = self.state.joystick.x > 0.1
-		--self.state.actions.left = self.state.joystick.x < -0.1
-	end
-
 	-- Mouse
 	local mouseX, mouseY = love.mouse.getPosition()
 	self.state.mouse = {absX=mouseX, absY=mouseY, relX=(mouseX-offsetXCanvas)/ratioScale, relY=(mouseY-camYOffset)/ratioScale}
@@ -82,6 +75,24 @@ function Input:update()
 	
 	self.state.actions.pause = love.keyboard.isDown(self.config.pause)
 	self.state.actions.newPress.pause = self.state.actions.pause and not self.prevState.actions.pause
+
+	-- Joystick
+	if self.config.joystick ~= nil then
+		local x, y, z = self.config.joystick:getAxes()
+		self.state.joystick.x, self.state.joystick.y, self.state.joystick.z = x, y, z
+
+		self.state.actions.right = self.state.actions.right or x > 0.1
+		self.state.actions.left = self.state.actions.left or x < -0.1
+		self.state.joystick.inclinXRatio = math.max(math.min((math.abs(x)-0.1)/0.6, 1), 0)
+
+		self.state.actions.up = self.state.actions.up or z >= 0.6
+		self.state.actions.down = self.state.actions.down or z < 0.6
+		if z >= 0.6 then
+			self.state.joystick.inclinZRatio = math.max(math.min(math.abs(z-0.6)/0.4, 1), 0)
+		else
+			self.state.joystick.inclinZRatio = math.max(math.min(math.abs(z-0.7)/0.4, 1), 0)
+		end
+	end
 end
 
 function Input:copyState(state)
@@ -95,7 +106,9 @@ function Input:copyState(state)
 	copyState.joystick = {
 		x = state.joystick.x,
 		y = state.joystick.y,
-		z = state.joystick.z
+		z = state.joystick.z,
+		inclinXRatio = state.joystick.inclinXRatio,
+		inclinZRatio = state.joystick.inclinZRatio,
 	}
     copyState.actions = {
         right = state.actions.right,

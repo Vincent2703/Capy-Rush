@@ -42,11 +42,11 @@ function GameOver:init()
 end
 
 function GameOver:start()
-    self.inGameCanvas = love.graphics.newCanvas(preRenderCanvas:getDimensions())
+    --[[self.inGameCanvas = love.graphics.newCanvas(preRenderCanvas:getDimensions())
     self.inGameCanvas:renderTo(function()
         love.graphics.setColor(255, 255, 255)
         love.graphics.draw(preRenderCanvas, 0, 0)
-    end)
+    end)--]]
 end
 
 function GameOver:update()
@@ -63,7 +63,7 @@ function GameOver:render()
     love.graphics.scale(ratioScale, -ratioScale)
     love.graphics.draw(preRenderCanvas)
     love.graphics.setColor(0, 0, 0, 0.4)
-    love.graphics.rectangle("fill", 0, 0, widthRes, heightRes)
+    love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
     love.graphics.setColor(255, 255, 255, 1)
 
     love.graphics.origin()

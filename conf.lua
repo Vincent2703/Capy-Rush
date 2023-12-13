@@ -1,5 +1,7 @@
 function love.conf(t)
-	t.window.title = "VroomVroom"
+    t.window = nil
+	--t.window.title = "VroomVroom"
+    --t.window.vsync = 1
 
 	t.accelerometerjoystick = true		-- Enable the accelerometer on iOS and Android by exposing it as a Joystick (boolean)
 	t.modules.audio = false              -- Enable the audio module (boolean)

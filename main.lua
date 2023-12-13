@@ -1,7 +1,7 @@
 function love.load()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
     widthRes, heightRes = 432, 650
-    widthWindow, heightWindow = 432, 650--480, 720
+    --widthWindow, heightWindow = 432, 650--480, 720
 
     loadLibraries()
     loadClasses()
@@ -83,14 +83,30 @@ function loadClasses()
 end
 
 function initScreen()
-    windowFlags = {vsync=1, fullscreen=false, resizable=true}
-    love.window.setMode(widthWindow, heightWindow, windowFlags)
+    local os = love.system.getOS()
+    local flags = {}
+    if os == "Android" then
+        widthWindow, heightWindow = 0, 0
+        flags.resizable = false
+        flags.fullscreen = true
+    else
+        widthWindow, heightWindow = 432, 700
+        flags.resizable = false
+        flags.fullscreen = false
+    end
+
+    love.window.setMode(widthWindow, heightWindow, flags)
+    widthWindow, heightWindow = love.graphics.getWidth(), love.graphics.getHeight()
 	love.graphics.setDefaultFilter("nearest", "nearest")
 	
 	canvas = love.graphics.newCanvas(widthWindow, heightWindow)
-    preRenderCanvas = love.graphics.newCanvas(widthRes, heightRes)
     ratioScale = math.min(widthWindow/widthRes, heightWindow/heightRes)
     offsetXCanvas = widthWindow/2-(widthRes/2)*ratioScale
 
-    camYOffset = 0
+    if heightWindow/heightRes > widthWindow/widthRes then
+        camYOffset = heightWindow-heightRes*ratioScale
+    else
+        camYOffset = 0
+    end
+    preRenderCanvas = love.graphics.newCanvas(widthRes, heightRes+camYOffset)
 end

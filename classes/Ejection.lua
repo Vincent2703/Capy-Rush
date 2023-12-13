@@ -6,12 +6,12 @@ function Ejection:init(x, y)
     self.radius = self.minRadius
     self.maxRadius = 20
     
-    self.maxSpeed = 1000
+    self.maxSpeed = 900
 
     self.velocity = {x=gameState.states["InGame"].player.velocity.x*10, y=gameState.states["InGame"].player.velocity.y*10}
-    self.accX, self.accY = 0.08, 0.08
+    self.accX, self.accY = 0.09, 0.08
 
-    self.ejectTime = 0.2
+    self.ejectTime = 0.25
     self.count = 0
 
     self.landOn = nil
@@ -36,8 +36,8 @@ function Ejection:update(dt)
         local targetVelY = (input.state.actions.up and speed) or (input.state.actions.down and -speed) or 0
         local targetVelX = (input.state.actions.right and speed) or (input.state.actions.left and -speed) or 0
         
-        velY = accY * targetVelY + (1 - accY/2) * velY
-        velX = accX * targetVelX + (1 - accX/2) * velX
+        velY = accY * (targetVelY*input.state.joystick.inclinZRatio) + (1 - accY/2) * velY
+        velX = accX * (targetVelX*input.state.joystick.inclinXRatio) + (1 - accX/2) * velX
         
         self.velocity.x, self.velocity.y = velX, velY
         self.x, self.y = self.x + velX * dt, self.y + velY * dt
