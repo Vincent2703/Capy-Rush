@@ -8,7 +8,7 @@ function Input:init()
 					left = "left",
 					boost = "lshift",
 					eject = "space",
-					pause = 'p',
+					pause = "escape",
 
 					joystick = love.joystick.getJoysticks()[1]
 				   }
@@ -88,9 +88,9 @@ function Input:update()
 		self.state.actions.up = self.state.actions.up or z >= 0.6
 		self.state.actions.down = self.state.actions.down or z < 0.6
 		if z >= 0.6 then
-			self.state.joystick.inclinZRatio = math.max(math.min(math.abs(z-0.6)/0.4, 1), 0)
+			self.state.joystick.inclinZRatio = math.max(math.min(math.abs(z-0.5)/0.4, 1), 0)
 		else
-			self.state.joystick.inclinZRatio = math.max(math.min(math.abs(z-0.7)/0.4, 1), 0)
+			self.state.joystick.inclinZRatio = math.max(math.min(math.abs(z-0.6)/0.4, 1), 0)
 		end
 	end
 end

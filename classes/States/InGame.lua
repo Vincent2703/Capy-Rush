@@ -6,20 +6,22 @@ function InGame:init()
     self.zoom = 1.5
     
     self.difficulties = {
-        {rate = 0.5, nbMaxCars = 1},
-        {rate = 0.5, nbMaxCars = 2},
-        {rate = 0.6, nbMaxCars = 2},
-        {rate = 0.7, nbMaxCars = 2},
-        {rate = 0.7, nbMaxCars = 3},
-        {rate = 0.8, nbMaxCars = 3},
-        {rate = 0.8, nbMaxCars = 4}
+        {id = 1, rate = 0.5, nbMaxCars = 1},
+        {id = 2, rate = 0.5, nbMaxCars = 2},
+        {id = 3, rate = 0.6, nbMaxCars = 2},
+        {id = 4, rate = 0.7, nbMaxCars = 2},
+        {id = 5, rate = 0.7, nbMaxCars = 3},
+        {id = 6, rate = 0.8, nbMaxCars = 3},
+        {id = 7, rate = 0.8, nbMaxCars = 4},
+        {id = 8, rate = 0.9, nbMaxCars = 4},
     }
+
+    self.carModels = self:createCarsModels()
 end
 
 function InGame:start() -- On restart
     self.lvl = self:createMap()
 
-    self.carModels = self:createCarsModels()
 
     self.player = self.carModels.car1:castToPlayer(self.lvl.mapChunks[1].paths[1].x+self.lvl.tileWidth/2-self.carModels.car1.widthCar/2, 50)
     self.inCar = true
@@ -80,6 +82,9 @@ function InGame:update(dt)
                 end
             end
         else
+            if self.stats.scores.current >= self.difficulty.id*100 and self.difficulty.id < #self.difficulties then
+                self:setDifficulty(self.difficulty.id+1)
+            end
             if self.player.currPathDir == "left" and self.stats.multipliers.glob == 1 then
                 self.stats.multipliers.glob = 2
             elseif self.player.currPathDir == "right" and self.stats.multipliers.glob == 2 then
@@ -186,6 +191,8 @@ function InGame:render()
     love.graphics.print(math.abs(math.ceil(self.stats.scores.current-0.5)), 250, 10)
 
     love.graphics.print('x: '..input.state.joystick.x..' \n('..math.abs(math.ceil(input.state.joystick.inclinXRatio*100-0.5))..'%)\n\nz: '..input.state.joystick.z..'\n('..math.abs(math.ceil(input.state.joystick.inclinZRatio*100-0.5))..'%)', 5, 60)
+
+    love.graphics.print("diff: "..self.difficulty.id, widthRes-100, 10)
 end
 
 

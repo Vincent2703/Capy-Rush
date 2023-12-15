@@ -63,11 +63,11 @@ function GameOver:render()
     love.graphics.scale(ratioScale, -ratioScale)
     love.graphics.draw(preRenderCanvas)
     love.graphics.setColor(0, 0, 0, 0.4)
-    love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
+    love.graphics.rectangle("fill", 0, 0, widthRes, heightRes)
     love.graphics.setColor(255, 255, 255, 1)
 
     love.graphics.origin()
-    love.graphics.translate(offsetXCanvas, camYOffset)
+    love.graphics.translate(offsetXCanvas, 0)
     love.graphics.scale(ratioScale, ratioScale)
     for key, ui in pairs(self.UI) do
         if ui.visible then

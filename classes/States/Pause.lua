@@ -8,7 +8,7 @@ function Pause:init()
 
         UIElements["ResumeBtn"] = RectangleButton(
             widthRes/3,
-            heightRes/2-25, 
+            heightRes/2-50, 
             widthRes/3,
             50,
             true,
@@ -16,6 +16,20 @@ function Pause:init()
             nil,
             nil,
             function() gameState:setState("InGame") end,
+            "release"
+        )
+
+
+        UIElements["ExitBtn"] = RectangleButton(
+            widthRes/3,
+            heightRes/2+50, 
+            widthRes/3,
+            50,
+            true,
+            "EXIT",
+            nil,
+            nil,
+            function() love.event.quit(0) end,
             "release"
         )
 
@@ -48,11 +62,11 @@ function Pause:render()
     love.graphics.scale(ratioScale, -ratioScale)
     love.graphics.draw(preRenderCanvas)
     love.graphics.setColor(0, 0, 0, 0.4)
-    love.graphics.rectangle("fill", 0, 0, canvas:getDimensions())
+    love.graphics.rectangle("fill", 0, 0, widthRes, heightRes)
     love.graphics.setColor(255, 255, 255, 1)
 
     love.graphics.origin()
-    love.graphics.translate(offsetXCanvas, camYOffset)
+    love.graphics.translate(offsetXCanvas, 0)
     love.graphics.scale(ratioScale, ratioScale)
     for key, ui in pairs(self.UI) do
         if ui.visible then

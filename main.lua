@@ -28,9 +28,14 @@ function love.draw()
     gameState.currentState:render()
 end
 
+function love.focus(f)
+    if not f then
+        gameState:setState("Pause", true)
+    end
+end
 
 
-function love.resize(width, height)
+--[[function love.resize(width, height)
     -- Update window dimensions
     widthWindow, heightWindow = width, height
 
@@ -46,7 +51,7 @@ function love.resize(width, height)
     else
         camYOffset = 0
     end
-end
+end--]]
 
 --
 
@@ -90,7 +95,7 @@ function initScreen()
         flags.resizable = false
         flags.fullscreen = true
     else
-        widthWindow, heightWindow = 432, 700
+        widthWindow, heightWindow = 600, 800
         flags.resizable = false
         flags.fullscreen = false
     end

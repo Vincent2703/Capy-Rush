@@ -9,7 +9,7 @@ function Ejection:init(x, y)
     self.maxSpeed = 900
 
     self.velocity = {x=gameState.states["InGame"].player.velocity.x*10, y=gameState.states["InGame"].player.velocity.y*10}
-    self.accX, self.accY = 0.09, 0.08
+    self.accX, self.accY = 0.08, 0.07
 
     self.ejectTime = 0.25
     self.count = 0
