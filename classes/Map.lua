@@ -186,7 +186,7 @@ function Map:updateMap()
 end
 
 function Map:getNbChunkAtPos(y)
-    for i, chunk in ipairs(self.mapChunks) do
+    for i, chunk in ipairs(self.mapChunks) do --TODO : Replace with queryPoint()
         local layer = chunk.sprites[1] -- Whatever the layer, same pos/dim
         if y >= layer.y and y <= layer.y+layer.height*self.map.tileheight then
             return i

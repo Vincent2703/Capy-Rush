@@ -68,6 +68,7 @@ function loadClasses()
     require("classes/Car")
     require("classes/CarSubclasses/Player")
     require("classes/CarSubclasses/RoadUser")
+    require("classes/CarSubclasses/Police")
 
     require("classes/Ejection")
 

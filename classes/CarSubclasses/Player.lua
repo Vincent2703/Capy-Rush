@@ -1,12 +1,12 @@
 Player = Car:extend("Player")
 
-function Player:init(textureName, widthCar, heightCar, maxSpeed, consumptionFactor)
-    Player.super.init(self, textureName, widthCar, heightCar, maxSpeed, consumptionFactor)
-end
+--[[function Player:init(textureName, widthCar, heightCar, maxSpeed, maxHealth, consumptionFactor)
+    Player.super.init(self, textureName, widthCar, heightCar, maxSpeed, maxHealth, consumptionFactor)
+end--]]
 
 function Player:update(dt)
-    local accX = self.accX
-    local accY = self.accY
+    local accX = 0.04
+    local accY = 0.02
 
     local velX, velY = self.velocity.x, self.velocity.y
 
@@ -35,8 +35,9 @@ function Player:update(dt)
 
     -- Move player using the velocity
 
-    local velX, velY, goalX, goalY, health = self:preMove(velX, velY, dt)
+    local velX, velY, goalX, goalY, health, collidesCar = self:preMove(velX, velY, dt)
     self.health = health
+    self.collidesCar = collidesCar
 
     local filter = function(item, other) 
         if other.isPath then

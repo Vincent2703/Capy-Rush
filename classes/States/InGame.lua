@@ -22,20 +22,25 @@ end
 function InGame:start() -- On restart
     self.lvl = self:createMap()
 
+    local modelCar = self.carModels.car1.car
+    self.player = modelCar:castToPlayer(self.lvl.mapChunks[1].paths[1].x+self.lvl.tileWidth/2-modelCar.widthCar/2, 50)
+    self.player.velocity.y, self.player.velocity.x = 0, 0
+    self.player.fuel = 100
+    self.player.health = self.player.maxHealth
 
-    self.player = self.carModels.car1:castToPlayer(self.lvl.mapChunks[1].paths[1].x+self.lvl.tileWidth/2-self.carModels.car1.widthCar/2, 50)
     self.inCar = true
 
     self.UI = self:createUI()
 
-    self.difficulty = self.difficulties[1]
+    self.difficulty = self.difficulties[4]
+    --self.policeCars = 1
 
     self.stats = Stats()
 
     self.distanceCount = 0
     self.prevYPos = 0
 
-    self.roadUsers = {}
+    self.cars = {}
 
     self.landingStatus = false
     self.eject = false
@@ -69,19 +74,23 @@ function InGame:update(dt)
                 if self.ejection.landOn == 0 then
                     gameState:setState("GameOver", true)
                 else 
-                    local roadUser = self.roadUsers[self.ejection.landOn]
+                    local car = self.cars[self.ejection.landOn]
                     self.UI["fuelGauge"].visible = true
-                    if roadUser.direction == "left" then
+                    if car.direction == "left" then
                         self.stats.multipliers.glob = 2
                     else
                         self.stats.multipliers.glob = 1
                     end
-                    self.player = roadUser:switchCar()
+                    self.player = car:switchCar()
                     self.inCar = true
                     self.stats:addPoints("ejections")
                 end
             end
         else
+            if self.player.health <= 0 then
+                gameState:setState("GameOver", true)
+            end
+
             if self.stats.scores.current >= self.difficulty.id*100 and self.difficulty.id < #self.difficulties then
                 self:setDifficulty(self.difficulty.id+1)
             end
@@ -107,7 +116,7 @@ function InGame:update(dt)
 
             if self.player.y >= self.lvl.map.height*self.lvl.tileHeight - heightRes*1.5 then
                 self.lvl:manageChunks()
-                Car:deleteOldRoadUsers(self.player.y-heightRes)
+                Car:deleteOldCars(self.player.y-heightRes)
             end
 
             local dist = self.player.y-self.prevYPos
@@ -121,7 +130,7 @@ function InGame:update(dt)
                     local chunk = self.lvl.mapChunks[self.lvl:getNbChunkAtPos(self.player.y)]
                     local nbCars = math.random(1, self.difficulty.nbMaxCars)
                     for i=1, nbCars do
-                        Car:addRandomRoadUser(chunk, self.player.y+heightRes+math.random(0, heightRes))
+                        Car:addRandomCar(chunk, self.player.y+heightRes+math.random(0, heightRes))
                     end
                 end
             end
@@ -185,7 +194,7 @@ function InGame:render()
 
     -- Temp life count and score
     if self.inCar then
-        love.graphics.print(self.player.health .. "/5", 100, 10)
+        love.graphics.print(self.player.health, 100, 10)
     end
 
     love.graphics.print(math.abs(math.ceil(self.stats.scores.current-0.5)), 250, 10)
@@ -210,8 +219,9 @@ function InGame:createMap()
     local lvl = Map(48, 48, 
     "assets/textures/roads/tileset.png",
     {
-        chunk1 = {path="assets/maps/chunk1.lua", ratio=0.6},
-        chunk2 = {path="assets/maps/chunk2.lua", ratio=0.4}
+        chunk1 = {path="assets/maps/chunk1.lua", ratio=0},
+        chunk2 = {path="assets/maps/chunk2.lua", ratio=0.5},
+        chunk3 = {path="assets/maps/chunk3.lua", ratio=0.5}
     }, 5)
 
     return lvl
@@ -219,8 +229,9 @@ end
 
 function InGame:createCarsModels()
     local carModels = {
-        car1 = Car("car1", 32, 35, 400, 4),
-        car2 = Car("car2", 32, 35, 450, 3.2)
+        car1 = {car = Car("car1", 32, 35, 400, 5, 4), ratio=0.5},
+        car2 = {car = Car("car2", 32, 35, 450, 4, 3.2), ratio=0.4},
+        police1 = {car = Car("police1", 32, 35, 450, 6, 3.2, true), ratio=0.1}
     }
 
     return carModels
@@ -243,13 +254,13 @@ end
 function InGame:updateAllCars(dt)
     if self.inCar then
         self.player:update(dt)
-        if self.player.health <= 0 then
-            gameState:setState("GameOver", true)
-        end
     end
 
-    for _, roadUser in pairs(self.roadUsers) do
-        roadUser:update(dt)
+    for _, car in ipairs(self.cars) do
+        car:update(dt)
+        if car.health <= 0 then
+            car:destroy()
+        end
     end
 end
 
@@ -258,11 +269,12 @@ function InGame:drawAllCars()
         local player = self.player
         player.anim:draw(player.spriteSheet, player.x, player.y, math.pi, 1, 1, player.widthCar, player.heightCar)
     end
-    for _, roadUser in pairs(self.roadUsers) do
-        if roadUser.direction == "left" then
-            roadUser.anim:draw(roadUser.spriteSheet, roadUser.x, roadUser.y+roadUser.heightCar, math.pi, 1, -1, roadUser.widthCar, roadUser.heightCar)
+    for _, car in ipairs(self.cars) do
+        if car.direction == "left" then
+            car.anim:draw(car.spriteSheet, car.x, car.y+car.heightCar, math.pi, 1, -1, car.widthCar, car.heightCar)
         else
-            roadUser.anim:draw(roadUser.spriteSheet, roadUser.x, roadUser.y, math.pi, 1, 1, roadUser.widthCar, roadUser.heightCar)
+            car.anim:draw(car.spriteSheet, car.x, car.y, math.pi, 1, 1, car.widthCar, car.heightCar)
+            love.graphics.rectangle("fill", car.x-car.widthCar, car.y, 5, 5)
         end
     end
 end

@@ -1,7 +1,7 @@
 RoadUser = Car:extend("RoadUser")
 
-function RoadUser:init(textureNameOrModel, widthCar, heightCar, maxSpeed, consumptionFactor, direction)
-    RoadUser.super.init(self, textureNameOrModel, widthCar, heightCar, maxSpeed, consumptionFactor)
+function RoadUser:init(textureNameOrModel, widthCar, heightCar, maxSpeed, maxHealth, consumptionFactor, direction)
+    RoadUser.super.init(self, textureNameOrModel, widthCar, heightCar, maxSpeed, maxHealth, consumptionFactor)
     self.direction = direction
     self.maxSpeedRoadUser = self.maxSpeed/2
     if direction == "left" then
@@ -16,11 +16,10 @@ function RoadUser:update(dt)
 
     local velX, velY = self.velocity.x, self.velocity.y
 
-    -- Update velocity based on direction
-    local targetVelX = 0
+    local distTargetX = self:avoidObstacles()
 
     -- Smoothly adjust velocity towards the target
-    velX = accX * targetVelX + (1 - accX) * velX
+    velX = accX*distTargetX - accX*velX + velX
 
     -- Update y-velocity
     velY = accY * self.maxSpeedRoadUser + (1 - accY) * velY

@@ -53,7 +53,7 @@ function Ejection:checkCarUnder()
         return (deltaX * deltaX + deltaY * deltaY) < (circleR * circleR);
     end
 
-    for i, car in ipairs(gameState.states["InGame"].roadUsers) do
+    for i, car in ipairs(gameState.states["InGame"].cars) do
         if checkIntersect(car.x, car.y, car.widthCar, car.heightCar, self.x, self.y, self.radius) then
             return i
         end
