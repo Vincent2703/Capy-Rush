@@ -23,7 +23,7 @@ function InGame:start() -- On restart
     self.lvl = self:createMap()
 
     local modelCar = self.carModels.car1.car
-    self.player = modelCar:castToPlayer(self.lvl.mapChunks[1].paths[1].x+self.lvl.tileWidth/2-modelCar.widthCar/2, 50)
+    self.player = modelCar:castToPlayer(self.lvl.mapChunks[1].paths[1].x+TILEDIM/2-modelCar.widthCar/2, 50)
     self.player.velocity.y, self.player.velocity.x = 0, 0
     self.player.fuel = 100
     self.player.health = self.player.maxHealth
@@ -32,7 +32,7 @@ function InGame:start() -- On restart
 
     self.UI = self:createUI()
 
-    self.difficulty = self.difficulties[4]
+    self.difficulty = self.difficulties[8]
     --self.policeCars = 1
 
     self.stats = Stats()
@@ -216,7 +216,7 @@ function InGame:createWorld()
 end
 
 function InGame:createMap()
-    local lvl = Map(48, 48, 
+    local lvl = Map(TILEDIM, TILEDIM, 
     "assets/textures/roads/tileset.png",
     {
         chunk1 = {path="assets/maps/chunk1.lua", ratio=0},
@@ -274,7 +274,9 @@ function InGame:drawAllCars()
             car.anim:draw(car.spriteSheet, car.x, car.y+car.heightCar, math.pi, 1, -1, car.widthCar, car.heightCar)
         else
             car.anim:draw(car.spriteSheet, car.x, car.y, math.pi, 1, 1, car.widthCar, car.heightCar)
-            love.graphics.rectangle("fill", car.x-car.widthCar, car.y, 5, 5)
+            if car.className == "Police" then
+                love.graphics.rectangle("line", car.x-50, car.y-100, car.widthCar+100, car.heightCar+200)
+            end
         end
     end
 end

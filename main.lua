@@ -1,6 +1,7 @@
 function love.load()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
-    widthRes, heightRes = 432, 650
+    widthRes, heightRes = 432, 650 --Mettre en maj
+    TILEDIM = 48
     --widthWindow, heightWindow = 432, 650--480, 720
 
     loadLibraries()

@@ -26,14 +26,13 @@ function Police:update(dt)
     if self.inPursuit then
         targetVelX, targetVelY = self:pursuit()
     end
-    targetVelX = self:avoidObstacles(targetVelX)
+    targetVelX, targetVelY = self:manageTrajectory(targetVelX, targetVelY)
 
     velX = accX * targetVelX + (1 - accX) * velX
 
     velY = accY * targetVelY + (1 - accY) * velY
 
-    local velX, velY, goalX, goalY, health = self:preMove(velX, velY, dt)
-    self.health = health
+    local velX, velY, goalX, goalY = self:preMove(velX, velY, dt)
 
     local filter = function(item, other) return self:filterColliders(item, other) end
     local actualX, actualY, cols, len = gameState.states["InGame"].world:move(self, goalX, goalY, filter)
@@ -47,7 +46,7 @@ function Police:update(dt)
 end
 
 function Police:checkBadDriver()
-    local watchZone = {xA=self.x-100, yA=self.y-200, xB=self.x+100, yB=self.y+200}
+    local watchZone = {xA=self.x-50, yA=self.y-100, xB=self.x+self.widthCar+100, yB=self.y+self.heightCar+200}
     local inGame = gameState.states["InGame"]
     local player = inGame.player
 
@@ -55,16 +54,16 @@ function Police:checkBadDriver()
       (player ~= nil and player.currPathDir == self.direction) and
       watchZone.xA <= player.x and player.x <= watchZone.xB and 
       watchZone.yA <= player.y and player.y <= watchZone.yB and
-      ((inGame.eject and inGame.ejection.landOn > 0) or player.collidesCar)
+      ((inGame.ejection and inGame.ejection.landOn > 0) or player.collidesCar)
 end
 
 function Police:startPursuit()
     self.inPursuit = true
     self.currMaxSpeed = self.maxSpeed
-    if direction == "left" then
+    if direction == "left" then --To remove ?
         self.currMaxSpeed = -self.currMaxSpeed
     end
-    self.velocity.y = self.currMaxSpeed
+    --self.velocity.y = self.currMaxSpeed
 end
 
 function Police:pursuit()

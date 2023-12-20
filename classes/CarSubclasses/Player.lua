@@ -35,8 +35,7 @@ function Player:update(dt)
 
     -- Move player using the velocity
 
-    local velX, velY, goalX, goalY, health, collidesCar = self:preMove(velX, velY, dt)
-    self.health = health
+    local velX, velY, goalX, goalY, collidesCar = self:preMove(velX, velY, dt)
     self.collidesCar = collidesCar
 
     local filter = function(item, other) 
