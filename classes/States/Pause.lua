@@ -8,7 +8,7 @@ function Pause:init()
 
         UIElements["ResumeBtn"] = RectangleButton(
             widthRes/3,
-            heightRes/2-50, 
+            heightRes/2-75, 
             widthRes/3,
             50,
             true,
@@ -22,7 +22,7 @@ function Pause:init()
 
         UIElements["ExitBtn"] = RectangleButton(
             widthRes/3,
-            heightRes/2+50, 
+            heightRes/2, 
             widthRes/3,
             50,
             true,
@@ -62,7 +62,7 @@ function Pause:render()
     love.graphics.scale(ratioScale, -ratioScale)
     love.graphics.draw(preRenderCanvas)
     love.graphics.setColor(0, 0, 0, 0.4)
-    love.graphics.rectangle("fill", 0, 0, widthRes, heightRes)
+    love.graphics.rectangle("fill", 0, 0, widthRes, heightWindow/ratioScale)
     love.graphics.setColor(255, 255, 255, 1)
 
     love.graphics.origin()

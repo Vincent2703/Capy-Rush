@@ -31,7 +31,7 @@ function Car:init(textureName, widthCar, heightCar, maxSpeed, maxHealth, consump
     self.anim = self.animations.up
 end
 
-function Car:preMove(velX, velY, dt)
+function Car:manageCollisions(velX, velY, dt)
     -- Update the last collision time
     self.lastCollision = self.lastCollision + dt
 
@@ -134,42 +134,6 @@ function Car:castToPolice(x, y, direction)
     return police
 end
 
-function Car:addRandomCar(chunk, posY)
-    local rand = math.random(1, #chunk.paths)
-    local randomPath = chunk.paths[rand]
-
-    local randomValue = math.random()
-    local cumulativeRatio = 0
-
-    local randCar = nil
-    for _, model in pairs(gameState.states["InGame"].carModels) do
-        cumulativeRatio = cumulativeRatio + model.ratio
-        if randomValue <= cumulativeRatio then
-            randCar = model.car
-            break
-        end
-    end
-
-    local car
-    if not randCar.isPolice then
-        car = randCar:castToRoadUser(randomPath.x+randomPath.width/2-randCar.widthCar/2, posY, randomPath.direction)
-    else
-        car = randCar:castToPolice(randomPath.x+randomPath.width/2-randCar.widthCar/2, posY, randomPath.direction)
-    end
-    table.insert(gameState.states["InGame"].cars, car)
-   
-end
-
-function Car:deleteOldCars(posYStartingRemoving)
-    local cars = gameState.states["InGame"].cars
-    
-    for _, car in ipairs(cars) do
-        if car.y <= posYStartingRemoving then
-            car:destroy()
-        end
-    end
-end
-
 function Car:destroy()
     local posX, posY = self.y, self.x
     local inGame = gameState.states["InGame"]
@@ -234,8 +198,17 @@ function Car:manageTrajectory(velX, velY)
         return item.isPath
     end
 
-    local _, lenTopPaths = world:queryRect(self.x, self.y+self.heightCar*5, self.widthCar, 1, filterPaths) 
-    local _, lenTopCars = world:queryRect(self.x, self.y+self.heightCar, self.widthCar, self.heightCar*2, filterCars)
+    local queryTopPathsY
+    local queryTopCarsY
+    if self.direction == "right" then
+        queryTopPathsY = self.y+self.heightCar*5
+        queryTopCarsY = self.y+self.heightCar
+    else
+        queryTopPathsY = self.y-self.heightCar*6
+        queryTopCarsY = self.y-self.heightCar*2
+    end
+    local _, lenTopPaths = world:querySegment(self.x, queryTopPathsY, self.x-self.widthCar, queryTopPathsY, filterPaths)
+    local _, lenTopCars = world:queryRect(self.x, queryTopCarsY, self.widthCar, self.heightCar*2, filterCars)
 
     if (lenTopPaths == 0 or lenTopCars > 0) and self.targetX == nil then -- No path or car(s) and no target already defined
 

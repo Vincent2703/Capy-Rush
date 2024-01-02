@@ -24,7 +24,7 @@ function RoadUser:update(dt)
     -- Update y-velocity
     velY = accY * targetVelY + (1 - accY) * velY
 
-    local velX, velY, goalX, goalY = self:preMove(velX, velY, dt)
+    local velX, velY, goalX, goalY = self:manageCollisions(velX, velY, dt)
 
     -- Move player using the velocity
 

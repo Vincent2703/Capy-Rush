@@ -6,13 +6,13 @@ function InGame:init()
     self.zoom = 1.5
     
     self.difficulties = {
-        {id = 1, rate = 0.5, nbMaxCars = 1},
-        {id = 2, rate = 0.5, nbMaxCars = 2},
-        {id = 3, rate = 0.6, nbMaxCars = 2},
-        {id = 4, rate = 0.7, nbMaxCars = 2},
-        {id = 5, rate = 0.7, nbMaxCars = 3},
-        {id = 6, rate = 0.8, nbMaxCars = 3},
-        {id = 7, rate = 0.8, nbMaxCars = 4},
+        {id = 1, rate = 0.6, nbMaxCars = 1},
+        {id = 2, rate = 0.6, nbMaxCars = 2},
+        {id = 3, rate = 0.7, nbMaxCars = 2},
+        {id = 4, rate = 0.7, nbMaxCars = 3},
+        {id = 5, rate = 0.8, nbMaxCars = 3},
+        {id = 6, rate = 0.8, nbMaxCars = 4},
+        {id = 7, rate = 0.9, nbMaxCars = 4},
         {id = 8, rate = 0.9, nbMaxCars = 4},
     }
 
@@ -32,8 +32,7 @@ function InGame:start() -- On restart
 
     self.UI = self:createUI()
 
-    self.difficulty = self.difficulties[8]
-    --self.policeCars = 1
+    self.difficulty = self.difficulties[1]
 
     self.stats = Stats()
 
@@ -116,7 +115,7 @@ function InGame:update(dt)
 
             if self.player.y >= self.lvl.map.height*self.lvl.tileHeight - heightRes*1.5 then
                 self.lvl:manageChunks()
-                Car:deleteOldCars(self.player.y-heightRes)
+                InGame:deleteOldCars(self.player.y-heightRes)
             end
 
             local dist = self.player.y-self.prevYPos
@@ -127,13 +126,16 @@ function InGame:update(dt)
                 self.distanceCount = 0
                 local rand = math.random()
                 if rand <= self.difficulty.rate then
-                    local chunk = self.lvl.mapChunks[self.lvl:getNbChunkAtPos(self.player.y)]
                     local nbCars = math.random(1, self.difficulty.nbMaxCars)
+
                     for i=1, nbCars do
-                        Car:addRandomCar(chunk, self.player.y+heightRes+math.random(0, heightRes))
+                        self:addCarRandomly()
                     end
+
                 end
+
             end
+
         end
     end
     
@@ -237,6 +239,77 @@ function InGame:createCarsModels()
     return carModels
 end
 
+function InGame:getRandomCarModel()
+    local randCar = nil
+    local cumulativeRatio = 0
+    local randomValue = math.random()
+
+    for _, model in pairs(self.carModels) do
+        cumulativeRatio = cumulativeRatio + model.ratio
+        if randomValue <= cumulativeRatio then
+            return model.car
+        end
+    end
+end
+
+function InGame:addCarToPathAtPosY(car, path, posY)
+    if not car.isPolice then
+        c = car:castToRoadUser(path.x+path.width/2-car.widthCar/2, posY, path.direction)
+    else
+        c = car:castToPolice(path.x+path.width/2-car.widthCar/2, posY, path.direction)
+    end
+    table.insert(self.cars, c)
+end
+
+function InGame:addCarRandomly()
+    local randCarModel = self:getRandomCarModel()
+    local randPosY = self.player.y + heightRes + math.random(0, 800)
+    local currNbChunk = self.lvl:getNbChunkAtPos(randPosY)
+    local currChunk = self.lvl.mapChunks[currNbChunk]
+    
+    if currChunk then
+        
+        local randNbPath = math.random(1, #currChunk.paths)
+        local randomPath = currChunk.paths[randNbPath]
+        
+        local nextChunk = self.lvl.mapChunks[currNbChunk+1]
+
+        local filterCars = function(item) --Add to a class function
+            return item.className == "RoadUser" or item.className == "Police"
+        end
+        local _, nbNearCars = self.world:querySegment(randomPath.x+randomPath.width/2, randPosY-randCarModel.heightCar, randomPath.x+randomPath.width/2, randPosY+randCarModel.heightCar*2, filterCars)
+
+        local atEndOfPath = (randomPath.direction == "right" and randPosY >= (randomPath.y + randomPath.height) - randCarModel.heightCar * 5) 
+            or 
+            (randomPath.direction == "left" and randPosY <= randomPath.y + randCarModel.heightCar * 5)
+
+
+        if nbNearCars == 0 then
+            if atEndOfPath and nextChunk then
+                for _, path in ipairs(nextChunk.paths) do
+                    if math.abs(path.x - randomPath.x) < 5 then -- 5px margin 
+                        self:addCarToPathAtPosY(randCarModel, randomPath, randPosY)
+                        break 
+                    end
+                end
+            else
+                self:addCarToPathAtPosY(randCarModel, randomPath, randPosY)
+            end
+        end
+
+    end
+end
+
+function InGame:deleteOldCars(posYStartingRemoving)
+    local cars = gameState.states["InGame"].cars
+    
+    for _, car in ipairs(cars) do
+        if car.y <= posYStartingRemoving then
+            car:destroy()
+        end
+    end
+end
+
 function InGame:createUI()
     local UIElements = {}
 
@@ -274,9 +347,6 @@ function InGame:drawAllCars()
             car.anim:draw(car.spriteSheet, car.x, car.y+car.heightCar, math.pi, 1, -1, car.widthCar, car.heightCar)
         else
             car.anim:draw(car.spriteSheet, car.x, car.y, math.pi, 1, 1, car.widthCar, car.heightCar)
-            if car.className == "Police" then
-                love.graphics.rectangle("line", car.x-50, car.y-100, car.widthCar+100, car.heightCar+200)
-            end
         end
     end
 end
