@@ -1,15 +1,13 @@
 Pause = class("Pause")
 
 function Pause:init()
-    self.inGameCanvas = love.graphics.newCanvas(widthRes, heightRes)
-
     local function createUI()
         local UIElements = {}
 
         UIElements["ResumeBtn"] = RectangleButton(
-            widthRes/3,
-            heightRes/2-75, 
-            widthRes/3,
+            widthWindow/3,
+            heightWindow/2-75, 
+            widthWindow/3,
             50,
             true,
             "RESUME",
@@ -21,9 +19,9 @@ function Pause:init()
 
 
         UIElements["ExitBtn"] = RectangleButton(
-            widthRes/3,
-            heightRes/2, 
-            widthRes/3,
+            widthWindow/3,
+            heightWindow/2+25, 
+            widthWindow/3,
             50,
             true,
             "EXIT",
@@ -56,18 +54,15 @@ function Pause:update()
 end
 
 function Pause:render()
-    --love.graphics.clear()
-
-    love.graphics.translate(offsetXCanvas, heightWindow)
-    love.graphics.scale(ratioScale, -ratioScale)
-    love.graphics.draw(preRenderCanvas)
+    love.graphics.translate(0, heightRes+offsetYMap/ratioScale) --Temporaire, trouver une meilleure méthode
+    love.graphics.scale(1/ratioScale, -1/ratioScale)
+    love.graphics.draw(preRenderCanvas) 
     love.graphics.setColor(0, 0, 0, 0.4)
-    love.graphics.rectangle("fill", 0, 0, widthRes, heightWindow/ratioScale)
+    love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
     love.graphics.setColor(255, 255, 255, 1)
 
     love.graphics.origin()
-    love.graphics.translate(offsetXCanvas, 0)
-    love.graphics.scale(ratioScale, ratioScale)
+
     for key, ui in pairs(self.UI) do
         if ui.visible then
             ui:draw()

@@ -15,8 +15,8 @@ function Input:init()
 				   
 	self.state = {}
 	self.state.mouse = {
-						absX = nil, 
-						absY = nil, 
+						x = nil, 
+						y = nil, 
 						relX = nil,
 						relY = nil
 						}			
@@ -46,13 +46,18 @@ function Input:init()
 						}
 				
 	self.prevState = self.state
+
+
+	self.phoneBackPressed = false
+	self.startingJoyZ = 0
+	self.diff = 0
 end
 
 function Input:update()
 	self.prevState = self:copyState(self.state)
 	-- Mouse
 	local mouseX, mouseY = love.mouse.getPosition()
-	self.state.mouse = {absX=mouseX, absY=mouseY, relX=(mouseX-offsetXCanvas)/ratioScale, relY=(mouseY-camYOffset)/ratioScale}
+	self.state.mouse = {x=mouseX, y=mouseY}
 	
 	self.state.actions.click = love.mouse.isDown(1, 2)
 	self.state.actions.newPress.click = self.state.actions.click and not self.prevState.actions.click
@@ -73,7 +78,10 @@ function Input:update()
 	self.state.actions.eject = love.keyboard.isDown(self.config.eject)
 	self.state.actions.newPress.eject = self.state.actions.eject and not self.prevState.actions.eject
 	
-	self.state.actions.pause = love.keyboard.isDown(self.config.pause)
+	self.state.actions.pause = love.keyboard.isDown(self.config.pause) or self.phoneBackPressed
+	if self.phoneBackPressed then
+		self.phoneBackPressed = false
+	end
 	self.state.actions.newPress.pause = self.state.actions.pause and not self.prevState.actions.pause
 
 	-- Joystick
@@ -83,23 +91,32 @@ function Input:update()
 
 		self.state.actions.right = self.state.actions.right or x > 0.1
 		self.state.actions.left = self.state.actions.left or x < -0.1
-		self.state.joystick.inclinXRatio = math.max(math.min((math.abs(x)-0.1)/0.6, 1), 0)
+		self.state.joystick.inclinXRatio = math.max(math.min((math.abs(x)-0.1)/0.6, 1), 0) --Try x axis
 
-		self.state.actions.up = self.state.actions.up or z >= 0.6
-		self.state.actions.down = self.state.actions.down or z < 0.6
+		local deviation = z - self.startingJoyZ
+		--local maxDeviation = (deviation < 0) and (-1 - self.startingJoyZ) or (1 - self.startingJoyZ)
+		--local normalizedQuotient = math.min(1, math.max(0, deviation / maxDeviation * 3))
+
+		local normalizedQuotient = math.min(1, math.max(0, deviation/0.5))
+		
+		self.state.joystick.inclinZRatio = normalizedQuotient
+
+		self.state.actions.up = self.state.actions.up or z > 0
+		self.state.actions.down = self.state.actions.down or z < 0
+		--[[
 		if z >= 0.6 then
 			self.state.joystick.inclinZRatio = math.max(math.min(math.abs(z-0.5)/0.4, 1), 0)
 		else
 			self.state.joystick.inclinZRatio = math.max(math.min(math.abs(z-0.6)/0.4, 1), 0)
-		end
+		end--]]
 	end
 end
 
 function Input:copyState(state)
 	local copyState = {}
 	copyState.mouse = {
-		absX = state.mouse.absX,
-		absY = state.mouse.absY,
+		x = state.mouse.x,
+		y = state.mouse.y,
 		relX = state.mouse.relX,
 		relY = state.mouse.relY
 	}
@@ -129,4 +146,8 @@ function Input:copyState(state)
         }
     }
 	return copyState
+end
+
+function Input:setCurrentJoyZ()
+	self.startingJoyZ = self.config.joystick:getAxis(3)
 end

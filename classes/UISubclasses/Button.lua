@@ -16,7 +16,7 @@ function Button:init(x, y, width, height, visible, text, colorA, colorB, callbac
 end
 
 function Button:update()
-    local mouseX, mouseY = input.state.mouse.relX, input.state.mouse.relY
+    local mouseX, mouseY = input.state.mouse.x, input.state.mouse.y
     local inBounds = false
 
     if self:instanceOf(RectangleButton) then

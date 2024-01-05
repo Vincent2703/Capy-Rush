@@ -15,6 +15,8 @@ function Ejection:init(x, y)
     self.count = 0
 
     self.landOn = nil
+
+    input:setCurrentJoyZ()
 end
 
 function Ejection:update(dt)

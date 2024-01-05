@@ -1,4 +1,5 @@
 function love.load()
+    OS = love.system.getOS()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
     widthRes, heightRes = 432, 650 --Mettre en maj
     TILEDIM = 48
@@ -18,14 +19,20 @@ function love.load()
     input = Input()  
 end
 
+function love.keypressed(key, scancode, isrepeat)
+    if OS == "Android" and key == "escape" then
+        input.phoneBackPressed = true
+    end
+end
+
 function love.update(dt)
     input:update()
 
     gameState.currentState:update(dt)
-
 end
 
 function love.draw()
+    love.graphics.scale(ratioScale)
     gameState.currentState:render()
 end
 
@@ -34,7 +41,6 @@ function love.focus(f)
         gameState:setState("Pause", true)
     end
 end
-
 
 --[[function love.resize(width, height)
     -- Update window dimensions
@@ -90,24 +96,40 @@ function loadClasses()
 end
 
 function initScreen()
-    local os = love.system.getOS()
     local flags = {}
-    if os == "Android" then
+    if OS == "Android" then
         widthWindow, heightWindow = 0, 0
         flags.resizable = false
         flags.fullscreen = true
     else
-        widthWindow, heightWindow = 600, 800
-        flags.resizable = false
+        widthWindow, heightWindow = 360, 780 --936
+        flags.resizable = true
         flags.fullscreen = false
     end
 
     love.window.setMode(widthWindow, heightWindow, flags)
+    love.window.setMode(widthWindow, heightWindow, flags) --Twice fix Android gap bug
+
     widthWindow, heightWindow = love.graphics.getWidth(), love.graphics.getHeight()
 	love.graphics.setDefaultFilter("nearest", "nearest")
 	
 	canvas = love.graphics.newCanvas(widthWindow, heightWindow)
     ratioScale = math.min(widthWindow/widthRes, heightWindow/heightRes)
+    print(ratioScale)
+
+    offsetXCamera = widthWindow-widthRes*ratioScale
+    print(offsetXCamera)
+    if heightWindow/heightRes > widthWindow/widthRes then
+        offsetYMap = heightWindow-heightRes*ratioScale
+    else
+        offsetYMap = 0
+    end
+
+    preRenderCanvas = love.graphics.newCanvas(widthWindow, heightWindow) --Rename to game/map canvas ?
+end
+
+--[[
+
     offsetXCanvas = widthWindow/2-(widthRes/2)*ratioScale
 
     if heightWindow/heightRes > widthWindow/widthRes then
@@ -115,5 +137,4 @@ function initScreen()
     else
         camYOffset = 0
     end
-    preRenderCanvas = love.graphics.newCanvas(widthRes, heightRes+camYOffset)
-end
+]]

@@ -10,9 +10,9 @@ function GameOver:init()
         local UIElements = {}
 
         UIElements["ReplayBtn"] = RectangleButton(
-            widthRes/3,
-            heightRes/2-50, 
-            widthRes/3,
+            widthWindow/3,
+            heightWindow/2-75, 
+            widthWindow/3,
             50,
             true,
             "REPLAY",
@@ -23,9 +23,9 @@ function GameOver:init()
         )
 
         UIElements["ExitBtn"] = RectangleButton(
-            widthRes/3,
-            heightRes/2+50, 
-            widthRes/3,
+            widthWindow/3,
+            heightWindow/2+25, 
+            widthWindow/3,
             50,
             true,
             "EXIT",
@@ -58,17 +58,15 @@ function GameOver:update()
 end
 
 function GameOver:render()
-
-    love.graphics.translate(offsetXCanvas, heightWindow)
-    love.graphics.scale(ratioScale, -ratioScale)
-    love.graphics.draw(preRenderCanvas)
+    love.graphics.translate(0, heightRes+offsetYMap/ratioScale) --Temporaire, trouver une meilleure méthode
+    love.graphics.scale(1/ratioScale, -1/ratioScale)
+    love.graphics.draw(preRenderCanvas) 
     love.graphics.setColor(0, 0, 0, 0.4)
-    love.graphics.rectangle("fill", 0, 0, widthRes, heightRes)
+    love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
     love.graphics.setColor(255, 255, 255, 1)
 
     love.graphics.origin()
-    love.graphics.translate(offsetXCanvas, 0)
-    love.graphics.scale(ratioScale, ratioScale)
+
     for key, ui in pairs(self.UI) do
         if ui.visible then
             ui:draw()

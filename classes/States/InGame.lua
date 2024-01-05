@@ -3,7 +3,7 @@ InGame = class("InGame")
 function InGame:init()
     self.world = self:createWorld()
 
-    self.zoom = 1.5
+    self.zoom = 2.5
     
     self.difficulties = {
         {id = 1, rate = 0.6, nbMaxCars = 1},
@@ -49,11 +49,11 @@ end
 function InGame:update(dt)
     if gameState:isCurrentState("InGame") then
         if (input.state.actions.newPress.eject 
-        or (input.state.actions.newPress.click and input.state.mouse.absY <= 0.9*heightWindow and input.state.mouse.absY >= 0.1*heightWindow)) 
+        or (input.state.actions.newPress.click and input.state.mouse.y <= 0.9*heightWindow and input.state.mouse.y >= 0.1*heightWindow)) 
         and not self.eject then
             self:manageEjection(true)
         elseif (input.state.actions.newPress.eject 
-        or (input.state.actions.newPress.click and input.state.mouse.absY <= 0.9*heightWindow and input.state.mouse.absY >= 0.1*heightWindow)) 
+        or (input.state.actions.newPress.click and input.state.mouse.y <= 0.9*heightWindow and input.state.mouse.y >= 0.1*heightWindow)) 
         and self.eject and not self.landingStatus then
             self:manageEjection(false)
         elseif input.state.actions.newPress.pause then
@@ -158,12 +158,6 @@ function InGame:render()
     -- Draw the player and road users
     self:drawAllCars()
 
-    --[[local items, len = self.world:getItems()
-    for i = 1, len do
-    local x, y, w, h = self.world:getRect(items[i])
-    love.graphics.rectangle("line", x, y, w, h)
-    end--]]
-
     if self.eject then
         self.ejection:render()
     end
@@ -172,8 +166,8 @@ function InGame:render()
     love.graphics.origin()
 
     -- Flip horizontally and scale the canvas
-    love.graphics.translate(offsetXCanvas, heightWindow)
-    love.graphics.scale(ratioScale, -ratioScale)
+    love.graphics.translate(0, heightWindow)
+    love.graphics.scale(1, -1)
 
     -- Set the default canvas
     love.graphics.setCanvas()
@@ -181,11 +175,13 @@ function InGame:render()
     -- Draw the preRenderCanvas to the screen
     love.graphics.draw(preRenderCanvas)
 
+    --Use another canvas for UI ?
+
     -- Reset transformations
     love.graphics.origin()
 
-    love.graphics.translate(offsetXCanvas, camYOffset)
-    love.graphics.scale(ratioScale, ratioScale)
+    love.graphics.translate(0, 0)
+    love.graphics.scale(1, 1)
 
     -- Draw UI elements
     for _, ui in pairs(self.UI) do
@@ -199,11 +195,14 @@ function InGame:render()
         love.graphics.print(self.player.health, 100, 10)
     end
 
-    love.graphics.print(math.abs(math.ceil(self.stats.scores.current-0.5)), 250, 10)
+    love.graphics.print(math.abs(math.ceil(self.stats.scores.current-0.5)), 200, 10)
 
-    love.graphics.print('x: '..input.state.joystick.x..' \n('..math.abs(math.ceil(input.state.joystick.inclinXRatio*100-0.5))..'%)\n\nz: '..input.state.joystick.z..'\n('..math.abs(math.ceil(input.state.joystick.inclinZRatio*100-0.5))..'%)', 5, 60)
+    --love.graphics.print('x: '..input.state.joystick.x..' \n('..math.abs(math.ceil(input.state.joystick.inclinXRatio*100-0.5))..'%)\n\nz: '..input.state.joystick.z..'\n('..math.abs(math.ceil(input.state.joystick.inclinZRatio*100-0.5))..'%)', 5, 60)
+    love.graphics.print(math.ceil(input.state.joystick.inclinZRatio*100-0.5), 5, 60)
 
-    love.graphics.print("diff: "..self.difficulty.id, widthRes-100, 10)
+    love.graphics.print("diff: "..self.difficulty.id, widthWindow-100, 10)
+
+    love.graphics.print(widthWindow ..'x'.. heightWindow,0, heightWindow/2)
 end
 
 
@@ -314,10 +313,10 @@ function InGame:createUI()
     local UIElements = {}
 
     UIElements["fuelGauge"] = FuelGauge(
-        10, 
-        heightRes-30, 
-        widthRes-20, 
-        20, 
+        widthWindow*0.05, 
+        heightWindow*0.95, 
+        widthWindow*0.9, 
+        widthWindow*0.04, 
         true
     )
 
@@ -351,18 +350,37 @@ function InGame:drawAllCars()
     end
 end
 
-function InGame:manageCamera()
+function InGame:manageCamera() 
     local player, ejection = self.player, self.ejection
     local trX, trY = 0, 0
-    if self.inCar then
-        trX = math.min(0, math.max(-player.x * self.zoom + widthRes / 2, -widthRes / 2))
-        trY = math.min(0, ((-player.y + player.heightCar * 3) * self.zoom + camYOffset))
-    elseif self.eject then
-        trX = math.min(0, math.max(-ejection.x * self.zoom + widthRes / 2, -widthRes / 2))
-        trY = math.min(0, ((-ejection.y + 96 + ejection.maxRadius) * self.zoom + camYOffset))
+
+    local function calculateMiddle(entity, widthOffset)
+        widthOffset = widthOffset or 0
+        return -entity.x*self.zoom + widthRes/2 - widthOffset
     end
+
+    local function calculateCameraOffset(offsetX, middle, widthOffset)
+        widthOffset = widthOffset or 0
+        if offsetX > 0 then
+            return math.min(0, math.max(middle + (offsetX - widthOffset)*ratioScale, -widthRes + offsetX/ratioScale))
+        else
+            return math.min(0, math.max(middle, -widthRes*(self.zoom-1)))
+        end
+    end
+
+    if self.inCar then
+        local playerMiddle = calculateMiddle(player, player.widthCar)
+        trX = calculateCameraOffset(offsetXCamera, playerMiddle, player.widthCar)
+        trY = math.min(0, -player.y*self.zoom + player.heightCar + offsetYMap/ratioScale)
+    elseif self.eject then
+        local ejectionMiddle = calculateMiddle(ejection)
+        trX = calculateCameraOffset(offsetXCamera, ejectionMiddle)
+        trY = math.min(0, -ejection.y*self.zoom + offsetYMap/ratioScale)
+    end
+
     return trX, trY
 end
+
 
 function InGame:manageEjection(ejection)
     if ejection then
