@@ -192,17 +192,17 @@ function InGame:render()
 
     -- Temp life count and score
     if self.inCar then
-        love.graphics.print(self.player.health, 100, 10)
+        love.graphics.print("life: "..self.player.health.."/"..self.player.maxHealth, 10, 40)
     end
 
-    love.graphics.print(math.abs(math.ceil(self.stats.scores.current-0.5)), 200, 10)
+    love.graphics.print("score: "..math.abs(math.ceil(self.stats.scores.current-0.5)), 150, 40)
 
-    --love.graphics.print('x: '..input.state.joystick.x..' \n('..math.abs(math.ceil(input.state.joystick.inclinXRatio*100-0.5))..'%)\n\nz: '..input.state.joystick.z..'\n('..math.abs(math.ceil(input.state.joystick.inclinZRatio*100-0.5))..'%)', 5, 60)
-    love.graphics.print(math.ceil(input.state.joystick.inclinZRatio*100-0.5), 5, 60)
+    love.graphics.print('x: '..input.state.joystick.x..'\n\ny: '..input.state.joystick.y..'\n\nz: '..input.state.joystick.z.."\n\nrotation: "..rotation, 5, 80)
 
-    love.graphics.print("diff: "..self.difficulty.id, widthWindow-100, 10)
+    love.graphics.print("LVL: "..self.difficulty.id, widthWindow-100, 40)
 
-    love.graphics.print(widthWindow ..'x'.. heightWindow,0, heightWindow/2)
+    --love.graphics.print(input.state.joystick.tiltX, 100, 100)
+
 end
 
 
@@ -278,7 +278,8 @@ function InGame:addCarRandomly()
         end
         local _, nbNearCars = self.world:querySegment(randomPath.x+randomPath.width/2, randPosY-randCarModel.heightCar, randomPath.x+randomPath.width/2, randPosY+randCarModel.heightCar*2, filterCars)
 
-        local atEndOfPath = (randomPath.direction == "right" and randPosY >= (randomPath.y + randomPath.height) - randCarModel.heightCar * 5) 
+        local atEndOfPath = 
+            (randomPath.direction == "right" and randPosY >= (randomPath.y + randomPath.height) - randCarModel.heightCar * 5) 
             or 
             (randomPath.direction == "left" and randPosY <= randomPath.y + randCarModel.heightCar * 5)
 
@@ -286,7 +287,7 @@ function InGame:addCarRandomly()
         if nbNearCars == 0 then
             if atEndOfPath and nextChunk then
                 for _, path in ipairs(nextChunk.paths) do
-                    if math.abs(path.x - randomPath.x) < 5 then -- 5px margin 
+                    if path.x == randomPath.x then
                         self:addCarToPathAtPosY(randCarModel, randomPath, randPosY)
                         break 
                     end

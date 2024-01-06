@@ -207,7 +207,7 @@ function Car:manageTrajectory(velX, velY)
         queryTopPathsY = self.y-self.heightCar*6
         queryTopCarsY = self.y-self.heightCar*2
     end
-    local _, lenTopPaths = world:querySegment(self.x, queryTopPathsY, self.x-self.widthCar, queryTopPathsY, filterPaths)
+    local _, lenTopPaths = world:queryPoint(self.x, queryTopPathsY, filterPaths)
     local _, lenTopCars = world:queryRect(self.x, queryTopCarsY, self.widthCar, self.heightCar*2, filterCars)
 
     if (lenTopPaths == 0 or lenTopCars > 0) and self.targetX == nil then -- No path or car(s) and no target already defined

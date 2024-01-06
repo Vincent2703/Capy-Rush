@@ -115,10 +115,8 @@ function initScreen()
 	
 	canvas = love.graphics.newCanvas(widthWindow, heightWindow)
     ratioScale = math.min(widthWindow/widthRes, heightWindow/heightRes)
-    print(ratioScale)
 
     offsetXCamera = widthWindow-widthRes*ratioScale
-    print(offsetXCamera)
     if heightWindow/heightRes > widthWindow/widthRes then
         offsetYMap = heightWindow-heightRes*ratioScale
     else

@@ -15,10 +15,10 @@ function Player:update(dt)
     -- Update velocity based on input
     local targetVelX = 0
     if input.state.actions.right then
-        targetVelX = self.maxSpeed*input.state.joystick.inclinXRatio
+        targetVelX = self.maxSpeed*input.state.joystick.tiltX
         self.anim = self.animations.right
     elseif input.state.actions.left then
-        targetVelX = -self.maxSpeed*input.state.joystick.inclinXRatio
+        targetVelX = -self.maxSpeed*input.state.joystick.tiltX
         self.anim = self.animations.left
     end
 

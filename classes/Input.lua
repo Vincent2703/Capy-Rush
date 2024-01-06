@@ -24,8 +24,8 @@ function Input:init()
 						x = 1,
 						y = 1,
 						z = 1,
-						inclinXRatio = 1,
-						inclinZRatio = 1
+						tiltX = 1,
+						tiltZ = 1
 	}
 	self.state.actions = {
 						right = false,
@@ -85,31 +85,40 @@ function Input:update()
 	self.state.actions.newPress.pause = self.state.actions.pause and not self.prevState.actions.pause
 
 	-- Joystick
-	if self.config.joystick ~= nil then
+	if self.config.joystick then
 		local x, y, z = self.config.joystick:getAxes()
 		self.state.joystick.x, self.state.joystick.y, self.state.joystick.z = x, y, z
-
-		self.state.actions.right = self.state.actions.right or x > 0.1
-		self.state.actions.left = self.state.actions.left or x < -0.1
-		self.state.joystick.inclinXRatio = math.max(math.min((math.abs(x)-0.1)/0.6, 1), 0) --Try x axis
-
-		local deviation = z - self.startingJoyZ
-		--local maxDeviation = (deviation < 0) and (-1 - self.startingJoyZ) or (1 - self.startingJoyZ)
-		--local normalizedQuotient = math.min(1, math.max(0, deviation / maxDeviation * 3))
-
-		local normalizedQuotient = math.min(1, math.max(0, deviation/0.5))
+	
+		local normOfG = math.sqrt(x * x + y * y + z * z)
+		local nx, ny, nz = x / normOfG, y / normOfG, z / normOfG
 		
-		self.state.joystick.inclinZRatio = normalizedQuotient
+		local inclination = math.floor(math.deg(math.acos(nz)) + 0.5)
 
-		self.state.actions.up = self.state.actions.up or z > 0
-		self.state.actions.down = self.state.actions.down or z < 0
-		--[[
-		if z >= 0.6 then
-			self.state.joystick.inclinZRatio = math.max(math.min(math.abs(z-0.5)/0.4, 1), 0)
-		else
-			self.state.joystick.inclinZRatio = math.max(math.min(math.abs(z-0.6)/0.4, 1), 0)
-		end--]]
+		--if z > 0 then
+		 	rotation = (inclination < 25 or inclination > 155) and x or math.deg(math.atan2(nx, ny))/90
+		--else
+		--	rotation = (inclination < 25 or inclination > 155) and -x or -math.deg(math.atan2(nx, ny))/90
+		--end
+
+		local rotationCropped = math.max(-1, math.min(rotation / 0.85, 1))
+
+		local tx = x
+		if z < 0 then
+			tx = -tx
+		end
+		self.state.actions.right = self.state.actions.right or (tx > 0.1)
+		self.state.actions.left = self.state.actions.left or (tx < -0.1)
+		self.state.joystick.tiltX = math.abs(rotationCropped)
+	
+		local deviation = z - self.startingJoyZ
+		local deviaNorma = math.min(1, math.abs(z) == 1 and 1 or math.abs(deviation))
+		local deviaBoost = math.min(1, deviaNorma * 1.5)		
+		self.state.joystick.tiltZ = deviaBoost
+	
+		self.state.actions.up = self.state.actions.up or (deviation > 0)
+		self.state.actions.down = self.state.actions.down or (deviation < 0)
 	end
+	
 end
 
 function Input:copyState(state)
@@ -124,8 +133,8 @@ function Input:copyState(state)
 		x = state.joystick.x,
 		y = state.joystick.y,
 		z = state.joystick.z,
-		inclinXRatio = state.joystick.inclinXRatio,
-		inclinZRatio = state.joystick.inclinZRatio,
+		tiltX = state.joystick.tiltX,
+		tiltZ = state.joystick.tiltZ,
 	}
     copyState.actions = {
         right = state.actions.right,
@@ -149,5 +158,7 @@ function Input:copyState(state)
 end
 
 function Input:setCurrentJoyZ()
-	self.startingJoyZ = self.config.joystick:getAxis(3)
+	if self.config.joystick ~= nil then
+		self.startingJoyZ = self.config.joystick:getAxis(3)
+	end
 end
