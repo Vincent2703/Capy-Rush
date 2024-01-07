@@ -87,37 +87,44 @@ function Input:update()
 	-- Joystick
 	if self.config.joystick then
 		local x, y, z = self.config.joystick:getAxes()
-		self.state.joystick.x, self.state.joystick.y, self.state.joystick.z = x, y, z
-	
 		local normOfG = math.sqrt(x * x + y * y + z * z)
+		
+		self.state.joystick.x, self.state.joystick.y, self.state.joystick.z = x, y, z
 		local nx, ny, nz = x / normOfG, y / normOfG, z / normOfG
 		
 		local inclination = math.floor(math.deg(math.acos(nz)) + 0.5)
-
-		--if z > 0 then
-		 	rotation = (inclination < 25 or inclination > 155) and x or math.deg(math.atan2(nx, ny))/90
-		--else
-		--	rotation = (inclination < 25 or inclination > 155) and -x or -math.deg(math.atan2(nx, ny))/90
-		--end
-
+		local rotation = math.deg(math.atan2(nx, ny)) / 90
 		local rotationCropped = math.max(-1, math.min(rotation / 0.85, 1))
-
+		
 		local tx = x
-		if z < 0 then
-			tx = -tx
-		end
-		self.state.actions.right = self.state.actions.right or (tx > 0.1)
-		self.state.actions.left = self.state.actions.left or (tx < -0.1)
+		
+		local turnLeft, turnRight = false, false
+		
+		if tx < -0.1 then
+			turnLeft = true
+		elseif tx > 0.1 then
+			turnRight = true
+		elseif math.abs(z) <= 0.1 then
+			if tx < 0 then
+				turnLeft = true
+			elseif tx > 0 then
+				turnRight = true
+			end
+		end		
+		
+		self.state.actions.right = self.state.actions.right or turnRight
+		self.state.actions.left = self.state.actions.left or turnLeft
 		self.state.joystick.tiltX = math.abs(rotationCropped)
 	
-		local deviation = z - self.startingJoyZ
-		local deviaNorma = math.min(1, math.abs(z) == 1 and 1 or math.abs(deviation))
-		local deviaBoost = math.min(1, deviaNorma * 1.5)		
+		local deviation = (y > 0) and (z - self.startingJoyZ) or (-(y - self.startingJoyZ)*2)
+		local deviaNorma = math.abs(deviation)
+		local deviaBoost = math.min(1, deviaNorma*1.5)
 		self.state.joystick.tiltZ = deviaBoost
 	
 		self.state.actions.up = self.state.actions.up or (deviation > 0)
 		self.state.actions.down = self.state.actions.down or (deviation < 0)
 	end
+	
 	
 end
 
@@ -159,6 +166,10 @@ end
 
 function Input:setCurrentJoyZ()
 	if self.config.joystick ~= nil then
-		self.startingJoyZ = self.config.joystick:getAxis(3)
+		if z ~= 1 then
+			self.startingJoyZ = self.config.joystick:getAxis(3)
+		else
+			self.startingJoyZ = -(self.config.joystick:getAxis(2))
+		end
 	end
 end

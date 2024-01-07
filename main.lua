@@ -37,28 +37,10 @@ function love.draw()
 end
 
 function love.focus(f)
-    if not f then
+    if not f and gameState:isCurrentState("InGame") then
         gameState:setState("Pause", true)
     end
 end
-
---[[function love.resize(width, height)
-    -- Update window dimensions
-    widthWindow, heightWindow = width, height
-
-    -- Resize canvas
-    canvas = love.graphics.newCanvas(widthWindow, heightWindow)
-
-    ratioScale = math.min(widthWindow/widthRes, heightWindow/heightRes)
-    offsetXCanvas = widthWindow/2-(widthRes/2)*ratioScale
-
-    if heightWindow/heightRes > widthWindow/widthRes then
-        camYOffset = heightWindow-heightRes*ratioScale
-        preRenderCanvas = love.graphics.newCanvas(widthRes, heightRes+camYOffset)
-    else
-        camYOffset = 0
-    end
-end--]]
 
 --
 
@@ -125,14 +107,3 @@ function initScreen()
 
     preRenderCanvas = love.graphics.newCanvas(widthWindow, heightWindow) --Rename to game/map canvas ?
 end
-
---[[
-
-    offsetXCanvas = widthWindow/2-(widthRes/2)*ratioScale
-
-    if heightWindow/heightRes > widthWindow/widthRes then
-        camYOffset = heightWindow-heightRes*ratioScale
-    else
-        camYOffset = 0
-    end
-]]

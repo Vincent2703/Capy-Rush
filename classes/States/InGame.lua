@@ -90,7 +90,7 @@ function InGame:update(dt)
                 gameState:setState("GameOver", true)
             end
 
-            if self.stats.scores.current >= self.difficulty.id*100 and self.difficulty.id < #self.difficulties then
+            if self.stats.scores.current >= self.difficulty.id*50 and self.difficulty.id < #self.difficulties then
                 self:setDifficulty(self.difficulty.id+1)
             end
             if self.player.currPathDir == "left" and self.stats.multipliers.glob == 1 then
@@ -197,11 +197,9 @@ function InGame:render()
 
     love.graphics.print("score: "..math.abs(math.ceil(self.stats.scores.current-0.5)), 150, 40)
 
-    love.graphics.print('x: '..input.state.joystick.x..'\n\ny: '..input.state.joystick.y..'\n\nz: '..input.state.joystick.z.."\n\nrotation: "..rotation, 5, 80)
+    --love.graphics.print('x: '..input.state.joystick.x..'\n\ny: '..input.state.joystick.y..'\n\nz: '..input.state.joystick.z.."\nrotX: "..rotation, 5, 80)
 
     love.graphics.print("LVL: "..self.difficulty.id, widthWindow-100, 40)
-
-    --love.graphics.print(input.state.joystick.tiltX, 100, 100)
 
 end
 
