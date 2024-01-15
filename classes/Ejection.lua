@@ -35,8 +35,8 @@ function Ejection:update(dt)
         local targetVelY = (input.state.actions.up and speed) or (input.state.actions.down and -speed) or 0
         local targetVelX = (input.state.actions.right and speed) or (input.state.actions.left and -speed) or 0
         
-        velY = accY * (targetVelY*input.state.joystick.tiltZ) + (1 - accY/2) * velY
-        velX = accX * (targetVelX*input.state.joystick.tiltX) + (1 - accX/2) * velX
+        velY = accY * (targetVelY*input.state.accelerometer.tiltZ) + (1 - accY/2) * velY
+        velX = accX * (targetVelX*input.state.accelerometer.tiltX) + (1 - accX/2) * velX
         
         self.velocity.x, self.velocity.y = velX, velY
         self.x, self.y = self.x + velX * dt, self.y + velY * dt
@@ -65,6 +65,6 @@ function Ejection:render()
     love.graphics.setColor(255, 0, 0)
     love.graphics.circle("fill", self.x, self.y, self.radius)
     love.graphics.setColor(255, 255, 255)
-    love.graphics.print(math.ceil(input.state.joystick.tiltZ*100-0.5), 5, 60)
+    love.graphics.print(math.ceil(input.state.accelerometer.tiltZ*100-0.5), 5, 60)
 
 end

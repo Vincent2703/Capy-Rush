@@ -7,10 +7,12 @@ function Map:init(tileWidth, tileHeight, tilesetPath, predefinedChunks, nbChunks
     self.nbChunksPerIter = 3
     self.mapChunks = {}
 
-    self.map = {
+    self.startingChunkName = "street3"
+
+    self.mapParams = {
         orientation = "orthogonal",
-        width = 11,
-        height = 50,
+        width = 9,
+        height = 80, --TODO
         tilewidth = tileWidth,
         tileheight = tileHeight,
         tilesets = {},
@@ -30,10 +32,11 @@ function Map:init(tileWidth, tileHeight, tilesetPath, predefinedChunks, nbChunks
     }
     tileset.imagewidth, tileset.imageheight = love.graphics.newImage(tilesetPath):getDimensions()
     tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(tileWidth*tileHeight))
-    table.insert(self.map.tilesets, tileset)
+    table.insert(self.mapParams.tilesets, tileset)
+    self.tileset = self.mapParams.tilesets[1]
 
-    self:addChunk("chunk1") -- Starting chunk
-    self.map = self:updateMap()
+    self:addChunk(self.startingChunkName) -- Starting chunk
+    --self.map = self:updateMap()
 
     self.mapWidth, self.mapHeight = self.map.width*tileWidth, self.map.height*tileHeight
 end
@@ -70,7 +73,7 @@ end
 function Map:manageChunks()
     self:removeOldChunks()
     self:addRandomChunks()
-    self.map = self:updateMap()
+    --self.map = self:updateMap()
 end
 
 function Map:addChunk(chunkName)
@@ -83,14 +86,38 @@ function Map:addChunk(chunkName)
     local currentHeight = 0 
 
     if #self.mapChunks > 0 then
-        currentHeight = self.map.height*self.map.tileheight
-        self.map.height = self.map.height + chunkAsset.height
+        currentHeight = self.mapParams.height*self.mapParams.tileheight
+        self.mapParams.height = self.mapParams.height + chunkAsset.height
     end
+
+    for name, data in pairs(chunkAsset.layers.sprites) do
+        table.insert(self.mapParams.layers,
+            {
+                type = "tilelayer", 
+                name = name,
+                x = 0,
+                y = currentHeight,
+                width = chunkAsset.width,
+                height = chunkAsset.height,
+                visible = true,
+                opacity = 1,
+                offsetx = 0,
+                offsety = 0,
+                --properties = {},
+                encoding = "lua",
+                data = data
+            }
+        )
+    end
+
+    self.map = sti(self.mapParams)
     
-    for _, data in pairs(chunkAsset.layers.sprites) do
+
+    
+    --[[for name, data in pairs(chunkAsset.layers.sprites) do
         local spriteLayer = {
             type = "tilelayer", 
-            name = chunkName,
+            name = name,
             x = 0,
             y = currentHeight,
             width = chunkAsset.width,
@@ -99,12 +126,12 @@ function Map:addChunk(chunkName)
             opacity = 1,
             offsetx = 0,
             offsety = 0,
-            properties = {},
+            --properties = {},
             encoding = "lua",
             data = data
         }
         table.insert(chunkMap.sprites, spriteLayer)
-    end
+    end--]]
 
     for _, obs in ipairs(chunkAsset.layers.objects.obstacles) do
         local obstacle = {x=obs.x, y=obs.y+currentHeight, width=obs.width, height=obs.height, isObstacle=true}
@@ -135,7 +162,7 @@ end
 
 
 function Map:updateMap()
-    local m = {
+    --[[local m = {
         orientation = "orthogonal",
         width = 11,
         height = self.map.height,
@@ -143,9 +170,9 @@ function Map:updateMap()
         tileheight = self.tileHeight,
         tilesets = {},
         layers = {}
-    }
+    }--]]
 
-    local tileset = {
+    --[[local tileset = {
         name = "roads",
         firstgid = 1,
         tilewidth = self.tileWidth,
@@ -155,7 +182,7 @@ function Map:updateMap()
         image = self.tilesetPath,
         tileoffset = {x = 0, y = 0},
         tiles = {}
-      }
+      }--]]
     tileset.imagewidth, tileset.imageheight = self.map.tilesets[1].imagewidth, self.map.tilesets[1].imageheight
     tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(self.tileWidth*self.tileHeight))
     table.insert(m.tilesets, tileset)
@@ -174,7 +201,7 @@ function Map:updateMap()
                     opacity = 1,
                     offsetx = 0,
                     offsety = 0,
-                    properties = {},
+                    --properties = {},
                     encoding = "lua",
                     data = spriteLayer.data
                 }
@@ -186,7 +213,7 @@ function Map:updateMap()
 end
 
 function Map:getNbChunkAtPos(y)
-    for i, chunk in ipairs(self.mapChunks) do --TODO : Replace with queryPoint()
+    for i, chunk in ipairs(self.mapChunks) do --TODO : Replace with queryPoint() -- MAP CHUNK PLUS UTILE
         local layer = chunk.sprites[1] -- Whatever the layer, same pos/dim
         if y >= layer.y and y <= layer.y+layer.height*self.map.tileheight then
             return i

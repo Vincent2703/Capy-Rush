@@ -24,11 +24,8 @@ function Car:init(textureName, widthCar, heightCar, maxSpeed, maxHealth, consump
 
     local animationSpeed = 1
     self.animations = {}
-    self.animations.up = anim8.newAnimation(self.grid("1-1", 1), animationSpeed)
-    self.animations.left = anim8.newAnimation(self.grid("1-1", 1), animationSpeed)
-    self.animations.right = anim8.newAnimation(self.grid("1-1", 1), animationSpeed)
-    self.animations.brake = anim8.newAnimation(self.grid("1-1", 1), animationSpeed)
-    self.anim = self.animations.up
+
+    self.anim = anim8.newAnimation(self.grid("1-1", 1), animationSpeed)
 end
 
 function Car:manageCollisions(velX, velY, dt)

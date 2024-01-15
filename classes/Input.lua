@@ -10,8 +10,19 @@ function Input:init()
 					eject = "space",
 					pause = "escape",
 
-					joystick = love.joystick.getJoysticks()[1]
+					accelerometer = nil
 				   }
+
+
+	local joysticks = love.joystick.getJoysticks()
+	if joysticks ~= nil then
+		for i, joystick in ipairs(joysticks) do
+			if joystick:getName() == "Android Accelerometer" and joystick:getAxisCount() == 3 then
+				self.config.accelerometer = joystick 
+				break
+			end
+		end
+	end
 				   
 	self.state = {}
 	self.state.mouse = {
@@ -20,7 +31,7 @@ function Input:init()
 						relX = nil,
 						relY = nil
 						}			
-	self.state.joystick = {
+	self.state.accelerometer = {
 						x = 1,
 						y = 1,
 						z = 1,
@@ -84,46 +95,53 @@ function Input:update()
 	end
 	self.state.actions.newPress.pause = self.state.actions.pause and not self.prevState.actions.pause
 
-	-- Joystick
-	if self.config.joystick then
-		local x, y, z = self.config.joystick:getAxes()
-		local normOfG = math.sqrt(x * x + y * y + z * z)
+	-- Accelerometer
+	if self.config.accelerometer then
+		local x, y, z = self.config.accelerometer:getAxes()
+		local normOfG = math.sqrt(x*x + y*y + z*z)
 		
-		self.state.joystick.x, self.state.joystick.y, self.state.joystick.z = x, y, z
+		self.state.accelerometer.x, self.state.accelerometer.y, self.state.accelerometer.z = x, y, z
 		local nx, ny, nz = x / normOfG, y / normOfG, z / normOfG
 		
-		local inclination = math.floor(math.deg(math.acos(nz)) + 0.5)
+		inclination = math.floor(math.deg(math.acos(nz)) + 0.5)
+	
 		local rotation = math.deg(math.atan2(nx, ny)) / 90
-		local rotationCropped = math.max(-1, math.min(rotation / 0.85, 1))
-		
-		local tx = x
-		
+		local rotationModulate = rotation
+	
+		if inclination >= 0 and inclination < 20 then
+			rotationModulate = rotation/2
+		elseif inclination > 30 and inclination < 50 then
+			rotationModulate = rotation*2
+		elseif inclination >= 50 and inclination < 90 then
+			rotationModulate = rotation*3
+		end
+	
+		rotationModulate = y <= 0 and rotationModulate/3 or rotationModulate
+		rotationModulate = math.min(math.abs(rotationModulate), 1)
+				
 		local turnLeft, turnRight = false, false
 		
-		if tx < -0.1 then
+		if x < -0.1 then
 			turnLeft = true
-		elseif tx > 0.1 then
+		elseif x > 0.1 or (math.abs(z) <= 0.1 and x > 0) then
 			turnRight = true
-		elseif math.abs(z) <= 0.1 then
-			if tx < 0 then
-				turnLeft = true
-			elseif tx > 0 then
-				turnRight = true
-			end
-		end		
+		elseif x < 0 or (math.abs(z) <= 0.1 and x < 0) then
+			turnLeft = true
+		end
 		
 		self.state.actions.right = self.state.actions.right or turnRight
 		self.state.actions.left = self.state.actions.left or turnLeft
-		self.state.joystick.tiltX = math.abs(rotationCropped)
+		self.state.accelerometer.tiltX = math.abs(rotationModulate)
 	
 		local deviation = (y > 0) and (z - self.startingJoyZ) or (-(y - self.startingJoyZ)*2)
 		local deviaNorma = math.abs(deviation)
 		local deviaBoost = math.min(1, deviaNorma*1.5)
-		self.state.joystick.tiltZ = deviaBoost
+		self.state.accelerometer.tiltZ = deviaBoost
 	
 		self.state.actions.up = self.state.actions.up or (deviation > 0)
 		self.state.actions.down = self.state.actions.down or (deviation < 0)
 	end
+	
 	
 	
 end
@@ -136,12 +154,12 @@ function Input:copyState(state)
 		relX = state.mouse.relX,
 		relY = state.mouse.relY
 	}
-	copyState.joystick = {
-		x = state.joystick.x,
-		y = state.joystick.y,
-		z = state.joystick.z,
-		tiltX = state.joystick.tiltX,
-		tiltZ = state.joystick.tiltZ,
+	copyState.accelerometer = {
+		x = state.accelerometer.x,
+		y = state.accelerometer.y,
+		z = state.accelerometer.z,
+		tiltX = state.accelerometer.tiltX,
+		tiltZ = state.accelerometer.tiltZ,
 	}
     copyState.actions = {
         right = state.actions.right,
@@ -165,11 +183,11 @@ function Input:copyState(state)
 end
 
 function Input:setCurrentJoyZ()
-	if self.config.joystick ~= nil then
+	if self.config.accelerometer ~= nil then
 		if z ~= 1 then
-			self.startingJoyZ = self.config.joystick:getAxis(3)
+			self.startingJoyZ = self.config.accelerometer:getAxis(3)
 		else
-			self.startingJoyZ = -(self.config.joystick:getAxis(2))
+			self.startingJoyZ = -(self.config.accelerometer:getAxis(2))
 		end
 	end
 end

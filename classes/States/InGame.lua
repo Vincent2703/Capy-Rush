@@ -150,6 +150,7 @@ function InGame:render()
 
     -- Draw the map layers
     for _, layer in ipairs(self.lvl.map.layers) do
+        print(layer.name)
         if layer.type == "tilelayer" then
             self.lvl.map:drawLayer(layer)
         end
@@ -197,9 +198,11 @@ function InGame:render()
 
     love.graphics.print("score: "..math.abs(math.ceil(self.stats.scores.current-0.5)), 150, 40)
 
-    --love.graphics.print('x: '..input.state.joystick.x..'\n\ny: '..input.state.joystick.y..'\n\nz: '..input.state.joystick.z.."\nrotX: "..rotation, 5, 80)
+    --love.graphics.print('x: '..input.state.accelerometer.x..'\n\ny: '..input.state.accelerometer.y..'\n\nz: '..input.state.accelerometer.z.."\nrotX: "..rotation, 5, 80)
 
     love.graphics.print("LVL: "..self.difficulty.id, widthWindow-100, 40)
+
+
 
 end
 
@@ -216,11 +219,14 @@ end
 
 function InGame:createMap()
     local lvl = Map(TILEDIM, TILEDIM, 
-    "assets/textures/roads/tileset.png",
+    "assets/textures/roads/street2/spritesheet.png",
+    --"assets/textures/roads/street2/spritesheet.png",
     {
-        chunk1 = {path="assets/maps/chunk1.lua", ratio=0},
-        chunk2 = {path="assets/maps/chunk2.lua", ratio=0.5},
-        chunk3 = {path="assets/maps/chunk3.lua", ratio=0.5}
+        --street1 = {path="assets/maps/street1.lua", ratio=1},
+        --street2 = {path="assets/maps/street2.lua", ratio=0.5},
+        street3 = {path="assets/maps/street3.lua", ratio=1},
+        --chunk2 = {path="assets/maps/chunk2.lua", ratio=0.5},
+        --chunk3 = {path="assets/maps/chunk3.lua", ratio=0.5}
     }, 5)
 
     return lvl
@@ -228,9 +234,9 @@ end
 
 function InGame:createCarsModels()
     local carModels = {
-        car1 = {car = Car("car1", 32, 35, 400, 5, 4), ratio=0.5},
-        car2 = {car = Car("car2", 32, 35, 450, 4, 3.2), ratio=0.4},
-        police1 = {car = Car("police1", 32, 35, 450, 6, 3.2, true), ratio=0.1}
+        car1 = {car = Car("carTest", 36, 36, 400, 5, 4), ratio=0.5},
+        car2 = {car = Car("carTest", 36, 36, 450, 4, 3.2), ratio=0.4},
+        police1 = {car = Car("carTest", 36, 36, 450, 6, 3.2, true), ratio=0.1}
     }
 
     return carModels

@@ -15,11 +15,9 @@ function Player:update(dt)
     -- Update velocity based on input
     local targetVelX = 0
     if input.state.actions.right then
-        targetVelX = self.maxSpeed*input.state.joystick.tiltX
-        self.anim = self.animations.right
+        targetVelX = self.maxSpeed*input.state.accelerometer.tiltX
     elseif input.state.actions.left then
-        targetVelX = -self.maxSpeed*input.state.joystick.tiltX
-        self.anim = self.animations.left
+        targetVelX = -self.maxSpeed*input.state.accelerometer.tiltX
     end
 
     -- Smoothly adjust velocity towards the target
