@@ -19,9 +19,9 @@ return
 				},
 				{
 					x = 240,
-					y = 3408,
+					y = 3504,
 					width = 48,
-					height = 432,
+					height = 336,
 				},
 				{
 					x = 240,

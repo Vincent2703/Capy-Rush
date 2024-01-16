@@ -42,11 +42,6 @@ function GameOver:init()
 end
 
 function GameOver:start()
-    --[[self.inGameCanvas = love.graphics.newCanvas(preRenderCanvas:getDimensions())
-    self.inGameCanvas:renderTo(function()
-        love.graphics.setColor(255, 255, 255)
-        love.graphics.draw(preRenderCanvas, 0, 0)
-    end)--]]
 end
 
 function GameOver:update()
@@ -58,7 +53,6 @@ function GameOver:update()
 end
 
 function GameOver:render()
-    love.graphics.translate(0, heightRes+offsetYMap/ratioScale) --Temporaire, trouver une meilleure méthode
     love.graphics.scale(1/ratioScale, -1/ratioScale)
     love.graphics.draw(preRenderCanvas) 
     love.graphics.setColor(0, 0, 0, 0.4)

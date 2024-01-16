@@ -10,7 +10,8 @@ function Player:update(dt)
 
     local velX, velY = self.velocity.x, self.velocity.y
 
-    self.fuel = math.max(0, self.fuel - self.consumptionFactor*dt)
+    --self.fuel = math.max(0, self.fuel - self.consumptionFactor*dt)
+    self.health = 10
 
     -- Update velocity based on input
     local targetVelX = 0
@@ -51,4 +52,6 @@ function Player:update(dt)
 
     -- Update animation
     self.anim:update(dt)
+
+    --print(self.y)
 end

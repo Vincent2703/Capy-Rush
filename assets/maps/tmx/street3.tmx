@@ -9,7 +9,7 @@
   <objectgroup id="4" name="rightPaths">
    <object id="59" x="336" y="0" width="48" height="3840"/>
    <object id="60" x="288" y="0" width="48" height="3840"/>
-   <object id="61" x="240" y="3408" width="48" height="432"/>
+   <object id="61" x="240" y="3503.83" width="48" height="336.167"/>
    <object id="62" x="240" y="0" width="48" height="384"/>
   </objectgroup>
   <objectgroup id="6" name="obstacles">

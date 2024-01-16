@@ -39,7 +39,7 @@ function Ejection:update(dt)
         velX = accX * (targetVelX*input.state.accelerometer.tiltX) + (1 - accX/2) * velX
         
         self.velocity.x, self.velocity.y = velX, velY
-        self.x, self.y = self.x + velX * dt, self.y + velY * dt
+        self.x, self.y = self.x + velX * dt, self.y - velY * dt
     else 
         self.landOn = self:checkCarUnder()
     end

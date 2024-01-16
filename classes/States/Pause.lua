@@ -54,8 +54,7 @@ function Pause:update()
 end
 
 function Pause:render()
-    love.graphics.translate(0, heightRes+offsetYMap/ratioScale) --Temporaire, trouver une meilleure méthode
-    love.graphics.scale(1/ratioScale, -1/ratioScale)
+    love.graphics.scale(1/ratioScale, 1/ratioScale)
     love.graphics.draw(preRenderCanvas) 
     love.graphics.setColor(0, 0, 0, 0.4)
     love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)

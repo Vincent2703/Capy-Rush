@@ -75,7 +75,7 @@ function Police:pursuit()
     local velX, velY = 0, self.currMaxSpeed
     if player ~= nil then
         velX = player.x-self.x
-        if player.y < self.y then
+        if player.y > self.y then
             velY = velY/2
         end
     end

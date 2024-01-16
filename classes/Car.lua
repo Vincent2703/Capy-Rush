@@ -33,7 +33,7 @@ function Car:manageCollisions(velX, velY, dt)
     self.lastCollision = self.lastCollision + dt
 
     -- Calculate the goal position based on velocity and time
-    local goalX, goalY = self.x + velX*dt, self.y + velY*dt
+    local goalX, goalY = self.x + velX*dt, self.y - velY*dt
     -- Round the goal position to two decimal places
     goalX, goalY = tonumber(string.format("%.2f", goalX)), tonumber(string.format("%.2f", goalY))
 
@@ -73,16 +73,16 @@ function Car:manageCollisions(velX, velY, dt)
                 velX, velY = velX / 2, velY * 0.75
                 other.velocity.x = other.velocity.x + self.velocity.x / 2
                 other.velocity.y = math.max(velY, other.velocity.y / 2)
-            elseif normal.y == -1 then
+            elseif normal.y == 1 then
                 velX, velY = velX / 2, velY / 2
                 other.velocity.y = other.velocity.y + self.velocity.y / 3
             end
-        -- Check if the colliding car is an obstacle
+        -- Check if the colliding item is an obstacle
         elseif other.isObstacle then
             -- Adjust velocities based on the collision
             if normal.x ~= 0 then
                 velX, velY = 0, velY / 2
-            elseif normal.y == -1 then
+            elseif normal.y == 1 then
                 velX, velY = velX / 2, 0
             end
 
@@ -198,22 +198,29 @@ function Car:manageTrajectory(velX, velY)
     local queryTopPathsY
     local queryTopCarsY
     if self.direction == "right" then
-        queryTopPathsY = self.y+self.heightCar*5
-        queryTopCarsY = self.y+self.heightCar
+        queryTopPathsY = self.y-self.heightCar*3
+        queryTopCarsY = self.y-self.heightCar*2 --Rename to bottom
     else
-        queryTopPathsY = self.y-self.heightCar*6
-        queryTopCarsY = self.y-self.heightCar*2
+        queryTopPathsY = self.y+self.heightCar*6
+        queryTopCarsY = self.y+self.heightCar*2
     end
-    local _, lenTopPaths = world:queryPoint(self.x, queryTopPathsY, filterPaths)
+    local _, lenTopPaths = world:queryPoint(self.x+self.widthCar/2, queryTopPathsY, filterPaths)
     local _, lenTopCars = world:queryRect(self.x, queryTopCarsY, self.widthCar, self.heightCar*2, filterCars)
 
     if (lenTopPaths == 0 or lenTopCars > 0) and self.targetX == nil then -- No path or car(s) and no target already defined
 
-        local _, lenLeftCarsObstacles = world:queryRect(self.x-self.widthCar/2-TILEDIM/2, self.y, self.widthCar, self.heightCar*3, filterCarsObstacles)
+        local _, lenLeftCarsObstacles = world:queryRect(self.x-TILEDIM/2, self.y, self.widthCar, self.heightCar*3, filterCarsObstacles)
         local _, lenRightCarsObstacles = world:queryRect(self.x+self.widthCar/2+TILEDIM/2, self.y, self.widthCar, self.heightCar*3, filterCarsObstacles)
 
-        local leftPaths, lenLeftPaths = world:queryPoint(self.x-TILEDIM/2, self.y+TILEDIM*3, filterPaths)
-        local rightPaths, lenRightPaths = world:queryPoint(self.x+self.widthCar+TILEDIM/2, self.y+TILEDIM*3, filterPaths)
+        local yNextPaths = 0
+        if self.direction == "right" then 
+            yNextPaths = self.y-TILEDIM*3
+        else
+            yNextPaths = self.y+self.heightCar+TILEDIM*3
+        end
+
+        local leftPaths, lenLeftPaths = world:queryPoint(self.x-TILEDIM/2, yNextPaths, filterPaths) 
+        local rightPaths, lenRightPaths = world:queryPoint(self.x+self.widthCar+TILEDIM/2, yNextPaths, filterPaths)
 
 
         local leftOK = lenLeftCarsObstacles==0 and lenLeftPaths==1
