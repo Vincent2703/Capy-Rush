@@ -4,13 +4,13 @@ function Map:init(tileWidth, tileHeight, tilesetPath, predefinedChunks, nbChunks
     self.tileWidth, self.tileHeight = tileWidth, tileHeight
     self.tilesetPath = tilesetPath
     self.predefinedChunks = predefinedChunks 
-    self.nbChunksPerIter = 3
+    self.nbChunksPerIter = nbChunksPerIter
     self.mapChunks = {}
 
     self.mapConfig = {
         orientation = "orthogonal",
         width = 9,
-        height = 80,
+        height = 80, --TODO
         tilewidth = tileWidth,
         tileheight = tileHeight,
         tilesets = {},
@@ -32,7 +32,7 @@ function Map:init(tileWidth, tileHeight, tilesetPath, predefinedChunks, nbChunks
     tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(tileWidth*tileHeight))
     table.insert(self.mapConfig.tilesets, tileset)
 
-    self:addChunk("street3") -- Starting chunk
+    self:addChunk("chunk1") -- Starting chunk To do : init param
     self.map = self:updateMap()
 
     self.mapWidth, self.mapHeight = self.mapConfig.width*tileWidth, self.mapConfig.height*tileHeight
@@ -68,7 +68,7 @@ function Map:removeOldChunks()
 end
 
 function Map:manageChunks()
-    --self:removeOldChunks() A FAIRE
+    self:removeOldChunks()
     self:addRandomChunks()
     self.map = self:updateMap()
 end
@@ -111,7 +111,6 @@ function Map:addChunk(chunkName)
             local direction = (pathGroup == chunkAsset.layers.objects.rightPaths) and "right" or "left"
             local p = {
                 x = path.x,
-                --y = path.y + currentHeight,
                 y = currentHeight-chunkAsset.height*self.mapConfig.tileheight+path.y,
                 width = path.width,
                 height = path.height,

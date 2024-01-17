@@ -184,11 +184,11 @@ function Car:manageTrajectory(velX, velY)
     local world = inGame.world
     
     local filterCars = function(item) --Detect cars, minus the player
-        return item.className == "RoadUser" or item.className == "Police"
+        return (item.className == "RoadUser" or item.className == "Police") and self ~= item
     end
 
     local filterCarsObstacles = function(item) --Detect cars (including Player) and obstacles
-        return item.isObstacle or item.className == "RoadUser" or item.className == "Police" or item.className == "Player" --Instanceof Car
+        return (item.isObstacle or item.className == "RoadUser" or item.className == "Police" or item.className == "Player") and self ~= item --Instanceof Car
     end
 
     local filterPaths = function(item) --Detect paths
@@ -199,17 +199,17 @@ function Car:manageTrajectory(velX, velY)
     local queryTopCarsY
     if self.direction == "right" then
         queryTopPathsY = self.y-self.heightCar*3
-        queryTopCarsY = self.y-self.heightCar*2 --Rename to bottom
+        queryTopCarsY = self.y-self.heightCar*2
     else
-        queryTopPathsY = self.y+self.heightCar*6
-        queryTopCarsY = self.y+self.heightCar*2
+        queryTopPathsY = self.y+self.heightCar*4
+        queryTopCarsY = self.y+self.heightCar*3
     end
     local _, lenTopPaths = world:queryPoint(self.x+self.widthCar/2, queryTopPathsY, filterPaths)
-    local _, lenTopCars = world:queryRect(self.x, queryTopCarsY, self.widthCar, self.heightCar*2, filterCars)
+    local cars, lenTopCars = world:queryRect(self.x, queryTopCarsY, self.widthCar, self.heightCar*2, filterCars)
 
     if (lenTopPaths == 0 or lenTopCars > 0) and self.targetX == nil then -- No path or car(s) and no target already defined
 
-        local _, lenLeftCarsObstacles = world:queryRect(self.x-TILEDIM/2, self.y, self.widthCar, self.heightCar*3, filterCarsObstacles)
+        local _, lenLeftCarsObstacles = world:queryRect(self.x-self.widthCar/2-TILEDIM/2, self.y, self.widthCar, self.heightCar*3, filterCarsObstacles)
         local _, lenRightCarsObstacles = world:queryRect(self.x+self.widthCar/2+TILEDIM/2, self.y, self.widthCar, self.heightCar*3, filterCarsObstacles)
 
         local yNextPaths = 0

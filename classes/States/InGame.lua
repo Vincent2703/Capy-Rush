@@ -32,7 +32,7 @@ function InGame:start() -- On restart
 
     self.UI = self:createUI()
 
-    self.difficulty = self.difficulties[3]
+    self.difficulty = self.difficulties[1]
 
     self.stats = Stats()
 
@@ -115,7 +115,7 @@ function InGame:update(dt)
 
             if self.player.y <= -self.lvl.map.height*self.lvl.tileHeight + heightRes*1.5 then
                 self.lvl:manageChunks()
-                InGame:deleteOldCars(self.player.y-heightRes)
+                self:deleteOldCars(self.player.y+heightRes)
             end
 
             local dist = self.prevYPos-self.player.y
@@ -146,28 +146,36 @@ function InGame:render()
     love.graphics.setCanvas(preRenderCanvas)
 
     love.graphics.translate(self:manageCamera())
-    --love.graphics.translate(-self.player.x, -self.player.y)
     love.graphics.scale(self.zoom, self.zoom)
 
     -- Draw the map layers
+    local currYCoord = self.player and self.player.y or (self.ejection and self.ejection.y or 0)
+
     for _, layer in ipairs(self.lvl.map.layers) do
-        --print(layer.name)
-        if layer.type == "tilelayer" then --Check pos ?
+        if layer.type == "tilelayer" and currYCoord-heightWindow <= layer.y+layer.height*self.lvl.tileHeight and currYCoord+heightWindow >= layer.y then
+            if self.ejection and layer.name == "signs" then
+                layer.opacity = 0.5
+            elseif self.player and layer.name == "signs" and layer.opacity == 0.5 then
+                layer.opacity = 1
+            end
+
+            if layer.name == "vegetation" then
+                -- Draw the player and road users
+                self:drawAllCars()
+            end
             self.lvl.map:drawLayer(layer)
         end
     end
 
-   --[[ local items, len = gameState.states["InGame"].world:getItems()
+    --[[love.graphics.setColor(255, 0, 0)
+   local items, len = gameState.states["InGame"].world:getItems()
     for i = 1, len do
         local x, y, w, h = gameState.states["InGame"].world:getRect(items[i])
         if items[i].isObstacle or items[i].health ~= nil then
             love.graphics.rectangle("line", x, y, w, h)
         end
-    end--]]
-
-
-    -- Draw the player and road users
-    self:drawAllCars()
+    end
+    love.graphics.setColor(255, 255, 255)--]]
 
     if self.eject then
         self.ejection:render()
@@ -176,24 +184,12 @@ function InGame:render()
     -- Reset transformations
     love.graphics.origin()
 
-    -- Flip horizontally and scale the canvas
-    --love.graphics.translate(0, heightWindow)
-    --love.graphics.scale(1, 1)
-
     -- Set the default canvas
     love.graphics.setCanvas()
 
     -- Draw the preRenderCanvas to the screen
     love.graphics.draw(preRenderCanvas)
 
-    --Use another canvas for UI ?
-
-    -- Reset transformations
-    --[[love.graphics.origin()
-
-    love.graphics.translate(0, 0)
-    love.graphics.scale(1, 1)--]]
-    
 
     -- Draw UI elements
     for _, ui in pairs(self.UI) do
@@ -214,7 +210,6 @@ function InGame:render()
     love.graphics.print("LVL: "..self.difficulty.id, widthWindow-100, 40)
 
 
-
 end
 
 
@@ -230,14 +225,16 @@ end
 
 function InGame:createMap()
     local lvl = Map(TILEDIM, TILEDIM, 
-    "assets/textures/roads/street2/spritesheet.png",
-    --"assets/textures/roads/street2/spritesheet.png",
+    "assets/textures/tiles/spritesheet.png",
     {
-        --street1 = {path="assets/maps/street1.lua", ratio=1},
-        --street2 = {path="assets/maps/street2.lua", ratio=0.5},
-        street3 = {path="assets/maps/street3.lua", ratio=1},
-        --chunk2 = {path="assets/maps/chunk2.lua", ratio=0.5},
-        --chunk3 = {path="assets/maps/chunk3.lua", ratio=0.5}
+        chunk1 = {path="assets/maps/chunk1.lua", ratio=0.1},
+        chunk2 = {path="assets/maps/chunk2.lua", ratio=0.05},
+        chunk3 = {path="assets/maps/chunk3.lua", ratio=0.05},
+        chunk4 = {path="assets/maps/chunk4.lua", ratio=0.4},
+        chunk5 = {path="assets/maps/chunk5.lua", ratio=0.05},
+        chunk6 = {path="assets/maps/chunk6.lua", ratio=0.025},
+        chunk7 = {path="assets/maps/chunk7.lua", ratio=0.025},
+        chunk8 = {path="assets/maps/chunk8.lua", ratio=0.3},
     }, 5)
 
     return lvl
@@ -245,9 +242,10 @@ end
 
 function InGame:createCarsModels()
     local carModels = {
-        car1 = {car = Car("car1", 32, 35, 400, 5, 4), ratio=0.5},
-        car2 = {car = Car("car2", 32, 35, 450, 4, 3.2), ratio=0.4},
-        police1 = {car = Car("police1", 32, 35, 450, 6, 3.2, true), ratio=0.1}
+        car1 = {car = Car("car1", 32, 35, 400, 5, 4), ratio=0.55},
+        car2 = {car = Car("car2", 32, 35, 450, 4, 3.2), ratio=0.3},
+        taxi = {car = Car("taxi", 28, 37, 390, 6, 3.5), ratio=0.1},
+        police1 = {car = Car("police1", 32, 35, 450, 6, 3.2, true), ratio=0.05}
     }
 
     return carModels
@@ -297,7 +295,6 @@ function InGame:addCarRandomly()
         local _, nbNearCars = self.world:querySegment(randomPath.x+randomPath.width/2, randPosY-randCarModel.heightCar*2, randomPath.x+randomPath.width/2, randPosY+randCarModel.heightCar, filterCars)
         if nbNearCars == 0 then
             self:addCarToPathAtPosY(randCarModel, randomPath, randPosY)
-            print("spawn", randomPath.direction)
         end
         
     end
@@ -307,7 +304,7 @@ function InGame:deleteOldCars(posYStartingRemoving)
     local cars = gameState.states["InGame"].cars
     
     for _, car in ipairs(cars) do
-        if car.y <= posYStartingRemoving then
+        if car.y > posYStartingRemoving then
             car:destroy()
         end
     end
@@ -341,15 +338,21 @@ function InGame:updateAllCars(dt)
 end
 
 function InGame:drawAllCars()
+    local player = self.player
+
     if self.inCar then
-        local player = self.player
         player.anim:draw(player.spriteSheet, player.x+player.widthCar, player.y+player.heightCar, nil, 1, 1, player.widthCar, player.heightCar)
     end
     for _, car in ipairs(self.cars) do
-        if car.direction == "left" then
-            car.anim:draw(car.spriteSheet, car.x, car.y+car.heightCar, math.pi, 1, -1, car.widthCar, car.heightCar)
-        else
-            car.anim:draw(car.spriteSheet, car.x+car.widthCar, car.y+car.heightCar, nil, 1, 1, car.widthCar, car.heightCar)
+        local currXCoord = self.player and self.player.x or (self.ejection and self.ejection.x or 0)
+        local currYCoord = self.player and self.player.y or (self.ejection and self.ejection.y or 0)
+        if car.y < currYCoord+offsetYMap and car.y > currYCoord-heightWindow and car.x > currXCoord-widthWindow and car.x < currXCoord+widthWindow then
+            if car.direction == "left" then
+                car.anim:draw(car.spriteSheet, car.x, car.y+car.heightCar, math.pi, 1, -1, car.widthCar, car.heightCar)
+            else
+                --love.graphics.rectangle("line", car.x, car.y-car.heightCar*2-10, car.widthCar, car.heightCar*2)
+                car.anim:draw(car.spriteSheet, car.x+car.widthCar, car.y+car.heightCar, nil, 1, 1, car.widthCar, car.heightCar)
+            end
         end
     end
 end
@@ -375,11 +378,11 @@ function InGame:manageCamera()
     if self.inCar then
         local playerMiddle = calculateMiddle(player, player.widthCar)
         trX = calculateCameraOffset(offsetXCamera, playerMiddle, player.widthCar)
-        trY = math.max(heightWindow/ratioScale, -player.y*self.zoom + widthWindow/2 + offsetYMap/ratioScale)
+        trY = math.max(heightWindow/ratioScale, -player.y*self.zoom + widthWindow*0.75 + offsetYMap/ratioScale)
     elseif self.eject then
         local ejectionMiddle = calculateMiddle(ejection)
         trX = calculateCameraOffset(offsetXCamera, ejectionMiddle)
-        trY = math.max(heightWindow/ratioScale, -ejection.y*self.zoom + widthWindow/2 + offsetYMap/ratioScale)
+        trY = math.max(heightWindow/ratioScale, -ejection.y*self.zoom + widthWindow*0.75 + offsetYMap/ratioScale)
     end
 
     return trX, trY

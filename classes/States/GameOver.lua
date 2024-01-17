@@ -53,7 +53,7 @@ function GameOver:update()
 end
 
 function GameOver:render()
-    love.graphics.scale(1/ratioScale, -1/ratioScale)
+    love.graphics.scale(1/ratioScale, 1/ratioScale)
     love.graphics.draw(preRenderCanvas) 
     love.graphics.setColor(0, 0, 0, 0.4)
     love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
