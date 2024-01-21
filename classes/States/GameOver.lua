@@ -42,6 +42,7 @@ function GameOver:init()
 end
 
 function GameOver:start()
+    gameState.states["InGame"].stats:save()
 end
 
 function GameOver:update()

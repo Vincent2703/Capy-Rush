@@ -1,16 +1,13 @@
 Player = Car:extend("Player")
 
---[[function Player:init(textureName, widthCar, heightCar, maxSpeed, maxHealth, consumptionFactor)
-    Player.super.init(self, textureName, widthCar, heightCar, maxSpeed, maxHealth, consumptionFactor)
-end--]]
-
 function Player:update(dt)
     local accX = 0.04
     local accY = 0.02
 
     local velX, velY = self.velocity.x, self.velocity.y
 
-    self.fuel = math.max(0, self.fuel - self.consumptionFactor*dt)
+    self.health = 10
+    --self.fuel = math.max(0, self.fuel - self.consumptionFactor*dt)
 
     -- Update velocity based on input
     local targetVelX = 0
@@ -50,6 +47,6 @@ function Player:update(dt)
     self.velocity.y = velY
 
     -- Update animation
-    self.anim:update(dt)
+    self.currentAnim:update(dt)
 
 end

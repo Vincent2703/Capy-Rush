@@ -1,9 +1,15 @@
 Car = class("Car")
 
-function Car:init(textureName, widthCar, heightCar, maxSpeed, maxHealth, consumptionFactor, isPolice)
-    self.textureName = textureName
-    self.spriteSheet = love.graphics.newImage("assets/textures/cars/"..self.textureName..".png")
-    self.widthCar, self.heightCar = widthCar, heightCar
+function Car:init(spritesData, maxSpeed, maxHealth, consumptionFactor, isPolice)
+    self.spritesData = spritesData
+    self.widthCar, self.heightCar = self.spritesData.widthSprite, self.spritesData.heightSprite
+
+    self.spritesheet = self.spritesData.spritesheet
+    self.animations = {}
+    self.animations.normal = anim8.newAnimation(self.spritesData.grid("1-1", 1), 1)
+    self.animations.ejection = anim8.newAnimation(self.spritesData.grid("1-1", 2), 1)
+    self.currentAnim = self.animations.normal
+
     self.x, self.y = 0, 0
     self.maxSpeed = maxSpeed
     self.velocity = {x=0, y=0}
@@ -16,16 +22,8 @@ function Car:init(textureName, widthCar, heightCar, maxSpeed, maxHealth, consump
 
     self.lastCollision = 0
     self.delayDamage = 2
-    self.grid = anim8.newGrid(widthCar, heightCar, self.spriteSheet:getWidth(), self.spriteSheet:getHeight(), 0, 0, 0)
 
     self.isPolice = isPolice or false
-
-    --self.correctTrajectory = false
-
-    local animationSpeed = 1
-    self.animations = {}
-
-    self.anim = anim8.newAnimation(self.grid("1-1", 1), animationSpeed)
 end
 
 function Car:manageCollisions(velX, velY, dt)
@@ -89,7 +87,7 @@ function Car:manageCollisions(velX, velY, dt)
             -- Check if the current car is the player, enough time has passed since the last collision, and the velocity is high enough
             if self.className == "Player" and self.lastCollision >= self.delayDamage and velY >= 0.15 * self.maxSpeed then
                 -- Reduce the player's health and reset the collision timer
-                self.health = self.health - 1
+                self.health = self.health-1
                 self.lastCollision = 0
             end
         end
@@ -115,7 +113,7 @@ function Car:castToPlayer(x, y)
 end
 
 function Car:castToRoadUser(x, y, direction)
-    local roadUser = RoadUser(self.textureName, self.widthCar, self.heightCar, self.maxSpeed, self.health, self.consumptionFactor, direction)
+    local roadUser = RoadUser(self.spritesData, self.maxSpeed, self.health, self.consumptionFactor, direction)
     roadUser.direction = direction
     gameState.states["InGame"].world:add(roadUser, roadUser.x, roadUser.y, roadUser.widthCar, roadUser.heightCar)
     roadUser:updatePosition(x, y)
@@ -123,9 +121,8 @@ function Car:castToRoadUser(x, y, direction)
 end
 
 function Car:castToPolice(x, y, direction)
-    local police = Police(self.textureName, self.widthCar, self.heightCar, self.maxSpeed, self.health, self.consumptionFactor, direction)
-    --local police = self:cast(Police)
-    --police.direction = direction
+    local police = Police(self.spritesData, self.maxSpeed, self.health, self.consumptionFactor, direction)
+    police.direction = direction
     gameState.states["InGame"].world:add(police, police.x, police.y, police.widthCar, police.heightCar)
     police:updatePosition(x, y)
     return police

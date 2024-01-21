@@ -5,7 +5,7 @@ function UI:init(x, y, width, height, visible)
     self.width, self.height = width, height
     self.visible = visible or false
 
-    self.canvas = love.graphics.newCanvas(self.width, self.height)
+    --self.canvas = love.graphics.newCanvas(self.width, self.height)
 end
 
 function UI:toggleVisibility()

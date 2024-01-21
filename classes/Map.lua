@@ -1,7 +1,6 @@
 Map = class("Map")
 
-function Map:init(tileWidth, tileHeight, tilesetPath, predefinedChunks, nbChunksPerIter)
-    self.tileWidth, self.tileHeight = tileWidth, tileHeight
+function Map:init(tilesetPath, predefinedChunks, nbChunksPerIter, startingChunkName)
     self.tilesetPath = tilesetPath
     self.predefinedChunks = predefinedChunks 
     self.nbChunksPerIter = nbChunksPerIter
@@ -10,9 +9,9 @@ function Map:init(tileWidth, tileHeight, tilesetPath, predefinedChunks, nbChunks
     self.mapConfig = {
         orientation = "orthogonal",
         width = 9,
-        height = 80, --TODO
-        tilewidth = tileWidth,
-        tileheight = tileHeight,
+        height = self.predefinedChunks[startingChunkName].data.height,
+        --tilewidth = TILEDIM,
+        --tileheight = TILEDIM,
         tilesets = {},
         layers = {}
     }
@@ -20,8 +19,8 @@ function Map:init(tileWidth, tileHeight, tilesetPath, predefinedChunks, nbChunks
     local tileset = {
         name = "roads",
         firstgid = 1,
-        tilewidth = tileWidth,
-        tileheight = tileHeight,
+        tilewidth = TILEDIM,
+        tileheight = TILEDIM,
         spacing = 0,
         margin = 0,
         image = tilesetPath,
@@ -29,13 +28,13 @@ function Map:init(tileWidth, tileHeight, tilesetPath, predefinedChunks, nbChunks
         tiles = {}
     }
     tileset.imagewidth, tileset.imageheight = love.graphics.newImage(tilesetPath):getDimensions()
-    tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(tileWidth*tileHeight))
+    tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(TILEDIM*TILEDIM))
     table.insert(self.mapConfig.tilesets, tileset)
 
-    self:addChunk("chunk1") -- Starting chunk To do : init param
+    self:addChunk(startingChunkName)
     self.map = self:updateMap()
 
-    self.mapWidth, self.mapHeight = self.mapConfig.width*tileWidth, self.mapConfig.height*tileHeight
+    self.mapWidth, self.mapHeight = self.mapConfig.width*TILEDIM, self.mapConfig.height*TILEDIM
 end
 
 function Map:addRandomChunks()
@@ -59,7 +58,7 @@ function Map:removeOldChunks()
             for _, obj in ipairs(self.mapChunks[i].obstacles) do
                 gameState.states["InGame"].world:remove(obj)
             end
-            for _, obj in ipairs(self.mapChunks[i].paths) do --Merge works ?
+            for _, obj in ipairs(self.mapChunks[i].paths) do
                 gameState.states["InGame"].world:remove(obj)
             end
             table.remove(self.mapChunks, i)
@@ -74,7 +73,7 @@ function Map:manageChunks()
 end
 
 function Map:addChunk(chunkName)
-    local chunkAsset = require("assets/maps/"..chunkName)
+    local chunkAsset = self.predefinedChunks[chunkName].data
     local chunkMap = {
         layers = {},
         obstacles = {},
@@ -83,16 +82,17 @@ function Map:addChunk(chunkName)
     local currentHeight = 0 
 
     if #self.mapChunks > 0 then
-        currentHeight = -self.mapConfig.height*self.mapConfig.tileheight 
+        currentHeight = -self.mapConfig.height*TILEDIM
         self.mapConfig.height = self.mapConfig.height + chunkAsset.height 
     end
     
-    local order = {"ground", "road", "obstacles", "vegetation", "signs"}
-    for _, key in ipairs(order) do
-        local layer = chunkAsset.layers.sprites[key]
+    --local order = {"ground", "road", "obstacles", "vegetation", "signs"}
+    --for _, key in ipairs(order) do
+       -- local layer = chunkAsset.layers.sprites[key]
+    for name, layer in pairs(chunkAsset.layers.sprites) do
         local tileLayer = {
-            name = key,
-            y = currentHeight-chunkAsset.height*self.tileHeight,
+            name = name,
+            y = currentHeight-chunkAsset.height*TILEDIM,
             width = chunkAsset.width,
             height = chunkAsset.height,
             data = layer
@@ -101,7 +101,7 @@ function Map:addChunk(chunkName)
     end
 
     for _, obs in ipairs(chunkAsset.layers.objects.obstacles) do
-        local obstacle = {x=obs.x, y=currentHeight-chunkAsset.height*self.mapConfig.tileheight+obs.y, width=obs.width, height=obs.height, isObstacle=true}
+        local obstacle = {x=obs.x, y=currentHeight-chunkAsset.height*TILEDIM+obs.y, width=obs.w, height=obs.h, isObstacle=true}
         gameState.states["InGame"].world:add(obstacle, obstacle.x, obstacle.y, obstacle.width, obstacle.height)
         table.insert(chunkMap.obstacles, obstacle)
     end
@@ -111,9 +111,9 @@ function Map:addChunk(chunkName)
             local direction = (pathGroup == chunkAsset.layers.objects.rightPaths) and "right" or "left"
             local p = {
                 x = path.x,
-                y = currentHeight-chunkAsset.height*self.mapConfig.tileheight+path.y,
-                width = path.width,
-                height = path.height,
+                y = currentHeight-path.y,
+                width = path.w,
+                height = path.h,
                 direction = direction,
                 isPath = true
             }
@@ -129,21 +129,31 @@ end
 
 
 function Map:updateMap() -- To optimize. Shame that we can't directly add a layer to a map... Can we ?
+    local function find(t, value)
+        for i, v in ipairs(t) do
+            if v == value then
+                return i
+            end
+        end
+        return nil
+    end
+
+
     local m = {
         orientation = "orthogonal",
         width = self.mapConfig.width,
         height = self.mapConfig.height,
-        tilewidth = self.tileWidth,
-        tileheight = self.tileHeight,
+        tilewidth = TILEDIM,
+        tileheight = TILEDIM,
         tilesets = {},
         layers = {}
     }
 
     local tileset = {
-        name = "roads",
+        name = "tileset",
         firstgid = 1,
-        tilewidth = self.tileWidth,
-        tileheight = self.tileHeight,
+        tilewidth = TILEDIM,
+        tileheight = TILEDIM,
         spacing = 0,
         margin = 0,
         image = self.tilesetPath,
@@ -151,42 +161,52 @@ function Map:updateMap() -- To optimize. Shame that we can't directly add a laye
         tiles = {}
       }
     tileset.imagewidth, tileset.imageheight = self.mapConfig.tilesets[1].imagewidth, self.mapConfig.tilesets[1].imageheight
-    tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(self.tileWidth*self.tileHeight))
+    tileset.tilecount = math.ceil((tileset.imagewidth*tileset.imageheight)/(TILEDIM*TILEDIM))
     table.insert(m.tilesets, tileset)
 
+    local order = {"ground", "road", "obstacles", "vegetation", "signs"}
+    local orderedLayers = {}
+
+    -- Iterate through mapChunks and sort layers based on order
     for _, chunk in ipairs(self.mapChunks) do
         for _, spriteLayer in pairs(chunk.layers) do
-            table.insert(m.layers,
-                {
-                    type = "tilelayer", 
-                    name = spriteLayer.name,
-                    x = 0,
-                    y = spriteLayer.y,
-                    width = spriteLayer.width,
-                    height = spriteLayer.height,
-                    visible = true,
-                    opacity = 1,
-                    offsetx = 0,
-                    offsety = 0,
-                    properties = {},
-                    encoding = "lua",
-                    data = spriteLayer.data
-                }
-            )
+            local index = find(order, spriteLayer.name) -- Custom function to find index in the order table
+            if index then
+                table.insert(orderedLayers,
+                    {
+                        type = "tilelayer", 
+                        name = spriteLayer.name,
+                        x = 0,
+                        y = spriteLayer.y,
+                        width = spriteLayer.width,
+                        height = spriteLayer.height,
+                        visible = true,
+                        opacity = 1,
+                        offsetx = 0,
+                        offsety = 0,
+                        properties = {},
+                        encoding = "lua",
+                        data = spriteLayer.data
+                    }
+                )
+            end
         end
     end
+
+    -- Sort the orderedLayers based on the order table
+    table.sort(orderedLayers, function(a, b)
+        return find(order, a.name) < find(order, b.name)
+    end)
+
+    -- Now, orderedLayers contains the layers in the desired order
+    for _, layer in ipairs(orderedLayers) do
+        table.insert(m.layers, layer)
+    end
+
+    
 
     return sti(m)
 end
-
---[[function Map:getNbChunkAtPos(y)
-    for i, chunk in ipairs(self.mapChunks) do --TODO : Replace with queryPoint()
-        local layer = chunk.layers[1] -- Whatever the layer, same pos/dim
-        if y >= layer.y and y <= layer.y+layer.height*self.mapConfig.tileheight then
-            return i
-        end
-    end
-end--]]
 
 function Map:reset()
     local world = gameState.states["InGame"].world

@@ -1,7 +1,7 @@
 RoadUser = Car:extend("RoadUser")
 
-function RoadUser:init(textureNameOrModel, widthCar, heightCar, maxSpeed, maxHealth, consumptionFactor, direction)
-    RoadUser.super.init(self, textureNameOrModel, widthCar, heightCar, maxSpeed, maxHealth, consumptionFactor)
+function RoadUser:init(spritesData, maxSpeed, maxHealth, consumptionFactor, direction)
+    RoadUser.super.init(self, spritesData, maxSpeed, maxHealth, consumptionFactor)
     self.direction = direction
     self.currMaxSpeed = self.maxSpeed/2
     if direction == "left" then
@@ -36,5 +36,5 @@ function RoadUser:update(dt)
     self.velocity.x = velX
     self.velocity.y = velY
 
-    self.anim:update(dt)
+    self.currentAnim:update(dt)
 end

@@ -27,7 +27,7 @@ function Pause:init()
             "EXIT",
             nil,
             nil,
-            function() love.event.quit(0) end,
+            function() gameState.states["InGame"].stats:save();love.event.quit(0) end,
             "release"
         )
 

@@ -1,12 +1,15 @@
 function love.load()
+    VERSION = 0.1
     OS = love.system.getOS()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
-    widthRes, heightRes = 432, 650 --Mettre en maj
+    WIDTHRES, HEIGHTRES = 432, 650 --Mettre en maj
     TILEDIM = 48
     --widthWindow, heightWindow = 432, 650--480, 720
 
     loadLibraries()
     loadClasses()
+
+    setSave()
 
     initScreen()
 
@@ -45,6 +48,7 @@ end
 --
 
 function loadLibraries()
+    json = require("libraries/json/json")
 	anim8 = require("libraries/anim8/anim8")
 	class = require("libraries/30log/30log-clean")
 	sti = require("libraries/sti")
@@ -52,6 +56,8 @@ function loadLibraries()
 end
 
 function loadClasses()
+    require("classes/Save")
+
     require("classes/Map")
 
     require("classes/Car")
@@ -64,6 +70,7 @@ function loadClasses()
     require("classes/Stats")
 
     require("classes/UI")
+    require("classes/UISubclasses/NotifScore")
     require("classes/UISubclasses/FuelGauge")
     require("classes/UISubclasses/Button")
     require("classes/UISubclasses/ButtonSubclasses/RectangleButton")
@@ -96,14 +103,26 @@ function initScreen()
 	love.graphics.setDefaultFilter("nearest", "nearest")
 	
 	canvas = love.graphics.newCanvas(widthWindow, heightWindow)
-    ratioScale = math.min(widthWindow/widthRes, heightWindow/heightRes)
+    ratioScale = math.min(widthWindow/WIDTHRES, heightWindow/HEIGHTRES)
 
-    offsetXCamera = widthWindow-widthRes*ratioScale
-    if heightWindow/heightRes > widthWindow/widthRes then
-        offsetYMap = heightWindow-heightRes*ratioScale
+    offsetXCamera = widthWindow-WIDTHRES*ratioScale
+    if heightWindow/HEIGHTRES > widthWindow/WIDTHRES then
+        offsetYMap = heightWindow-HEIGHTRES*ratioScale
     else
         offsetYMap = 0
     end
 
     preRenderCanvas = love.graphics.newCanvas(widthWindow, heightWindow) --Rename to game/map canvas ?
+end
+
+function setSave()
+    save = Save("save.lua", false)
+    local saveContent = save:read()
+    local saveTable = {
+        lastVersionPlayed=VERSION,
+        lastTimePlayed=os.time(),
+        highscore=saveContent and saveContent.highscore or 0,
+        friend=saveContent and saveContent.friend or false
+    }
+    save:write(saveTable)
 end

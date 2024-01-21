@@ -1,7 +1,9 @@
 Police = Car:extend("Police")
 
-function Police:init(textureName, widthCar, heightCar, maxSpeed, maxHealth, consumptionFactor, direction)
-    Police.super.init(self, textureName, widthCar, heightCar, maxSpeed, maxHealth, consumptionFactor)
+function Police:init(spritesData, maxSpeed, maxHealth, consumptionFactor, direction)
+    Police.super.init(self, spritesData, maxSpeed, maxHealth, consumptionFactor)
+    self.animations.flashingLights = anim8.newAnimation(self.spritesData.grid("1-4", 3), 0.33)
+
     self.inPursuit = false
 
     self.direction = direction
@@ -42,7 +44,7 @@ function Police:update(dt)
     self.velocity.x = velX
     self.velocity.y = velY
 
-    self.anim:update(dt)
+    self.currentAnim:update(dt)
 end
 
 function Police:checkBadDriver()
@@ -61,6 +63,7 @@ function Police:checkBadDriver()
 end
 
 function Police:startPursuit()
+    self.currentAnim = self.animations.flashingLights
     self.inPursuit = true
     self.currMaxSpeed = self.maxSpeed
     if direction == "left" then 
