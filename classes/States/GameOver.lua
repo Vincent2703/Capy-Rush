@@ -18,6 +18,7 @@ function GameOver:init()
             "REPLAY",
             nil,
             nil,
+            true,
             function() replay() end,
             "release"
         )
@@ -31,6 +32,7 @@ function GameOver:init()
             "EXIT",
             nil,
             nil,
+            true,
             function() love.event.quit(0) end,
             "release"
         )

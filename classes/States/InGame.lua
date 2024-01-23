@@ -26,6 +26,7 @@ function InGame:start() -- On restart
     self.player.velocity.y, self.player.velocity.x = 0, 0
     self.player.fuel = 100
     self.player.health = self.player.maxHealth
+    self.player.posScreen = {x=0, y=0} 
 
     self.inCar = true
 
@@ -47,6 +48,8 @@ function InGame:start() -- On restart
     self.memoryCalls = 0
     self.memoryTotal = 0
     self.memoryMax = 0
+
+    self.camMap, self.camScreen = {x=0, y=0}, {x=0, y=0}
 end
 
 function InGame:update(dt)
@@ -80,8 +83,10 @@ function InGame:update(dt)
                     self.UI["fuelGauge"].visible = true
                     if car.direction == "left" then
                         self.stats.multipliers.glob = 2
+                        self.stats.GUI.reverse.visible = true
                     else
                         self.stats.multipliers.glob = 1
+                        self.stats.GUI.reverse.visible = false
                     end
                     self.player = car:switchCar()
                     self.inCar = true
@@ -98,14 +103,22 @@ function InGame:update(dt)
             end
             if self.player.currPathDir == "left" and self.stats.multipliers.glob == 1 then
                 self.stats.multipliers.glob = 2
+                self.stats.GUI.reverse.visible = true
             elseif self.player.currPathDir == "right" and self.stats.multipliers.glob == 2 then
                 self.stats.multipliers.glob = 1
+                self.stats.GUI.reverse.visible = false
             end
         end
 
-        for key, ui in pairs(self.UI) do 
+        for _, ui in pairs(self.UI) do
             if ui.visible then
                 ui:update()
+            end
+        end
+
+        for _, elem in pairs(self.stats.GUI) do
+            if elem.visible then
+                elem:update(dt)
             end
         end
 
@@ -144,6 +157,7 @@ function InGame:update(dt)
             self.stats.scores.best = math.ceil(self.stats.scores.current-0.5)
         end
     end
+    self.camMap = {x=self.player and self.player.x or (self.ejection and self.ejection.x or 0), y=self.player and self.player.y or (self.ejection and self.ejection.y or 0)}
 end
 
 function InGame:render()
@@ -153,11 +167,12 @@ function InGame:render()
     love.graphics.translate(self:manageCamera())
     love.graphics.scale(self.zoom, self.zoom)
 
-    -- Draw the map layers
-    local currYCoord = self.player and self.player.y or (self.ejection and self.ejection.y or 0)
 
+    self.camScreen.x, self.camScreen.y = love.graphics.transformPoint(self.camMap.x, self.camMap.y)
+
+    -- Draw the map layers
     for _, layer in ipairs(self.lvl.map.layers) do
-        if layer.type == "tilelayer" and currYCoord-heightWindow <= layer.y+layer.height*TILEDIM and currYCoord+heightWindow >= layer.y then
+        if layer.type == "tilelayer" and self.camMap.y-heightWindow <= layer.y+layer.height*TILEDIM and self.camMap.y+heightWindow >= layer.y then
             if self.eject and layer.name == "signs" then
                 layer.opacity = 0.5
             elseif not self.eject and layer.name == "signs" and layer.opacity == 0.5 then
@@ -203,8 +218,18 @@ function InGame:render()
         end
     end
 
+
+    for _, elem in pairs(self.stats.GUI) do
+        if elem.visible and self.inCar then
+            elem:draw(dt)
+        end
+    end
+
+    --UI Score (sub stats)
+
+
     -- Temp life count and score
-    if self.inCar then
+   --[[ if self.inCar then
         love.graphics.print("life: "..self.player.health.."/"..self.player.maxHealth, 10, 40)
     end
 
@@ -213,7 +238,7 @@ function InGame:render()
 
     --love.graphics.print('x: '..input.state.accelerometer.x..'\n\ny: '..input.state.accelerometer.y..'\n\nz: '..input.state.accelerometer.z.."\nrotX: "..rotation, 5, 80)
 
-    love.graphics.print("LVL: "..self.difficulty.id, widthWindow-100, 40)
+    love.graphics.print("LVL: "..self.difficulty.id, widthWindow-100, 40)--]]
 
     --[[self.memoryCalls = self.memoryCalls+1 
     local memory = math.ceil(collectgarbage('count')-0.5)
@@ -224,7 +249,6 @@ function InGame:render()
     love.graphics.print('Memory (kB): ' .. memory, 10,500)
     love.graphics.print('Memory avg (kB): ' .. math.ceil(self.memoryTotal/self.memoryCalls-0.5), 10,600)
     love.graphics.print('Memory max (kB): ' .. self.memoryMax, 10,700)--]]
-
 
 end
 
@@ -346,22 +370,25 @@ end
 function InGame:createUI()
     local UIElements = {}
 
-    UIElements.fuelGauge = FuelGauge(
-        widthWindow*0.05, 
-        heightWindow*0.95, 
-        widthWindow*0.9, 
-        widthWindow*0.04, 
-        true
-    )
-
-    UIElements.notifScore = NotifScore(
-        100, 
-        400,
-        100,
+    UIElements.pause = CircleButton(
+        math.ceil(widthWindow*0.95)-25,
+        math.ceil(heightWindow*0.05)-25,
+        50,
         50,
         true,
-        "test",
-        10
+        "| |",
+        {1,1,1},
+        {1,1,1, 0.5},
+        false,
+        function() gameState:setState("Pause") end
+    )
+
+    UIElements.fuelGauge = FuelGauge(
+        math.ceil(widthWindow*0.05), 
+        math.ceil(heightWindow*0.95), 
+        math.ceil(widthWindow*0.9), 
+        math.ceil(widthWindow*0.04), 
+        true
     )
 
     return UIElements
@@ -387,9 +414,7 @@ function InGame:drawAllCars()
         player.currentAnim:draw(player.spritesheet, player.x+player.widthCar, player.y+player.heightCar, nil, 1, 1, player.widthCar, player.heightCar)
     end
     for _, car in ipairs(self.cars) do
-        local currXCoord = self.player and self.player.x or (self.ejection and self.ejection.x or 0)
-        local currYCoord = self.player and self.player.y or (self.ejection and self.ejection.y or 0)
-        if car.y < currYCoord+offsetYMap and car.y > currYCoord-heightWindow and car.x > currXCoord-widthWindow and car.x < currXCoord+widthWindow then
+        if car.y < self.camMap.y+offsetYMap and car.y > self.camMap.y-heightWindow and car.x > self.camMap.x-widthWindow and car.x < self.camMap.x+widthWindow then
             if car.direction == "left" then
                 car.currentAnim:draw(car.spritesheet, car.x, car.y, math.pi, 1, 1, car.widthCar, car.heightCar)
             else
@@ -436,7 +461,7 @@ function InGame:manageEjection(ejection)
         self.landingStatus = false
         self.eject = true
         self.inCar = false
-        self.UI["fuelGauge"]:toggleVisibility()
+        self.UI["fuelGauge"].visible = false
         self.ejection = Ejection(self.player.x+self.player.widthCar/2, self.player.y+self.player.heightCar/2)
         self.player:destroy()
     else

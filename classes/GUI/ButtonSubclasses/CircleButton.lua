@@ -1,7 +1,7 @@
 CircleButton = Button:extend("CircleButton")
 
-function CircleButton:init(x, y, width, height, visible, text, colorA, colorB, callback, clickEvent)
-    CircleButton.super.init(self, x, y, width, height, visible, text, colorA, colorB, callback, clickEvent)
+function CircleButton:init(x, y, width, height, visible, text, colorA, colorB, background, callback, clickEvent)
+    CircleButton.super.init(self,x, y, width, height, visible, text, colorA, colorB, background, callback, clickEvent)
     self.radius = math.min(self.width, self.height)/2
     self.centerX, self.centerY = x+self.radius, y+self.radius
 
@@ -9,12 +9,14 @@ function CircleButton:init(x, y, width, height, visible, text, colorA, colorB, c
 end
 
 function CircleButton:draw()
-    if not self.pressed then
-        love.graphics.setColor(self.colorA)
-    else
-        love.graphics.setColor(self.colorB)
+    if self.background then
+        if not self.pressed then
+            love.graphics.setColor(self.colorA)
+        else
+            love.graphics.setColor(self.colorB)
+        end
+        love.graphics.circle("fill", self.centerX, self.centerY, self.radius)
     end
-    love.graphics.circle("fill", self.centerX, self.centerY, self.radius)
     if self.pressed then
         love.graphics.setColor(self.colorA)
     else

@@ -13,6 +13,7 @@ function Pause:init()
             "RESUME",
             nil,
             nil,
+            true,
             function() gameState:setState("InGame") end,
             "release"
         )
@@ -27,6 +28,7 @@ function Pause:init()
             "EXIT",
             nil,
             nil,
+            true,
             function() gameState.states["InGame"].stats:save();love.event.quit(0) end,
             "release"
         )

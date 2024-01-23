@@ -4,7 +4,6 @@ function love.load()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
     WIDTHRES, HEIGHTRES = 432, 650 --Mettre en maj
     TILEDIM = 48
-    --widthWindow, heightWindow = 432, 650--480, 720
 
     loadLibraries()
     loadClasses()
@@ -68,13 +67,14 @@ function loadClasses()
     require("classes/Ejection")
 
     require("classes/Stats")
-
-    require("classes/UI")
-    require("classes/UISubclasses/NotifScore")
-    require("classes/UISubclasses/FuelGauge")
-    require("classes/UISubclasses/Button")
-    require("classes/UISubclasses/ButtonSubclasses/RectangleButton")
-    require("classes/UISubclasses/ButtonSubclasses/CircleButton")
+    require("classes/GUI/Notif")
+    require("classes/GUI/NotifSubclasses/ShortNotif")
+    require("classes/GUI/NotifSubclasses/PersistNotif")
+    require("classes/GUI/Scores")
+    require("classes/GUI/FuelGauge")
+    require("classes/GUI/Button")
+    require("classes/GUI/ButtonSubclasses/RectangleButton")
+    require("classes/GUI/ButtonSubclasses/CircleButton")
 
     require("classes/GameState")
     require("classes/States/InGame")
@@ -91,7 +91,7 @@ function initScreen()
         flags.resizable = false
         flags.fullscreen = true
     else
-        widthWindow, heightWindow = 360, 780 --936
+        widthWindow, heightWindow = 360, 780 --936 / 780
         flags.resizable = true
         flags.fullscreen = false
     end

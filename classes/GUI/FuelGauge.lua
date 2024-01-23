@@ -1,8 +1,8 @@
-FuelGauge = UI:extend("FuelGauge")
+FuelGauge = class("FuelGauge")
 
 function FuelGauge:init(x, y, width, height, visible)
-    FuelGauge.super.init(self, x, y, width, height, visible)
-    self.player = gameState.states["InGame"].player
+    self.x, self.y, self.width, self.height, self.visible = x, y, width, height, visible or true
+    self.player = gameState.states["InGame"].player --Arg ? Or glob const IG ?
     self.fuel = self.player.fuel
 end
 

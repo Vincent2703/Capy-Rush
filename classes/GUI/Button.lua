@@ -1,13 +1,16 @@
-Button = UI:extend("Button")
+Button = class("Button")
 
-function Button:init(x, y, width, height, visible, text, colorA, colorB, callback, clickEvent)  -- TODO ? child imageBtn
-    Button.super.init(self, x, y, width, height, visible, text, colorA, colorB, callback, clickEvent)
+function Button:init(x, y, width, height, visible, text, colorA, colorB, background, callback, clickEvent)
+    self.x, self.y = x, y
+    self.width, self.height = width, height
+    self.visible = visible or false
     self.text = text
-    self.callback = callback or nil
+    self.callback = callback or function() end
 
     self.pressed = false
     self.colorA = colorA or {0, 0, 0}
     self.colorB = colorB or {10, 10, 10}
+    self.background = background
 
     local currentFont = love.graphics.getFont()
     self.widthText, self.heightText = currentFont:getWidth(text), currentFont:getHeight()

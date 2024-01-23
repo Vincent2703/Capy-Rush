@@ -66,11 +66,9 @@ function Police:startPursuit()
     self.currentAnim = self.animations.flashingLights
     self.inPursuit = true
     self.currMaxSpeed = self.maxSpeed
-    if direction == "left" then 
+    if self.direction == "left" then 
         self.direction = "right"
-        self.currMaxSpeed = -self.currMaxSpeed
     end
-    --self.velocity.y = self.currMaxSpeed
 end
 
 function Police:pursuit()

@@ -10,6 +10,8 @@ function Stats:init()
     self.achievements = {
         distance = 0,
         ejections = 0
+        --ejections à la suite
+        --reverseDistance
     }
 
     self.scores = {
@@ -17,8 +19,14 @@ function Stats:init()
             distance = 0,
             ejections = 0
         },
-        best = save:read().highscore,
+        best = math.abs(save:read().highscore),
         current = 0
+    }
+
+    self.GUI = {
+        scores = Scores(self.scores),
+        ejections = ShortNotif("ejection", '+'..self.multipliers.ejections),
+        reverse = PersistNotif("reverse !", "x2")
     }
 end
 
@@ -31,6 +39,10 @@ function Stats:addPoints(type, val)
     self.scores.points[type] = self.scores.points[type] + points
 
     self.scores.current = self.scores.current + points
+
+    if self.GUI[type] ~= nil and self.GUI[type].className == "ShortNotif" then
+        self.GUI[type].visible = true
+    end
 end
 
 function Stats:save()

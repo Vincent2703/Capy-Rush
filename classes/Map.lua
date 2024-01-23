@@ -10,8 +10,6 @@ function Map:init(tilesetPath, predefinedChunks, nbChunksPerIter, startingChunkN
         orientation = "orthogonal",
         width = 9,
         height = self.predefinedChunks[startingChunkName].data.height,
-        --tilewidth = TILEDIM,
-        --tileheight = TILEDIM,
         tilesets = {},
         layers = {}
     }
