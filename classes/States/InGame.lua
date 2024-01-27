@@ -26,6 +26,7 @@ function InGame:start() -- On restart
     self.player.velocity.y, self.player.velocity.x = 0, 0
     self.player.fuel = 100
     self.player.health = self.player.maxHealth
+    self.player.destructionState = "none"
     self.player.posScreen = {x=0, y=0} 
 
     self.inCar = true
@@ -54,6 +55,11 @@ end
 
 function InGame:update(dt)
     if gameState:isCurrentState("InGame") then
+
+        if self.player and self.player.destructionState == "end" then
+            gameState:setState("GameOver", true)
+        end
+        
         if (input.state.actions.newPress.eject 
         or (input.state.actions.newPress.click and input.state.mouse.y <= 0.9*heightWindow and input.state.mouse.y >= 0.1*heightWindow)) 
         and not self.eject then
@@ -94,14 +100,17 @@ function InGame:update(dt)
                 end
             end
         else
-            if self.player.health <= 0 then
-                gameState:setState("GameOver", true)
-            end
-
             if self.stats.scores.current >= self.difficulty.id*50 and self.difficulty.id < #self.difficulties then
                 self:setDifficulty(self.difficulty.id+1)
             end
-            if self.player.currPathDir == "left" and self.stats.multipliers.glob == 1 then
+
+            if self.player.onFire then
+                self.stats.multipliers.glob = 2
+                self.stats.GUI.onFire.visible = true
+            elseif not self.player.onFire and self.stats.GUI.onFire.visible then
+                self.stats.multipliers.glob = 1
+                self.stats.GUI.onFire.visible = false
+            elseif self.player.currPathDir == "left" and self.stats.multipliers.glob == 1 then
                 self.stats.multipliers.glob = 2
                 self.stats.GUI.reverse.visible = true
             elseif self.player.currPathDir == "right" and self.stats.multipliers.glob == 2 then
@@ -198,7 +207,7 @@ function InGame:render()
     love.graphics.setColor(255, 255, 255)--]]
 
     if self.eject then
-        self.ejection:render()
+        self.ejection:draw()
     end
 
     -- Reset transformations
@@ -229,10 +238,10 @@ function InGame:render()
 
 
     -- Temp life count and score
-   --[[ if self.inCar then
+    if self.inCar then
         love.graphics.print("life: "..self.player.health.."/"..self.player.maxHealth, 10, 40)
     end
-
+--[[
     love.graphics.print("score: "..math.abs(math.ceil(self.stats.scores.current-0.5)), 150, 40)
     love.graphics.print("highscore: "..math.abs(self.stats.scores.best), 150, 60)
 
@@ -297,12 +306,12 @@ function InGame:createCarsModels()
     end
 
     local carModels = {
-        car1 = {car = Car(getSpritesData("car1", 32, 35), 360, 5, 4), ratio=0.2},
-        car2 = {car = Car(getSpritesData("car2", 28, 32), 350, 6, 4.5), ratio=0.1},
-        car3 = {car = Car(getSpritesData("car3", 28, 37), 315, 5, 3.7), ratio=0.5},
-        taxi = {car = Car(getSpritesData("taxi", 28, 37), 310, 6, 3.5), ratio=0.1},
-        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 410, 3, 5.5), ratio=0.05},
-        police = {car = Car(getSpritesData("police1", 28, 35), 360, 5, 3.5, true), ratio=0.05}
+        car1 = {car = Car(getSpritesData("car1", 32, 35), 350, 5, 4), ratio=0.2},
+        car2 = {car = Car(getSpritesData("car2", 28, 32), 340, 6, 4.5), ratio=0.1},
+        car3 = {car = Car(getSpritesData("car3", 28, 37), 305, 5, 3.7, -2), ratio=0.5},
+        taxi = {car = Car(getSpritesData("taxi", 28, 37), 300, 6, 3.5), ratio=0.1},
+        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 380, 3, 5.5), ratio=0.05},
+        police = {car = Car(getSpritesData("police1", 28, 35), 350, 5, 3.5, nil, true), ratio=0.05}
     }
 
     return carModels
@@ -349,7 +358,7 @@ function InGame:addCarRandomly()
             return item.className == "RoadUser" or item.className == "Police"
         end
 
-        local _, nbNearCars = self.world:querySegment(randomPath.x+randomPath.width/2, randPosY-randCarModel.heightCar*2, randomPath.x+randomPath.width/2, randPosY+randCarModel.heightCar, filterCars)
+        local _, nbNearCars = self.world:querySegment(randomPath.x+randomPath.width/2, randPosY-randCarModel.heightCar*3, randomPath.x+randomPath.width/2, randPosY+randCarModel.heightCar*4, filterCars)
         if nbNearCars == 0 then
             self:addCarToPathAtPosY(randCarModel, randomPath, randPosY)
         end
@@ -401,9 +410,6 @@ function InGame:updateAllCars(dt)
 
     for _, car in ipairs(self.cars) do
         car:update(dt)
-        if car.health <= 0 then
-            car:destroy()
-        end
     end
 end
 
@@ -411,15 +417,11 @@ function InGame:drawAllCars()
     local player = self.player
 
     if self.inCar then
-        player.currentAnim:draw(player.spritesheet, player.x+player.widthCar, player.y+player.heightCar, nil, 1, 1, player.widthCar, player.heightCar)
+        player:draw()
     end
     for _, car in ipairs(self.cars) do
         if car.y < self.camMap.y+offsetYMap and car.y > self.camMap.y-heightWindow and car.x > self.camMap.x-widthWindow and car.x < self.camMap.x+widthWindow then
-            if car.direction == "left" then
-                car.currentAnim:draw(car.spritesheet, car.x, car.y, math.pi, 1, 1, car.widthCar, car.heightCar)
-            else
-                car.currentAnim:draw(car.spritesheet, car.x+car.widthCar, car.y+car.heightCar, nil, 1, 1, car.widthCar, car.heightCar)
-            end
+            car:draw()
         end
     end
 end
@@ -445,7 +447,7 @@ function InGame:manageCamera()
     if self.inCar then
         local playerMiddle = calculateMiddle(player, player.widthCar)
         trX = calculateCameraOffset(offsetXCamera, playerMiddle, player.widthCar)
-        trY = math.max(heightWindow/ratioScale, -player.y*self.zoom + widthWindow*0.95 + offsetYMap/ratioScale)
+        trY = math.max(heightWindow/ratioScale, -player.y*self.zoom + heightWindow*0.95)
     elseif self.eject then
         local ejectionMiddle = calculateMiddle(ejection)
         trX = calculateCameraOffset(offsetXCamera, ejectionMiddle)

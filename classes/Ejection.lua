@@ -2,9 +2,9 @@ Ejection = class("Ejection")
 
 function Ejection:init(x, y)
     self.x, self.y = x, y
-    self.minRadius = 5
-    self.radius = self.minRadius
-    self.maxRadius = 20
+    self.minScale = 0.4
+    self.scale = self.minScale
+    self.maxScale = 1
     
     self.maxSpeed = 900
 
@@ -15,6 +15,19 @@ function Ejection:init(x, y)
     self.count = 0
 
     self.landOn = nil
+
+    self.animations = {        
+        backCenter = anim8.newAnimation(globalAssets.animations.capyman.grid(1, 1), 1),
+        backLeft = anim8.newAnimation(globalAssets.animations.capyman.grid(2, 1), 1),
+        backRight = anim8.newAnimation(globalAssets.animations.capyman.grid(3, 1), 1),
+        frontCenter = anim8.newAnimation(globalAssets.animations.capyman.grid(1, 2), 1),
+        frontLeft = anim8.newAnimation(globalAssets.animations.capyman.grid(3, 2), 1),
+        frontRight = anim8.newAnimation(globalAssets.animations.capyman.grid(2, 2), 1),
+        flatUp = anim8.newAnimation(globalAssets.animations.capyman.grid(2, 3), 1),
+        flatDown = anim8.newAnimation(globalAssets.animations.capyman.grid(1, 3), 1)
+    }
+    self.currAnim = {name="backCenter", anim=self.animations.backCenter}
+    self.widthSprite, self.heightSprite = globalAssets.animations.capyman.spriteWidth, globalAssets.animations.capyman.spriteHeight
 
     input:setCurrentJoyZ()
 end
@@ -29,7 +42,7 @@ function Ejection:update(dt)
         local ratio = math.min(self.count / (self.ejectTime/2), (self.ejectTime - self.count) / (0.5*self.ejectTime))
         ratio = math.max(0, math.min(1, ratio))
         
-        self.radius = (self.maxRadius - self.minRadius) * ratio + self.minRadius
+        self.scale = (self.maxScale - self.minScale) * ratio + self.minScale
 
         local speed = self.maxSpeed*math.min(0.7, ratio)        
         local targetVelY = (input.state.actions.up and speed) or (input.state.actions.down and -speed) or 0
@@ -40,6 +53,38 @@ function Ejection:update(dt)
         
         self.velocity.x, self.velocity.y = velX, velY
         self.x, self.y = self.x + velX * dt, self.y - velY * dt
+
+        local side
+        if self.velocity.y >= 0 then --back
+            if self.ejectTime-self.count <= dt then 
+                side = "flatUp"
+            elseif self.velocity.x < -50 then
+                side = "backLeft"
+            elseif self.velocity.x > 50 then
+                side = "backRight"
+            else
+                side = "backCenter"
+            end
+        else --front
+            if self.ejectTime-self.count <= dt then 
+                side = "flatDown"
+            elseif self.velocity.x < -50 then
+                side = "frontLeft"
+            elseif self.velocity.x > 50 then
+                side = "frontRight"
+            else
+                side = "frontCenter"
+            end
+        end
+
+        if self.currAnim.name ~= side then
+            self.currAnim = {name=side, anim=self.animations[side]}
+        end
+
+        if self.currAnim.anim ~= nil then
+            self.currAnim.anim:update(dt)
+        end
+
     else 
         self.landOn = self:checkCarUnder()
     end
@@ -53,7 +98,7 @@ function Ejection:checkCarUnder()
     end
 
     for i, car in ipairs(gameState.states["InGame"].cars) do
-        if checkIntersect(car.x, car.y, car.widthCar, car.heightCar, self.x, self.y, self.radius) then
+        if checkIntersect(car.x, car.y, car.widthCar, car.heightCar, self.x, self.y, math.max(self.widthSprite, self.heightSprite)/2*self.scale) then
             return i
         end
     end
@@ -61,10 +106,9 @@ function Ejection:checkCarUnder()
 end
 
 
-function Ejection:render()
-    love.graphics.setColor(255, 0, 0)
-    love.graphics.circle("fill", self.x, self.y, self.radius)
-    love.graphics.setColor(255, 255, 255)
-    love.graphics.print(math.ceil(input.state.accelerometer.tiltZ*100-0.5), 5, 60)
+function Ejection:draw()
+    local offsetX, offsetY = self.widthSprite*self.scale/2, self.heightSprite*self.scale/2
 
+    --love.graphics.circle("line", self.x, self.y, math.max(offsetX, offsetY))
+    self.currAnim.anim:draw(globalAssets.animations.capyman.spritesheet, self.x-offsetX, self.y-offsetY, 0, self.scale)
 end

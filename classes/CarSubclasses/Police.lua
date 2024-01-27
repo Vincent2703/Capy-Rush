@@ -31,8 +31,12 @@ function Police:update(dt)
     targetVelX, targetVelY = self:manageTrajectory(targetVelX, targetVelY)
 
     velX = accX * targetVelX + (1 - accX) * velX
-
     velY = accY * targetVelY + (1 - accY) * velY
+
+    if self.destructionState ~= "none" then
+        velY = math.max(0, math.floor(self.velocity.y*1-dt))
+        velX = math.floor(velY/self.maxSpeed*velX)
+    end
 
     local velX, velY, goalX, goalY = self:manageCollisions(velX, velY, dt)
 
@@ -44,11 +48,12 @@ function Police:update(dt)
     self.velocity.x = velX
     self.velocity.y = velY
 
-    self.currentAnim:update(dt)
+    self.currCarAnim:update(dt)
+    self:manageEffectsAnim(dt)
 end
 
 function Police:checkBadDriver()
-    local watchZone = {xA=self.x-50, yA=self.y-100, xB=self.x+self.widthCar+100, yB=self.y+self.heightCar+200}
+    local watchZone = {xA=self.x-50, yA=self.y-100, xB=self.x+self.widthCar+50, yB=self.y+self.heightCar+100}
     local inGame = gameState.states["InGame"]
     local player = inGame.player
 
@@ -63,7 +68,7 @@ function Police:checkBadDriver()
 end
 
 function Police:startPursuit()
-    self.currentAnim = self.animations.flashingLights
+    self.currCarAnim = self.animations.flashingLights
     self.inPursuit = true
     self.currMaxSpeed = self.maxSpeed
     if self.direction == "left" then 

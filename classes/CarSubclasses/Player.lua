@@ -6,24 +6,29 @@ function Player:update(dt)
 
     local velX, velY = self.velocity.x, self.velocity.y
 
-    self.health = 10
-    --self.fuel = math.max(0, self.fuel - self.consumptionFactor*dt)
+    self.fuel = math.max(0, self.fuel - self.consumptionFactor*dt)
 
     -- Update velocity based on input
     local targetVelX = 0
-    if input.state.actions.right then
-        targetVelX = self.maxSpeed*input.state.accelerometer.tiltX
-    elseif input.state.actions.left then
-        targetVelX = -self.maxSpeed*input.state.accelerometer.tiltX
+    if self.destructionState == "none" then
+        if input.state.actions.right then
+            targetVelX = self.maxSpeed*input.state.accelerometer.tiltX
+        elseif input.state.actions.left then
+            targetVelX = -self.maxSpeed*input.state.accelerometer.tiltX
+        end
     end
 
-    -- Smoothly adjust velocity towards the target
-    velX = accX*targetVelX - accX*velX + velX
+    -- Smoothly adjust velocity towards the target or cap it
+    if targetVelX == 0 and math.abs(self.velocity.x) < 1 then
+        velX = 0
+    else
+        velX = accX*targetVelX - accX*velX + velX
+    end    
 
     -- Update y-velocity
     velY = accY * self.maxSpeed + (1 - accY) * velY
 
-    if self.fuel <= 0 then
+    if self.fuel <= 0 or self.destructionState ~= "none" then
         velY = math.max(0, math.floor(self.velocity.y*1-dt))
         velX = math.floor(velY/self.maxSpeed*velX)
     end
@@ -46,7 +51,7 @@ function Player:update(dt)
     self.velocity.x = velX
     self.velocity.y = velY
 
-    -- Update animation
-    self.currentAnim:update(dt)
-
+    -- Update animations
+    self.currCarAnim:update(dt)
+    self:manageEffectsAnim(dt)
 end

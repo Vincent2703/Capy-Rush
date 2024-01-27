@@ -26,7 +26,8 @@ function Stats:init()
     self.GUI = {
         scores = Scores(self.scores),
         ejections = ShortNotif("ejection", '+'..self.multipliers.ejections),
-        reverse = PersistNotif("reverse !", "x2")
+        reverse = PersistNotif("reverse !", "x2"),
+        onFire = PersistNotif("ON FIRE !", "x2")
     }
 end
 

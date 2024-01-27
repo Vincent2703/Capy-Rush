@@ -60,7 +60,7 @@ function Pause:render()
     love.graphics.draw(preRenderCanvas) 
     love.graphics.setColor(0, 0, 0, 0.4)
     love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
-    love.graphics.setColor(255, 255, 255, 1)
+    love.graphics.setColor(1, 1, 1, 1)
 
     love.graphics.origin()
 

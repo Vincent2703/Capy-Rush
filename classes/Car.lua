@@ -1,14 +1,27 @@
 Car = class("Car")
 
-function Car:init(spritesData, maxSpeed, maxHealth, consumptionFactor, isPolice)
+function Car:init(spritesData, maxSpeed, maxHealth, consumptionFactor, motorPosY, isPolice)
     self.spritesData = spritesData
     self.widthCar, self.heightCar = self.spritesData.widthSprite, self.spritesData.heightSprite
 
     self.spritesheet = self.spritesData.spritesheet
     self.animations = {}
-    self.animations.normal = anim8.newAnimation(self.spritesData.grid("1-1", 1), 1)
-    self.animations.ejection = anim8.newAnimation(self.spritesData.grid("1-1", 2), 1)
-    self.currentAnim = self.animations.normal
+
+    self.animations.normal = anim8.newAnimation(self.spritesData.grid("1-1", 1), 1) -- Anim useful ?
+    self.currCarAnim = self.animations.normal
+
+    self.animations.fire = {
+        front = anim8.newAnimation(globalAssets.animations.fire.grid("1-15", 1), 0.1),
+        left = anim8.newAnimation(globalAssets.animations.fire.grid("1-15", 2), 0.1),
+        right = anim8.newAnimation(globalAssets.animations.fire.grid("1-15", 3), 0.1)
+    }
+
+    self.animations.explosion = {
+        std = anim8.newAnimation(globalAssets.animations.explosion.grid("1-22", 1), 0.1, function(_, nbLoops) if nbLoops == 1 then self.destructionState = "end"; self:destroy() end end) 
+    }
+
+    self.currFireAnim = {name=nil, anim=nil}
+    self.explosionAnim = self.animations.explosion.std
 
     self.x, self.y = 0, 0
     self.maxSpeed = maxSpeed
@@ -17,6 +30,7 @@ function Car:init(spritesData, maxSpeed, maxHealth, consumptionFactor, isPolice)
     self.accY = 0.01
     self.fuel = 100
     self.consumptionFactor = consumptionFactor
+    self.motorPosY = motorPosY or 0
     self.maxHealth = maxHealth
     self.health = maxHealth
 
@@ -24,6 +38,10 @@ function Car:init(spritesData, maxSpeed, maxHealth, consumptionFactor, isPolice)
     self.delayDamage = 2
 
     self.isPolice = isPolice or false
+
+    self.onFire = false
+
+    self.destructionState = "none"
 end
 
 function Car:manageCollisions(velX, velY, dt)
@@ -58,7 +76,7 @@ function Car:manageCollisions(velX, velY, dt)
             playerCollidesCar = true
 
             -- Check if enough time has passed since the last collision and the velocity is high enough
-            if self.lastCollision >= self.delayDamage and velY >= 0.15 * self.maxSpeed then
+            if self.className == "Player" and self.lastCollision >= self.delayDamage and self.velocity.y >= 0.15 * self.maxSpeed then
                 -- Reduce health of both the player and the other car
                 other.health = other.health-1
                 self.health = self.health-1
@@ -75,6 +93,7 @@ function Car:manageCollisions(velX, velY, dt)
                 velX, velY = velX / 2, velY / 2
                 other.velocity.y = other.velocity.y + self.velocity.y / 3
             end
+            other.onFire = other.health == 1
         -- Check if the colliding item is an obstacle
         elseif other.isObstacle then
             -- Adjust velocities based on the collision
@@ -85,11 +104,17 @@ function Car:manageCollisions(velX, velY, dt)
             end
 
             -- Check if the current car is the player, enough time has passed since the last collision, and the velocity is high enough
-            if self.className == "Player" and self.lastCollision >= self.delayDamage and velY >= 0.15 * self.maxSpeed then
+            if self.className == "Player" and self.lastCollision >= self.delayDamage and self.velocity.y >= 0.15 * self.maxSpeed then
                 -- Reduce the player's health and reset the collision timer
                 self.health = self.health-1
                 self.lastCollision = 0
             end
+        end
+
+        self.onFire = self.health == 1
+        if self.health <= 0 then
+            self.destructionState = "currently"
+            self.onFire = false
         end
     end
 
@@ -113,7 +138,7 @@ function Car:castToPlayer(x, y)
 end
 
 function Car:castToRoadUser(x, y, direction)
-    local roadUser = RoadUser(self.spritesData, self.maxSpeed, self.health, self.consumptionFactor, direction)
+    local roadUser = RoadUser(self.spritesData, self.maxSpeed, self.maxHealth, self.consumptionFactor, direction)
     roadUser.direction = direction
     gameState.states["InGame"].world:add(roadUser, roadUser.x, roadUser.y, roadUser.widthCar, roadUser.heightCar)
     roadUser:updatePosition(x, y)
@@ -121,7 +146,7 @@ function Car:castToRoadUser(x, y, direction)
 end
 
 function Car:castToPolice(x, y, direction)
-    local police = Police(self.spritesData, self.maxSpeed, self.health, self.consumptionFactor, direction)
+    local police = Police(self.spritesData, self.maxSpeed, self.maxHealth, self.consumptionFactor, direction)
     police.direction = direction
     gameState.states["InGame"].world:add(police, police.x, police.y, police.widthCar, police.heightCar)
     police:updatePosition(x, y)
@@ -148,11 +173,14 @@ function Car:destroy()
 end
 
 function Car:switchCar()
+    print(self.health)
     local player = self:cast(Player)
+    print(self.health)
+    player.direction = "right"
     local inGame = gameState.states["InGame"] 
-    inGame.UI["fuelGauge"].player = player
-    local cars = inGame.cars
+    inGame.UI["fuelGauge"].player = player --optimize
 
+    local cars = inGame.cars
     for i, v in ipairs(cars) do
         if v == self then
             table.remove(cars, i)
@@ -206,8 +234,8 @@ function Car:manageTrajectory(velX, velY)
 
     if (lenTopPaths == 0 or lenTopCars > 0) and self.targetX == nil then -- No path or car(s) and no target already defined
 
-        local _, lenLeftCarsObstacles = world:queryRect(self.x-self.widthCar/2-TILEDIM/2, self.y, self.widthCar, self.heightCar*3, filterCarsObstacles)
-        local _, lenRightCarsObstacles = world:queryRect(self.x+self.widthCar/2+TILEDIM/2, self.y, self.widthCar, self.heightCar*3, filterCarsObstacles)
+        local _, lenLeftCarsObstacles = world:queryRect(self.x-TILEDIM, self.y-self.heightCar*2, TILEDIM*0.75, self.heightCar*4, filterCarsObstacles)
+        local _, lenRightCarsObstacles = world:queryRect(self.x+self.widthCar+TILEDIM*0.25, self.y-self.heightCar*2, TILEDIM*0.75, self.heightCar*4, filterCarsObstacles)
 
         local yNextPaths = 0
         if self.direction == "right" then 
@@ -266,4 +294,45 @@ function Car:manageTrajectory(velX, velY)
     end
 
     return velX, velY
+end
+
+function Car:manageEffectsAnim(dt)
+    if self.onFire  then --health == 2 --> smoke
+        local fireSide
+        if self.velocity.x > 3 then
+            fireSide = "right"
+        elseif self.velocity.x < -3 then
+            fireSide = "left"
+        else
+            fireSide = "front"
+        end
+
+        if self.currFireAnim.name ~= fireSide then
+            self.currFireAnim = {name=fireSide, anim=self.animations.fire[fireSide]}
+        end
+    end
+
+    if self.onFire then
+        self.currFireAnim.anim:update(dt)
+    end
+    if self.destructionState == "currently" then
+        self.explosionAnim:update(dt)
+    end
+
+end
+
+function Car:draw()
+    if self.direction == "left" then
+        self.currCarAnim:draw(self.spritesheet, self.x, self.y, math.pi, 1, 1, self.widthCar, self.heightCar)
+    else
+        self.currCarAnim:draw(self.spritesheet, self.x+self.widthCar, self.y+self.heightCar, nil, 1, 1, self.widthCar, self.heightCar)
+
+        if self.onFire and self.currFireAnim.anim ~= nil then
+            self.currFireAnim.anim:draw(globalAssets.animations.fire.spritesheet, self.x, self.y+self.motorPosY)
+        end
+
+        if self.destructionState == "currently" then
+            self.explosionAnim:draw(globalAssets.animations.explosion.spritesheet, self.x-globalAssets.animations.explosion.spriteWidth/3, self.y-globalAssets.animations.explosion.spriteHeight+self.heightCar/2)
+        end
+    end
 end

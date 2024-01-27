@@ -15,6 +15,8 @@ function love.load()
     local font = love.graphics.newFont("assets/fonts/FFFFORWA.ttf", 14)
     love.graphics.setFont(font)
 
+    loadGlobalAssets() 
+
     gameState = GameState()
     gameState:setState("InGame", true)
 
@@ -83,6 +85,29 @@ function loadClasses()
 
     require("classes/Input")
 end
+
+function loadGlobalAssets()
+    globalAssets = {
+        animations = {}
+    }
+
+    local imageInfo = {
+        fire = { "assets/textures/effects/fireSpritesheet.png", 32, 32, 1 },
+        explosion = { "assets/textures/effects/explosionSpritesheet.png", 71, 71, 2 },
+        capyman = { "assets/textures/player/capymanSpritesheet.png", 48, 48, 2 }
+    }
+
+    for name, info in pairs(imageInfo) do
+        local file = love.graphics.newImage(info[1])
+        globalAssets.animations[name] = {
+            spritesheet = file,
+            grid = anim8.newGrid(info[2], info[3], file:getWidth(), file:getHeight(), 0, 0, info[4]),
+            spriteWidth = info[2],
+            spriteHeight = info[3]
+        }
+    end
+end
+
 
 function initScreen()
     local flags = {}

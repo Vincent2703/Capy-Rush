@@ -20,9 +20,13 @@ function RoadUser:update(dt)
 
     -- Smoothly adjust velocity towards the target
     velX = accX*targetVelX - accX*velX + velX
-
     -- Update y-velocity
     velY = accY * targetVelY + (1 - accY) * velY
+
+    if self.destructionState ~= "none" then
+        velY = math.max(0, math.floor(self.velocity.y*1-dt))
+        velX = math.floor(velY/self.maxSpeed*velX)
+    end
 
     local velX, velY, goalX, goalY = self:manageCollisions(velX, velY, dt)
 
@@ -36,5 +40,6 @@ function RoadUser:update(dt)
     self.velocity.x = velX
     self.velocity.y = velY
 
-    self.currentAnim:update(dt)
+    self.currCarAnim:update(dt)
+    self:manageEffectsAnim(dt)
 end
