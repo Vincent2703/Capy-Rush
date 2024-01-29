@@ -51,7 +51,5 @@ function Player:update(dt)
     self.velocity.x = velX
     self.velocity.y = velY
 
-    -- Update animations
-    self.currCarAnim:update(dt)
-    self:manageEffectsAnim(dt)
+    self:commonUpdate(dt)
 end

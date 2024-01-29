@@ -17,7 +17,7 @@ function Car:init(spritesData, maxSpeed, maxHealth, consumptionFactor, motorPosY
     }
 
     self.animations.explosion = {
-        std = anim8.newAnimation(globalAssets.animations.explosion.grid("1-22", 1), 0.1, function(_, nbLoops) if nbLoops == 1 then self.destructionState = "end"; self:destroy() end end) 
+        std = anim8.newAnimation(globalAssets.animations.explosion.grid("1-22", 1), 0.09, function(_, nbLoops) if nbLoops == 1 then self:destroy() end end) 
     }
 
     self.currFireAnim = {name=nil, anim=nil}
@@ -42,6 +42,7 @@ function Car:init(spritesData, maxSpeed, maxHealth, consumptionFactor, motorPosY
     self.onFire = false
 
     self.destructionState = "none"
+    self.opacity = 1
 end
 
 function Car:manageCollisions(velX, velY, dt)
@@ -93,7 +94,7 @@ function Car:manageCollisions(velX, velY, dt)
                 velX, velY = velX / 2, velY / 2
                 other.velocity.y = other.velocity.y + self.velocity.y / 3
             end
-            other.onFire = other.health == 1
+            --other.onFire = other.health == 1
         -- Check if the colliding item is an obstacle
         elseif other.isObstacle then
             -- Adjust velocities based on the collision
@@ -111,11 +112,11 @@ function Car:manageCollisions(velX, velY, dt)
             end
         end
 
-        self.onFire = self.health == 1
-        if self.health <= 0 then
-            self.destructionState = "currently"
-            self.onFire = false
-        end
+        --To put elsewhere ?
+        --[[self.onFire = self.health == 1
+        other.onFire = other.health == 1
+        self.destructionState = (self.health <= 0) and "currently" or "none"
+        other.destructionState = (other.health <= 0) and "currently" or "none"--]]
     end
 
     return velX, velY, goalX, goalY, playerCollidesCar
@@ -296,6 +297,12 @@ function Car:manageTrajectory(velX, velY)
     return velX, velY
 end
 
+function Car:commonUpdate(dt)
+    self.currCarAnim:update(dt)
+    self:manageStateCar()
+    self:manageEffectsAnim(dt)
+end
+
 function Car:manageEffectsAnim(dt)
     if self.onFire  then --health == 2 --> smoke
         local fireSide
@@ -317,11 +324,21 @@ function Car:manageEffectsAnim(dt)
     end
     if self.destructionState == "currently" then
         self.explosionAnim:update(dt)
+        self.opacity = self.opacity-dt/2
     end
 
 end
 
+function Car:manageStateCar() 
+    self.onFire = self.health == 1
+    self.destructionState = (self.health <= 0) and "currently" or "none"
+end
+
 function Car:draw()
+    if self.destructionState == "currently" and self.className ~= "Player" then
+        love.graphics.setColor(0, 0, 0, self.opacity)
+    end
+
     if self.direction == "left" then
         self.currCarAnim:draw(self.spritesheet, self.x, self.y, math.pi, 1, 1, self.widthCar, self.heightCar)
     else
@@ -332,7 +349,10 @@ function Car:draw()
         end
 
         if self.destructionState == "currently" then
+            love.graphics.setColor(1, 1, 1, self.opacity)
             self.explosionAnim:draw(globalAssets.animations.explosion.spritesheet, self.x-globalAssets.animations.explosion.spriteWidth/3, self.y-globalAssets.animations.explosion.spriteHeight+self.heightCar/2)
+            love.graphics.setColor(1, 1, 1, 1)
+
         end
     end
 end

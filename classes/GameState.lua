@@ -4,7 +4,8 @@ function GameState:init()
     self.states = {
         InGame = InGame(),
         Pause = Pause(),
-        GameOver = GameOver()
+        GameOver = GameOver(),
+        Options = Options()
     }
     self.currentState = nil
 end

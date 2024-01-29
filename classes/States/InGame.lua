@@ -55,10 +55,6 @@ end
 
 function InGame:update(dt)
     if gameState:isCurrentState("InGame") then
-
-        if self.player and self.player.destructionState == "end" then
-            gameState:setState("GameOver", true)
-        end
         
         if (input.state.actions.newPress.eject 
         or (input.state.actions.newPress.click and input.state.mouse.y <= 0.9*heightWindow and input.state.mouse.y >= 0.1*heightWindow)) 
@@ -84,6 +80,7 @@ function InGame:update(dt)
                 self.eject = false
                 if self.ejection.landOn == 0 then
                     gameState:setState("GameOver", true)
+                    return
                 else 
                     local car = self.cars[self.ejection.landOn]
                     self.UI["fuelGauge"].visible = true
@@ -132,10 +129,15 @@ function InGame:update(dt)
         end
 
         self:updateAllCars(dt)
+        if self.player == nil and not self.eject then
+            gameState:setState("GameOver", true)
+            return
+        end
 
         if self.inCar then
             if self.player.fuel <= 0 and self.player.velocity.y == 0 then
                 gameState:setState("GameOver", true)
+                return
             end
 
             if self.player.y <= -self.lvl.map.height*TILEDIM + HEIGHTRES*1.5 then
@@ -234,13 +236,7 @@ function InGame:render()
         end
     end
 
-    --UI Score (sub stats)
-
-
-    -- Temp life count and score
-    if self.inCar then
-        love.graphics.print("life: "..self.player.health.."/"..self.player.maxHealth, 10, 40)
-    end
+    --love.graphics.print("tiltXSensi: "..input.state.accelerometer.tiltXSensibility, 150, 40)
 --[[
     love.graphics.print("score: "..math.abs(math.ceil(self.stats.scores.current-0.5)), 150, 40)
     love.graphics.print("highscore: "..math.abs(self.stats.scores.best), 150, 60)
@@ -306,12 +302,12 @@ function InGame:createCarsModels()
     end
 
     local carModels = {
-        car1 = {car = Car(getSpritesData("car1", 32, 35), 350, 5, 4), ratio=0.2},
-        car2 = {car = Car(getSpritesData("car2", 28, 32), 340, 6, 4.5), ratio=0.1},
+        car1 = {car = Car(getSpritesData("car1", 32, 35), 340, 5, 4), ratio=0.2},
+        car2 = {car = Car(getSpritesData("car2", 28, 32), 330, 6, 4.5), ratio=0.1},
         car3 = {car = Car(getSpritesData("car3", 28, 37), 305, 5, 3.7, -2), ratio=0.5},
         taxi = {car = Car(getSpritesData("taxi", 28, 37), 300, 6, 3.5), ratio=0.1},
-        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 380, 3, 5.5), ratio=0.05},
-        police = {car = Car(getSpritesData("police1", 28, 35), 350, 5, 3.5, nil, true), ratio=0.05}
+        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 355, 3, 5.5), ratio=0.05},
+        police = {car = Car(getSpritesData("police1", 28, 35), 345, 5, 3.5, nil, true), ratio=0.05}
     }
 
     return carModels
@@ -392,6 +388,19 @@ function InGame:createUI()
         function() gameState:setState("Pause") end
     )
 
+    UIElements.settings = RectangleButton(
+        math.ceil(widthWindow*0.95)-75,
+        math.ceil(heightWindow*0.05)-25,
+        50,
+        50,
+        true,
+        globalAssets.images.settingsIcon,
+        {1,1,1},
+        {1,1,1, 0.5},
+        false,
+        function() gameState:setState("Options") end
+    )
+
     UIElements.fuelGauge = FuelGauge(
         math.ceil(widthWindow*0.05), 
         math.ceil(heightWindow*0.95), 
@@ -409,7 +418,9 @@ function InGame:updateAllCars(dt)
     end
 
     for _, car in ipairs(self.cars) do
-        car:update(dt)
+        if car.y < self.camMap.y+offsetYMap and car.y > self.camMap.y-heightWindow and car.x > self.camMap.x-widthWindow and car.x < self.camMap.x+widthWindow then
+            car:update(dt)
+        end
     end
 end
 

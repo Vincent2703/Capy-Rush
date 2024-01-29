@@ -48,8 +48,7 @@ function Police:update(dt)
     self.velocity.x = velX
     self.velocity.y = velY
 
-    self.currCarAnim:update(dt)
-    self:manageEffectsAnim(dt)
+    self:commonUpdate(dt)
 end
 
 function Police:checkBadDriver()

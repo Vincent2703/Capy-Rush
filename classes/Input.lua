@@ -23,6 +23,8 @@ function Input:init()
 			end
 		end
 	end
+
+	local optionsSaved = save:read().options
 				   
 	self.state = {}
 	self.state.mouse = {
@@ -36,6 +38,7 @@ function Input:init()
 						y = 1,
 						z = 1,
 						tiltX = 1,
+						tiltXSensibility = optionsSaved.sensibility,
 						tiltZ = 1
 	}
 	self.state.actions = {
@@ -131,7 +134,7 @@ function Input:update()
 		
 		self.state.actions.right = self.state.actions.right or turnRight
 		self.state.actions.left = self.state.actions.left or turnLeft
-		self.state.accelerometer.tiltX = math.abs(rotationModulate)
+		self.state.accelerometer.tiltX = math.abs(rotationModulate)*self.state.accelerometer.tiltXSensibility
 	
 		local deviation = (y > 0) and (z - self.startingJoyZ) or (-(y - self.startingJoyZ)*2)
 		local deviaNorma = math.abs(deviation)

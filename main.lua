@@ -42,7 +42,7 @@ end
 
 function love.focus(f)
     if not f and gameState:isCurrentState("InGame") then
-        gameState:setState("Pause", true)
+        gameState:setState("Options", true)
     end
 end
 
@@ -77,18 +77,24 @@ function loadClasses()
     require("classes/GUI/Button")
     require("classes/GUI/ButtonSubclasses/RectangleButton")
     require("classes/GUI/ButtonSubclasses/CircleButton")
+    require("classes/GUI/Checkbox")
+    require("classes/GUI/Range")
 
     require("classes/GameState")
     require("classes/States/InGame")
     require("classes/States/Pause")
     require("classes/States/GameOver")
+    require("classes/States/Options")
 
     require("classes/Input")
 end
 
 function loadGlobalAssets()
     globalAssets = {
-        animations = {}
+        animations = {},
+        images = {
+            settingsIcon = love.graphics.newImage("assets/textures/misc/settingsIcon.png")
+        }
     }
 
     local imageInfo = {
@@ -147,7 +153,12 @@ function setSave()
         lastVersionPlayed=VERSION,
         lastTimePlayed=os.time(),
         highscore=saveContent and saveContent.highscore or 0,
-        friend=saveContent and saveContent.friend or false
+        friend=saveContent and saveContent.friend or false,
+        options = {
+            music = saveContent.options.music==true,
+            SFX = saveContent.options.SFX==true,
+            sensibility = saveContent.options.sensibility or 1
+        }
     }
     save:write(saveTable)
 end
