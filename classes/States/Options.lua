@@ -43,6 +43,8 @@ function Options:init()
 end
 
 function Options:start()
+    soundManager:setMusicVolume(0.4)
+
     local optionsSaved = save:read().options
 
     self.UI.musicCBX.state = optionsSaved.music
@@ -52,6 +54,11 @@ end
 
 function Options:saveOptions()
     input.state.accelerometer.tiltXSensibility = self.UI.sensibilityRange.currentValue
+    if not self.UI.musicCBX.state then
+        soundManager:pauseMusic()
+    else
+        soundManager:resumeMusic()
+    end
     
     local options = {
         music = self.UI.musicCBX.state,

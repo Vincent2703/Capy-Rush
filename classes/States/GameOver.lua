@@ -44,6 +44,8 @@ function GameOver:init()
 end
 
 function GameOver:start()
+    soundManager:setMusicVolume(0.4)
+
     gameState.states["InGame"].stats:save()
 end
 

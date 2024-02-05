@@ -8,6 +8,9 @@ function RoadUser:init(spritesData, maxSpeed, maxHealth, consumptionFactor, dire
         self.currMaxSpeed = -self.currMaxSpeed
     end
     self.velocity.y = self.currMaxSpeed
+
+    self.hornCanPlay = math.random() >= 0.6
+
 end
 
 function RoadUser:update(dt)
@@ -20,10 +23,11 @@ function RoadUser:update(dt)
 
     -- Smoothly adjust velocity towards the target
     velX = accX*targetVelX - accX*velX + velX
+    
     -- Update y-velocity
     velY = accY * targetVelY + (1 - accY) * velY
 
-    if self.destructionState ~= "none" then
+    if self.isExploding then
         velY = math.max(0, math.floor(self.velocity.y*1-dt))
         velX = math.floor(velY/self.maxSpeed*velX)
     end
@@ -41,4 +45,22 @@ function RoadUser:update(dt)
     self.velocity.y = velY
 
     self:commonUpdate(dt)
+
+    if self.direction == "left" and self.hornCanPlay then
+        local inGame = gameState.states["InGame"]
+        local player = inGame.player
+        if player and player.direction == "left" then
+            local filterPlayer = function(item) --Detect the player
+                return item.className == "Player"
+            end
+            local world = inGame.world
+            _, len = world:querySegment(self.x-TILEDIM, self.y+self.heightCar, self.x+self.widthCar+TILEDIM*3, self.y+self.heightCar, filterPlayer)
+            if len > 0 then --Detects player
+                local horns = {"horn1", "horn2"}
+                soundManager:playSFX(horns[math.random(#horns)], false, self.x, self.y, 1, 100)
+                self.hornCanPlay = false
+            end
+        end
+    end
+
 end

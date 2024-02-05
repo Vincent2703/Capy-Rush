@@ -40,7 +40,7 @@ function Pause:init()
 end
 
 function Pause:start()
-
+    soundManager:setMusicVolume(0.4)
 end
 
 function Pause:update()

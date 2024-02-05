@@ -88,6 +88,8 @@ function Ejection:update(dt)
     else 
         self.landOn = self:checkCarUnder()
     end
+
+    love.audio.setPosition(self.x, self.y, 0)
 end
 
 function Ejection:checkCarUnder()

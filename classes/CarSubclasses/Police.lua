@@ -33,7 +33,7 @@ function Police:update(dt)
     velX = accX * targetVelX + (1 - accX) * velX
     velY = accY * targetVelY + (1 - accY) * velY
 
-    if self.destructionState ~= "none" then
+    if self.isExploding then
         velY = math.max(0, math.floor(self.velocity.y*1-dt))
         velX = math.floor(velY/self.maxSpeed*velX)
     end
@@ -61,12 +61,14 @@ function Police:checkBadDriver()
         (inGame.ejection and 
         inGame.ejection.x >= watchZone.xA and inGame.ejection.x <= watchZone.xB and inGame.ejection.y >= watchZone.yA and inGame.ejection.y <= watchZone.yB) 
     or 
-        (player and player.currPathDir == self.direction and player.collidesCar and 
+        (player and player.direction == self.direction and player.collidesCar and 
         player.x >= watchZone.xA and player.x <= watchZone.xB and player.y >= watchZone.yA and player.y <= watchZone.yB)
     )
 end
 
 function Police:startPursuit()
+    self.sfx.policeSiren = soundManager:playSFX("policeSiren", true, self.x, self.y, 10, 250)
+
     self.currCarAnim = self.animations.flashingLights
     self.inPursuit = true
     self.currMaxSpeed = self.maxSpeed
@@ -76,6 +78,13 @@ function Police:startPursuit()
 end
 
 function Police:pursuit()
+    if self.isExploding then
+        self.sfx.policeSiren:stop()
+        return 0, 0
+    end
+    if self.sfx.policeSiren ~= nil then
+        self.sfx.policeSiren:setPosition(self.x, self.y)
+    end
     local player = gameState.states["InGame"].player
     local velX, velY = 0, self.currMaxSpeed
     if player ~= nil then

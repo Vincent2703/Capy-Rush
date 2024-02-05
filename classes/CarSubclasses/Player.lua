@@ -10,7 +10,7 @@ function Player:update(dt)
 
     -- Update velocity based on input
     local targetVelX = 0
-    if self.destructionState == "none" then
+    if not self.isExploding then
         if input.state.actions.right then
             targetVelX = self.maxSpeed*input.state.accelerometer.tiltX
         elseif input.state.actions.left then
@@ -28,7 +28,7 @@ function Player:update(dt)
     -- Update y-velocity
     velY = accY * self.maxSpeed + (1 - accY) * velY
 
-    if self.fuel <= 0 or self.destructionState ~= "none" then
+    if self.fuel <= 0 or self.isExploding then
         velY = math.max(0, math.floor(self.velocity.y*1-dt))
         velX = math.floor(velY/self.maxSpeed*velX)
     end
@@ -40,7 +40,7 @@ function Player:update(dt)
 
     local filter = function(item, other) 
         if other.isPath then
-            self.currPathDir = other.direction
+            self.direction = other.direction
         end
         return self:filterColliders(item, other) 
     end
@@ -52,4 +52,6 @@ function Player:update(dt)
     self.velocity.y = velY
 
     self:commonUpdate(dt)
+    
+    love.audio.setPosition(self.x, self.y, 0)
 end

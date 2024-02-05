@@ -35,14 +35,23 @@ function Car:init(spritesData, maxSpeed, maxHealth, consumptionFactor, motorPosY
     self.health = maxHealth
 
     self.lastCollision = 0
-    self.delayDamage = 2
+    self.delayDamage = 1
 
     self.isPolice = isPolice or false
 
     self.onFire = false
 
-    self.destructionState = "none"
+    --To refactorize
+    self.isExploding = false
+    self.startExplosionSFX = false
     self.opacity = 1
+
+    self.sfx = {
+        fire = nil,
+        wind = nil
+    }
+
+    self.isCar = true
 end
 
 function Car:manageCollisions(velX, velY, dt)
@@ -83,6 +92,7 @@ function Car:manageCollisions(velX, velY, dt)
                 self.health = self.health-1
                 -- Reset the collision timer
                 self.lastCollision = 0
+                soundManager:playSFX("crash2")
             end
 
             -- Adjust velocities based on the collision
@@ -97,6 +107,7 @@ function Car:manageCollisions(velX, velY, dt)
             --other.onFire = other.health == 1
         -- Check if the colliding item is an obstacle
         elseif other.isObstacle then
+
             -- Adjust velocities based on the collision
             if normal.x ~= 0 then
                 velX, velY = 0, velY / 2
@@ -105,18 +116,19 @@ function Car:manageCollisions(velX, velY, dt)
             end
 
             -- Check if the current car is the player, enough time has passed since the last collision, and the velocity is high enough
-            if self.className == "Player" and self.lastCollision >= self.delayDamage and self.velocity.y >= 0.15 * self.maxSpeed then
+            if self.className == "Player" and self.velocity.y >= 0.15 * self.maxSpeed and self.lastCollision >= self.delayDamage then
                 -- Reduce the player's health and reset the collision timer
                 self.health = self.health-1
                 self.lastCollision = 0
+                soundManager:playSFX("collisionObstacle")
             end
         end
 
         --To put elsewhere ?
         --[[self.onFire = self.health == 1
         other.onFire = other.health == 1
-        self.destructionState = (self.health <= 0) and "currently" or "none"
-        other.destructionState = (other.health <= 0) and "currently" or "none"--]]
+        self.isExploding = (self.health <= 0) and "currently" or "none"
+        other.isExploding = (other.health <= 0) and "currently" or "none"--]]
     end
 
     return velX, velY, goalX, goalY, playerCollidesCar
@@ -173,21 +185,28 @@ function Car:destroy()
     inGame.world:remove(self) 
 end
 
-function Car:switchCar()
-    print(self.health)
-    local player = self:cast(Player)
-    print(self.health)
+function Car:switchCar(carToSwitch)
+    local inGame = gameState.states["InGame"]
+
+    local speed = self.maxSpeed*0.6
+    local oldCar = self:cast(RoadUser)
+    oldCar.currMaxSpeed = speed
+
+    local player = carToSwitch:cast(Player)
     player.direction = "right"
-    local inGame = gameState.states["InGame"] 
-    inGame.UI["fuelGauge"].player = player --optimize
+
+    inGame.UI["fuelGauge"].player = player -- optimize
 
     local cars = inGame.cars
-    for i, v in ipairs(cars) do
-        if v == self then
-            table.remove(cars, i)
+    for i = #cars, 1, -1 do
+        if cars[i] == carToSwitch then
+            table.remove(cars, i) -- Remove new car from the list of roadUsers/Police
             break
         end
     end
+    oldCar.direction = "right"
+    table.insert(inGame.cars, oldCar)
+
     return player
 end
 
@@ -195,7 +214,7 @@ end
 function Car:filterColliders(item, other)
     if other.isObstacle then 
         return "slide" 
-    elseif other.className == "RoadUser" or other.className == "Player" or other.className == "Police" then --:subclassOf() does not work
+    elseif other.isCar then
         return "bounce"
     else
         return nil
@@ -205,6 +224,9 @@ end
 function Car:manageTrajectory(velX, velY)
     local velX = velX or 0
     local velY = velY or self.currMaxSpeed
+    if self.direction == "left" then
+        velY = velY*0.65
+    end
 
     local inGame = gameState.states["InGame"]
     local world = inGame.world
@@ -300,11 +322,11 @@ end
 function Car:commonUpdate(dt)
     self.currCarAnim:update(dt)
     self:manageStateCar()
-    self:manageEffectsAnim(dt)
+    self:manageEffects(dt)
 end
 
-function Car:manageEffectsAnim(dt)
-    if self.onFire  then --health == 2 --> smoke
+function Car:manageEffects(dt) --fire/explosion
+    if self.onFire then --health == 2 --> smoke
         local fireSide
         if self.velocity.x > 3 then
             fireSide = "right"
@@ -321,38 +343,65 @@ function Car:manageEffectsAnim(dt)
 
     if self.onFire then
         self.currFireAnim.anim:update(dt)
-    end
-    if self.destructionState == "currently" then
-        self.explosionAnim:update(dt)
-        self.opacity = self.opacity-dt/2
+        if self.sfx.fire == nil --[[and self.sfx.fire:typeOf("Source")--]] then
+            self.sfx.fire = soundManager:playSFX("fire", true, self.x, self.y)
+        else
+            self.sfx.fire:setPosition(self.x, self.y)
+        end
     end
 
+    if self.isExploding then
+        self.explosionAnim:update(dt)
+        self.opacity = self.opacity-dt/2
+
+        if self.startExplosionSFX then
+            if self.sfx.fire ~= nil then
+                self.sfx.fire:stop()
+            end
+            soundManager:playSFX("explosion", false, self.x, self.y)
+            self.startExplosionSFX = false
+        end
+    else
+        self.startExplosionSFX = true
+    end
+
+    --[[if self.className == "Player" then
+        if self.direction == "left" then
+            if self.sfx.wind == nil then
+                self.sfx.wind = soundManager:playSFX("wind")
+            else
+                self.sfx.wind:play()
+            end
+        else
+            if self.sfx.wind ~= nil then
+                self.sfx.wind:stop()
+            end
+        end
+    end--]]
 end
 
 function Car:manageStateCar() 
     self.onFire = self.health == 1
-    self.destructionState = (self.health <= 0) and "currently" or "none"
+    self.isExploding = self.health <= 0 or self.isExploding
 end
 
 function Car:draw()
-    if self.destructionState == "currently" and self.className ~= "Player" then
+    if self.isExploding then
         love.graphics.setColor(0, 0, 0, self.opacity)
     end
 
-    if self.direction == "left" then
+    if self.direction == "left" and self.className ~= "Player" then
         self.currCarAnim:draw(self.spritesheet, self.x, self.y, math.pi, 1, 1, self.widthCar, self.heightCar)
     else
         self.currCarAnim:draw(self.spritesheet, self.x+self.widthCar, self.y+self.heightCar, nil, 1, 1, self.widthCar, self.heightCar)
+    end
+    if self.onFire and self.currFireAnim.anim ~= nil then 
+        self.currFireAnim.anim:draw(globalAssets.animations.fire.spritesheet, self.x, self.y+self.motorPosY)
+    end
 
-        if self.onFire and self.currFireAnim.anim ~= nil then
-            self.currFireAnim.anim:draw(globalAssets.animations.fire.spritesheet, self.x, self.y+self.motorPosY)
-        end
-
-        if self.destructionState == "currently" then
-            love.graphics.setColor(1, 1, 1, self.opacity)
-            self.explosionAnim:draw(globalAssets.animations.explosion.spritesheet, self.x-globalAssets.animations.explosion.spriteWidth/3, self.y-globalAssets.animations.explosion.spriteHeight+self.heightCar/2)
-            love.graphics.setColor(1, 1, 1, 1)
-
-        end
+    if self.isExploding then
+        love.graphics.setColor(1, 1, 1, self.opacity)
+        self.explosionAnim:draw(globalAssets.animations.explosion.spritesheet, self.x-globalAssets.animations.explosion.spriteWidth/3, self.y-globalAssets.animations.explosion.spriteHeight+self.heightCar/2)
+        love.graphics.setColor(1, 1, 1, 1)
     end
 end

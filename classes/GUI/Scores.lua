@@ -7,6 +7,7 @@ function Scores:init(scores)
 
     self.time = 0
     self.beatingHighscore = false
+    self.canPlayCheering = self.highscore > 10
     self.blink = true --true = visible
     self.blinkTime = 1
     self.currentFont = love.graphics.getFont()
@@ -20,6 +21,10 @@ function Scores:update(dt)
     self.beatingHighscore = self.current > self.highscore
 
     if self.beatingHighscore then
+        if self.canPlayCheering then
+            soundManager:playSFX("cheering") --InGame instead ?
+            self.canPlayCheering = false
+        end
         self.time = self.time + dt
 
         if self.time <= self.blinkTime then

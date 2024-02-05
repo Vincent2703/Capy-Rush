@@ -10,6 +10,26 @@ function love.load()
 
     setSave()
 
+    soundManager = SoundManager(
+        {
+            postHardcore = love.audio.newSource("assets/sounds/musics/postHardcore.ogg", "stream"),
+            melodicMetal = love.audio.newSource("assets/sounds/musics/melodicMetal.ogg", "stream"),
+        },
+        {
+            collisionObstacle = love.audio.newSource("assets/sounds/SFX/collisionObstacle.ogg", "static"),
+            splatter = love.audio.newSource("assets/sounds/SFX/splatter.mp3", "static"),
+            explosion = love.audio.newSource("assets/sounds/SFX/explosion.ogg", "static"),
+            fire = love.audio.newSource("assets/sounds/SFX/fire.ogg", "static"),
+            policeSiren = love.audio.newSource("assets/sounds/SFX/policeSiren.ogg", "static"),
+            cheering = love.audio.newSource("assets/sounds/SFX/cheering.ogg", "static"),
+            crash2 = love.audio.newSource("assets/sounds/SFX/crash2.ogg", "static"),
+            tireScreech = love.audio.newSource("assets/sounds/SFX/tireScreech.ogg", "static"),
+            vroom2 = love.audio.newSource("assets/sounds/SFX/vroom2.ogg", "static"),
+            horn1 = love.audio.newSource("assets/sounds/SFX/horn1.ogg", "static"),
+            horn2 = love.audio.newSource("assets/sounds/SFX/horn2.ogg", "static"),
+        }
+    )
+
     initScreen()
 
     local font = love.graphics.newFont("assets/fonts/FFFFORWA.ttf", 14)
@@ -31,6 +51,8 @@ end
 
 function love.update(dt)
     input:update()
+
+    soundManager:updateMusics()
 
     gameState.currentState:update(dt)
 end
@@ -58,6 +80,8 @@ end
 
 function loadClasses()
     require("classes/Save")
+
+    require("classes/SoundManager")
 
     require("classes/Map")
 
@@ -149,16 +173,39 @@ end
 function setSave()
     save = Save("save.lua", false)
     local saveContent = save:read()
+
+    local music = true
+    if saveContent.options and saveContent.options.music ~= nil then
+        music = saveContent.options.music
+    end
+    local SFX = true
+    if saveContent.options and saveContent.options.SFX ~= nil then
+        SFX = saveContent.options.SFX
+    end
     local saveTable = {
         lastVersionPlayed=VERSION,
         lastTimePlayed=os.time(),
         highscore=saveContent and saveContent.highscore or 0,
         friend=saveContent and saveContent.friend or false,
         options = {
-            music = saveContent.options.music==true,
-            SFX = saveContent.options.SFX==true,
-            sensibility = saveContent.options.sensibility or 1
+            music = music,
+            SFX = SFX,
+            sensibility = saveContent.options and saveContent.options.sensibility or 1
         }
     }
     save:write(saveTable)
+
+end
+
+function manageMusic()
+    local musics = globalAssets.sounds.musics 
+    if save.content.options.music then
+        if not musics.postHardcore:isPlaying() then
+            love.audio.play(musics.postHardcore)
+        end
+    else
+        if musics.postHardcore:isPlaying() then
+            love.audio.pause(musics.postHardcore)
+        end
+    end
 end
