@@ -15,7 +15,7 @@ function Range:init(x, y, min, max, defaultValue, step, label)
     self.radiusCircle = 8
     self.xCircle = self.x+(self.defaultValue/(self.max-self.min))*self.width
     self.yCircle = self.y+self.height/2
-    self.marginInBounds = 20
+    self.marginInBounds = 40
 
     self.label = label or false
     self.textX, self.textY = self.x, self.y-self.height-self.marginInBounds-self.radiusCircle

@@ -24,6 +24,6 @@ function CircleButton:draw()
     else
         love.graphics.setColor(self.colorB)
     end
-    love.graphics.print(self.content, self.textX, self.textY)
+    love.graphics.print(self.content, self.textX, self.textY, 0, self.scale)
     love.graphics.setColor(255, 255, 255)
 end

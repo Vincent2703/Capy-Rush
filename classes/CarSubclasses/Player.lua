@@ -1,8 +1,10 @@
 Player = Car:extend("Player")
 
 function Player:update(dt)
-    local accX = 0.04
+    local inGame = gameState.states["InGame"]
+    local accX = 0.06
     local accY = 0.02
+    local maxSpeed = self.maxSpeed*inGame.difficulty.speed
 
     local velX, velY = self.velocity.x, self.velocity.y
 
@@ -12,9 +14,9 @@ function Player:update(dt)
     local targetVelX = 0
     if not self.isExploding then
         if input.state.actions.right then
-            targetVelX = self.maxSpeed*input.state.accelerometer.tiltX
+            targetVelX = maxSpeed*input.state.accelerometer.tiltX
         elseif input.state.actions.left then
-            targetVelX = -self.maxSpeed*input.state.accelerometer.tiltX
+            targetVelX = -maxSpeed*input.state.accelerometer.tiltX
         end
     end
 
@@ -26,11 +28,11 @@ function Player:update(dt)
     end    
 
     -- Update y-velocity
-    velY = accY * self.maxSpeed + (1 - accY) * velY
+    velY = accY * maxSpeed + (1 - accY) * velY
 
     if self.fuel <= 0 or self.isExploding then
         velY = math.max(0, math.floor(self.velocity.y*1-dt))
-        velX = math.floor(velY/self.maxSpeed*velX)
+        velX = math.floor(velY/maxSpeed*velX)
     end
 
     -- Move player using the velocity
@@ -44,7 +46,7 @@ function Player:update(dt)
         end
         return self:filterColliders(item, other) 
     end
-    local actualX, actualY, cols, len = gameState.states["InGame"].world:move(self, goalX, goalY, filter)
+    local actualX, actualY, cols, len = inGame.world:move(self, goalX, goalY, filter)
     
     self.x, self.y = actualX, actualY
 

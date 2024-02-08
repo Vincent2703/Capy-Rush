@@ -137,9 +137,10 @@ function Input:update()
 		self.state.accelerometer.tiltX = math.abs(rotationModulate)*self.state.accelerometer.tiltXSensibility
 	
 		local deviation = (y > 0) and (z - self.startingJoyZ) or (-(y - self.startingJoyZ)*2)
-		local deviaNorma = math.abs(deviation)
-		local deviaBoost = math.min(1, deviaNorma*1.5)
-		self.state.accelerometer.tiltZ = deviaBoost
+		--local deviaNorma = math.abs(deviation)
+		--local deviaBoost = math.min(1, deviaNorma*2)
+
+		self.state.accelerometer.tiltZ = 0.85
 	
 		self.state.actions.up = self.state.actions.up or (deviation > 0)
 		self.state.actions.down = self.state.actions.down or (deviation < 0)

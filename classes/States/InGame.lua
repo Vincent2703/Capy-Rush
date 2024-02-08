@@ -1,24 +1,24 @@
 InGame = class("InGame")
 
 function InGame:init()
-    self.world = self:createWorld()
-
     self.zoom = 2.5
     
     self.difficulties = {
-        {id = 1, rate = 0.6, nbMaxCars = 2},
-        {id = 2, rate = 0.7, nbMaxCars = 2},
-        {id = 3, rate = 0.7, nbMaxCars = 3},
-        {id = 4, rate = 0.8, nbMaxCars = 3},
-        {id = 5, rate = 0.8, nbMaxCars = 4},
-        {id = 6, rate = 0.9, nbMaxCars = 4},
-        {id = 7, rate = 0.9, nbMaxCars = 5},
+        {id = 1, rate = 0.6, nbMaxCars = 2, speed = 1},
+        {id = 2, rate = 0.7, nbMaxCars = 2, speed = 1.1},
+        {id = 3, rate = 0.7, nbMaxCars = 3, speed = 1.2},
+        {id = 4, rate = 0.8, nbMaxCars = 3, speed = 1.3},
+        {id = 5, rate = 0.8, nbMaxCars = 4, speed = 1.4},
+        {id = 6, rate = 0.9, nbMaxCars = 4, speed = 1.5},
+        {id = 7, rate = 0.9, nbMaxCars = 5, speed = 1.6},
     }
 
     self.carModels = self:createCarsModels()
 end
 
 function InGame:start() -- On restart
+    self.world = self:createWorld()
+
     self.lvl = self:createMap()
 
     local modelCar = self.carModels.car3.car
@@ -35,12 +35,14 @@ function InGame:start() -- On restart
 
     self.stats = Stats()
 
+    self.spawningDistance = 300
     self.distanceCount = 0
     self.prevYPos = 0
 
     self.cars = {}
 
     self.landingStatus = false
+    self.quickLanding = false
     self.eject = false
     self.ejection = nil
 
@@ -93,8 +95,12 @@ function InGame:update(dt)
                         self.stats.multipliers.glob = 1
                         self.stats.GUI.reverse.visible = false
                     end
-                    self.player = self.player:switchCar(car)
-                    self.stats:addPoints("ejections")
+                    self.player = self.player:switchCar(car) --bug when the old car is already destroyed
+                    if self.quickLanding then
+                        self.stats:addPoints("ejectionsQuickLanding")
+                    else
+                        self.stats:addPoints("ejectionsNoQuickLanding")
+                    end
                 end
             end
         else
@@ -150,7 +156,7 @@ function InGame:update(dt)
             self.stats:addPoints("distance", dist)
             self.distanceCount = self.distanceCount + dist
             self.prevYPos = self.player.y
-            if self.distanceCount >= 350 then
+            if self.distanceCount >= self.spawningDistance then
                 self.distanceCount = 0
                 local rand = math.random()
                 if rand <= self.difficulty.rate then
@@ -158,9 +164,7 @@ function InGame:update(dt)
                     for i=1, nbCars do
                         self:addCarRandomly()
                     end
-
                 end
-
             end
 
         end
@@ -238,7 +242,6 @@ function InGame:render()
 
     love.graphics.print("LVL: "..self.difficulty.id, 20, 30)
 
-    --love.graphics.print("tiltXSensi: "..input.state.accelerometer.tiltXSensibility, 150, 40)
 --[[
     love.graphics.print("score: "..math.abs(math.ceil(self.stats.scores.current-0.5)), 150, 40)
     love.graphics.print("highscore: "..math.abs(self.stats.scores.best), 150, 60)
@@ -283,7 +286,7 @@ function InGame:createMap()
         chunk4 = {data=getDataLvl("chunk4"), ratio=0.4},
         chunk5 = {data=getDataLvl("chunk5"), ratio=0.05},
         chunk6 = {data=getDataLvl("chunk6"), ratio=0.025},
-        chunk7 = {data=getDataLvl("chunk7"), ratio=0.025},
+        --chunk7 = {data=getDataLvl("chunk7"), ratio=0.025},
         chunk8 = {data=getDataLvl("chunk8"), ratio=0.3},
     }, 5, "chunk4")
 
@@ -304,12 +307,12 @@ function InGame:createCarsModels()
     end
 
     local carModels = {
-        car1 = {car = Car(getSpritesData("car1", 32, 35), 330, 5, 4), ratio=0.2},
-        car2 = {car = Car(getSpritesData("car2", 28, 32), 320, 6, 4.5), ratio=0.1},
-        car3 = {car = Car(getSpritesData("car3", 28, 37), 295, 5, 3.7, -2), ratio=0.5},
-        taxi = {car = Car(getSpritesData("taxi", 28, 37), 290, 6, 3.5), ratio=0.1},
-        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 345, 3, 5.5), ratio=0.05},
-        police = {car = Car(getSpritesData("police1", 28, 35), 335, 5, 3.5, nil, true), ratio=0.05}
+        car1 = {car = Car(getSpritesData("car1", 32, 35), 315, 5, 4, -2), ratio=0.2},
+        car2 = {car = Car(getSpritesData("car2", 28, 32), 305, 6, 4.5, -2), ratio=0.1},
+        car3 = {car = Car(getSpritesData("car3", 28, 37), 280, 5, 3.7, -2), ratio=0.5},
+        taxi = {car = Car(getSpritesData("taxi", 28, 37), 275, 6, 3.5, -2), ratio=0.1},
+        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 325, 3, 5.5), ratio=0.05},
+        police = {car = Car(getSpritesData("police1", 28, 35), 320, 5, 3.5, -2, true), ratio=0.05}
     }
 
     return carModels
@@ -340,7 +343,8 @@ end
 
 function InGame:addCarRandomly()
     local randCarModel = self:getRandomCarModel()
-    local randPosY = self.player.y - HEIGHTRES - math.random(0, 800)
+    local min = self.player.y+offsetYMap-HEIGHTRES
+    local randPosY = math.random(min-HEIGHTRES, min)
 
     local filterPaths = function(item) --Detect paths
         return item.isPath
@@ -458,11 +462,11 @@ function InGame:manageCamera()
     if not self.eject then
         local playerMiddle = calculateMiddle(player, player.widthCar)
         trX = calculateCameraOffset(offsetXCamera, playerMiddle, player.widthCar)
-        trY = math.max(heightWindow/ratioScale, -player.y*self.zoom + heightWindow*0.95)
+        trY = math.max(heightWindow/ratioScale, -player.y*self.zoom + heightWindow*0.9)
     elseif self.eject then
         local ejectionMiddle = calculateMiddle(ejection)
         trX = calculateCameraOffset(offsetXCamera, ejectionMiddle)
-        trY = math.max(heightWindow/ratioScale, -ejection.y*self.zoom + heightWindow*0.95)
+        trY = math.max(heightWindow/ratioScale, -ejection.y*self.zoom + heightWindow*0.9)
     end
 
     return trX, trY
@@ -471,11 +475,13 @@ end
 
 function InGame:manageEjection(ejection)
     if ejection then
+        self.quickLanding = false
         self.landingStatus = false
         self.eject = true
         self.ejection = Ejection(self.player.x+self.player.widthCar/2, self.player.y+self.player.heightCar/2)
         self.player.isExploding = true
     else
+        self.quickLanding = true
         self.landingStatus = true
         self.ejection.velocity.x, self.ejection.velocity.y = self.ejection.velocity.x/2, self.ejection.velocity.y/2
         self.ejection.maxSpeed = self.ejection.maxSpeed/2

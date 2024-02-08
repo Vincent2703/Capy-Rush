@@ -22,17 +22,30 @@ function Options:init()
             0.1,
             "Sensibility"
         )
-        UIElements["saveBtn"] = RectangleButton(
+        UIElements["saveBtnRtGame"] = RectangleButton(
             125,
             450, 
             150,
             50,
-            true,
-            "Save & resume",
+            false,
+            "Save & Resume",
             nil,
             nil,
             true,
-            function() self:saveOptions(); gameState:setState("InGame")  end,
+            function() self:saveOptions(); gameState:setState("InGame") end,
+            "release"
+        )
+        UIElements["saveBtnRtHome"] = RectangleButton(
+            125,
+            450, 
+            150,
+            50,
+            false,
+            "Save & Return",
+            nil,
+            nil,
+            true,
+            function() self:saveOptions(); gameState:setState("Home") end,
             "release"
         )
 
@@ -40,9 +53,20 @@ function Options:init()
     end
 
     self.UI = createUI()
+
+    self.bgWidth = globalAssets.images.homeBackground:getWidth()
+    self.zoom = widthWindow/self.bgWidth
 end
 
 function Options:start()
+    if gameState.prevState == "Home" then
+        self.UI.saveBtnRtHome.visible = true
+        self.UI.saveBtnRtGame.visible = false
+    else
+        self.UI.saveBtnRtHome.visible = false
+        self.UI.saveBtnRtGame.visible = true
+    end
+
     soundManager:setMusicVolume(0.4)
 
     local optionsSaved = save:read().options
@@ -85,15 +109,21 @@ end
 
 function Options:render()
     love.graphics.scale(1/ratioScale, 1/ratioScale)
-    love.graphics.draw(preRenderCanvas) 
-    love.graphics.setColor(0, 0, 0, 0.4)
-    love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
-    love.graphics.setColor(1, 1, 1, 1)
-
     love.graphics.origin()
 
-    love.graphics.print("Options", 30, 30, 0, 1.4) --Element Title
+    if gameState.prevState == "InGame" then
+        love.graphics.draw(preRenderCanvas) 
+        love.graphics.setColor(0, 0, 0, 0.4)
+        love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
+        love.graphics.setColor(1, 1, 1, 1)
+    else
+        love.graphics.draw(globalAssets.images.homeBackground, 0, 0, 0, self.zoom)
+        love.graphics.setColor(0, 0, 0, 0.2)
+        love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
+        love.graphics.setColor(1,1,1)
+    end
 
+    love.graphics.print("Options", 30, 30, 0, 1.4) --Element Title
 
     for key, ui in pairs(self.UI) do
         if ui.visible then

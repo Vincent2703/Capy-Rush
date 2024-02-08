@@ -38,7 +38,7 @@ function love.load()
     loadGlobalAssets() 
 
     gameState = GameState()
-    gameState:setState("InGame", true)
+    gameState:setState("Home", true)
 
     input = Input()  
 end
@@ -64,7 +64,7 @@ end
 
 function love.focus(f)
     if not f and gameState:isCurrentState("InGame") then
-        gameState:setState("Options", true)
+        gameState:setState("Pause", true)
     end
 end
 
@@ -103,12 +103,15 @@ function loadClasses()
     require("classes/GUI/ButtonSubclasses/CircleButton")
     require("classes/GUI/Checkbox")
     require("classes/GUI/Range")
+    require("classes/GUI/ScrollingPanel")
 
     require("classes/GameState")
+    require("classes/States/Home")
     require("classes/States/InGame")
     require("classes/States/Pause")
     require("classes/States/GameOver")
     require("classes/States/Options")
+    require("classes/States/Tutorial")
 
     require("classes/Input")
 end
@@ -117,14 +120,17 @@ function loadGlobalAssets()
     globalAssets = {
         animations = {},
         images = {
-            settingsIcon = love.graphics.newImage("assets/textures/misc/settingsIcon.png")
+            settingsIcon = love.graphics.newImage("assets/textures/misc/settingsIcon.png"),
+            homeBackground = love.graphics.newImage("assets/textures/misc/sky2.png")
         }
     }
 
     local imageInfo = {
         fire = { "assets/textures/effects/fireSpritesheet.png", 32, 32, 1 },
+        smoke = { "assets/textures/effects/smokeSpritesheet.png", 35, 35, 2 },
         explosion = { "assets/textures/effects/explosionSpritesheet.png", 71, 71, 2 },
-        capyman = { "assets/textures/player/capymanSpritesheet.png", 48, 48, 2 }
+        capyman = { "assets/textures/player/capymanSpritesheet.png", 48, 48, 2 },
+        flyingCapyman = { "assets/textures/misc/flyingCapySpritesheet.png", 252, 247, 0 },
     }
 
     for name, info in pairs(imageInfo) do
@@ -146,7 +152,7 @@ function initScreen()
         flags.resizable = false
         flags.fullscreen = true
     else
-        widthWindow, heightWindow = 360, 780 --936 / 780
+        widthWindow, heightWindow = 392, 850--936 / 780
         flags.resizable = true
         flags.fullscreen = false
     end

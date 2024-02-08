@@ -7,8 +7,12 @@ function Car:init(spritesData, maxSpeed, maxHealth, consumptionFactor, motorPosY
     self.spritesheet = self.spritesData.spritesheet
     self.animations = {}
 
-    self.animations.normal = anim8.newAnimation(self.spritesData.grid("1-1", 1), 1) -- Anim useful ?
+    self.animations.normal = anim8.newAnimation(self.spritesData.grid(1, 1), 1) -- Anim useful ?
     self.currCarAnim = self.animations.normal
+
+    self.animations.smoke = {
+        std = anim8.newAnimation(globalAssets.animations.smoke.grid("1-9", 1), 0.08, function() self.smokeOffsetY = 0 end)
+    }
 
     self.animations.fire = {
         front = anim8.newAnimation(globalAssets.animations.fire.grid("1-15", 1), 0.1),
@@ -17,7 +21,7 @@ function Car:init(spritesData, maxSpeed, maxHealth, consumptionFactor, motorPosY
     }
 
     self.animations.explosion = {
-        std = anim8.newAnimation(globalAssets.animations.explosion.grid("1-22", 1), 0.09, function(_, nbLoops) if nbLoops == 1 then self:destroy() end end) 
+        std = anim8.newAnimation(globalAssets.animations.explosion.grid("1-22", 1), 0.09, function() self:destroy() end) 
     }
 
     self.currFireAnim = {name=nil, anim=nil}
@@ -39,6 +43,8 @@ function Car:init(spritesData, maxSpeed, maxHealth, consumptionFactor, motorPosY
 
     self.isPolice = isPolice or false
 
+    self.isSmoking = false
+    self.smokeOffsetY = 0
     self.onFire = false
 
     --To refactorize
@@ -225,7 +231,7 @@ function Car:manageTrajectory(velX, velY)
     local velX = velX or 0
     local velY = velY or self.currMaxSpeed
     if self.direction == "left" then
-        velY = velY*0.65
+        velY = velY/2
     end
 
     local inGame = gameState.states["InGame"]
@@ -341,7 +347,10 @@ function Car:manageEffects(dt) --fire/explosion
         end
     end
 
-    if self.onFire then
+    if self.isSmoking then
+        self.smokeOffsetY = self.smokeOffsetY-dt*20
+        self.animations.smoke.std:update(dt)
+    elseif self.onFire then
         self.currFireAnim.anim:update(dt)
         if self.sfx.fire == nil --[[and self.sfx.fire:typeOf("Source")--]] then
             self.sfx.fire = soundManager:playSFX("fire", true, self.x, self.y)
@@ -381,6 +390,7 @@ function Car:manageEffects(dt) --fire/explosion
 end
 
 function Car:manageStateCar() 
+    self.isSmoking = self.health == 2
     self.onFire = self.health == 1
     self.isExploding = self.health <= 0 or self.isExploding
 end
@@ -395,7 +405,9 @@ function Car:draw()
     else
         self.currCarAnim:draw(self.spritesheet, self.x+self.widthCar, self.y+self.heightCar, nil, 1, 1, self.widthCar, self.heightCar)
     end
-    if self.onFire and self.currFireAnim.anim ~= nil then 
+    if self.isSmoking then
+        self.animations.smoke.std:draw(globalAssets.animations.smoke.spritesheet, self.x, self.y+self.motorPosY-self.smokeOffsetY)
+    elseif self.onFire and self.currFireAnim.anim ~= nil then 
         self.currFireAnim.anim:draw(globalAssets.animations.fire.spritesheet, self.x, self.y+self.motorPosY)
     end
 

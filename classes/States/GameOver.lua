@@ -23,18 +23,45 @@ function GameOver:init()
             "release"
         )
 
-        UIElements["ExitBtn"] = RectangleButton(
+        UIElements["HomeBtn"] = RectangleButton(
             widthWindow/3,
             heightWindow/2+25, 
             widthWindow/3,
             50,
             true,
-            "EXIT",
+            "HOME",
             nil,
             nil,
             true,
-            function() love.event.quit(0) end,
+            function() gameState.states["InGame"].stats:save();gameState:setState("Home") end,
             "release"
+        )
+
+        UIElements["ExitBtn"] = RectangleButton(
+            widthWindow-60,
+            heightWindow-50, 
+            50,
+            50,
+            true,
+            "EXIT",
+            {1,1,1},
+            {1,1,1, 0.5},
+            false,
+            function() gameState.states["InGame"].stats:save();love.event.quit(0) end,
+            "release"
+        )
+
+        UIElements.settingsBtn = RectangleButton(
+            widthWindow-50,
+            11,
+            50,
+            50,
+            true,
+            globalAssets.images.settingsIcon,
+            {1,1,1},
+            {1,1,1, 0.5},
+            false,
+            function() gameState:setState("Options", true) end
         )
 
         return UIElements

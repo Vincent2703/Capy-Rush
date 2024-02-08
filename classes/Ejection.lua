@@ -6,10 +6,10 @@ function Ejection:init(x, y)
     self.scale = self.minScale
     self.maxScale = 1
     
-    self.maxSpeed = 900
+    self.maxSpeed = 800
 
     self.velocity = {x=gameState.states["InGame"].player.velocity.x*10, y=gameState.states["InGame"].player.velocity.y*10}
-    self.accX, self.accY = 0.08, 0.07
+    self.accX, self.accY = 0.08, 0.05 --tester accY 
 
     self.ejectTime = 0.25
     self.count = 0
@@ -44,7 +44,7 @@ function Ejection:update(dt)
         
         self.scale = (self.maxScale - self.minScale) * ratio + self.minScale
 
-        local speed = self.maxSpeed*math.min(0.7, ratio)        
+        local speed = self.maxSpeed*math.min(0.8, ratio)        
         local targetVelY = (input.state.actions.up and speed) or (input.state.actions.down and -speed) or 0
         local targetVelX = (input.state.actions.right and speed) or (input.state.actions.left and -speed) or 0
         
