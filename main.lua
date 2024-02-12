@@ -2,7 +2,9 @@ function love.load()
     VERSION = 0.1
     OS = love.system.getOS()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
-    WIDTHRES, HEIGHTRES = 432, 650 --Mettre en maj
+    WIDTHRES, HEIGHTRES = 432, 650
+    SAFEZONE = {}
+    SAFEZONE.X, SAFEZONE.Y, SAFEZONE.W, SAFEZONE.H = love.window.getSafeArea()
     TILEDIM = 48
 
     loadLibraries()
@@ -37,10 +39,10 @@ function love.load()
 
     loadGlobalAssets() 
 
+    input = Input()  
+
     gameState = GameState()
     gameState:setState("Home", true)
-
-    input = Input()  
 end
 
 function love.keypressed(key, scancode, isrepeat)
@@ -79,6 +81,8 @@ function loadLibraries()
 end
 
 function loadClasses()
+    require("classes/Utils")
+
     require("classes/Save")
 
     require("classes/SoundManager")
@@ -106,12 +110,13 @@ function loadClasses()
     require("classes/GUI/ScrollingPanel")
 
     require("classes/GameState")
-    require("classes/States/Home")
+    require("classes/States/Home") --Rename to screens ?
     require("classes/States/InGame")
     require("classes/States/Pause")
     require("classes/States/GameOver")
     require("classes/States/Options")
     require("classes/States/Tutorial")
+    require("classes/States/Credits")
 
     require("classes/Input")
 end
@@ -121,19 +126,25 @@ function loadGlobalAssets()
         animations = {},
         images = {
             settingsIcon = love.graphics.newImage("assets/textures/misc/settingsIcon.png"),
-            homeBackground = love.graphics.newImage("assets/textures/misc/sky2.png")
+            homeBackground = love.graphics.newImage("assets/textures/misc/sky2.png"),
+            arrowRight = love.graphics.newImage("assets/textures/misc/tuto/arrowRight.png"),
+            arrowLeft = love.graphics.newImage("assets/textures/misc/tuto/arrowLeft.png")
         }
     }
 
-    local imageInfo = {
+    local animations = {
         fire = { "assets/textures/effects/fireSpritesheet.png", 32, 32, 1 },
         smoke = { "assets/textures/effects/smokeSpritesheet.png", 35, 35, 2 },
         explosion = { "assets/textures/effects/explosionSpritesheet.png", 71, 71, 2 },
         capyman = { "assets/textures/player/capymanSpritesheet.png", 48, 48, 2 },
         flyingCapyman = { "assets/textures/misc/flyingCapySpritesheet.png", 252, 247, 0 },
+        phoneTilts = { "assets/textures/misc/tuto/tilts.png", 64, 64},
+        phoneTouch = { "assets/textures/misc/tuto/touch.png", 88, 64},
+        movingCar = { "assets/textures/misc/tuto/movingCar.png", 236, 150},
+        ejection = { "assets/textures/misc/tuto/ejection.png", 136, 150},
     }
 
-    for name, info in pairs(imageInfo) do
+    for name, info in pairs(animations) do
         local file = love.graphics.newImage(info[1])
         globalAssets.animations[name] = {
             spritesheet = file,
@@ -152,7 +163,7 @@ function initScreen()
         flags.resizable = false
         flags.fullscreen = true
     else
-        widthWindow, heightWindow = 392, 850--936 / 780
+        widthWindow, heightWindow = 392, 850-- 392x850
         flags.resizable = true
         flags.fullscreen = false
     end

@@ -2,38 +2,47 @@ ScrollingPanel = class("ScrollingPanel")
 
 function ScrollingPanel:init()
     self.visible = true
- --fusionner panelpos et dim etc
-    self.panelPos = {x=50, y=100}
-    self.panelDim = {w=200, h=400}
+    
+    self.panel = {
+        x = 20, 
+        y = 60, 
+        w = widthWindow - 40, 
+        h = heightWindow - 120 
+    }
+    self.scrollBar = { 
+        rangeBar = { x = 300, y = 100, w = 10, h = 300 }, 
+        selectBar = { x = 301, y = 101, w = 8, h = 50 } }
 
-    self.scrollBarPos = {x=300, y=100}
-	self.innerBarPos = {x=self.scrollBarPos.x+1, y=self.scrollBarPos.y+1}
     self.marginInBounds = 10
-	self.quotientScrollBarWidth = 0.02
-	self.scrollBarWidth, self.scrollBarHeight = 10, 300
-    self.innerBarDim = {w=self.scrollBarWidth-2, h=50}
-	self.isScrolling = false
+    self.scrollBarWidth, self.scrollBarHeight = 10, 300
+    self.innerBarDim = { w = self.scrollBarWidth-2, h = 50 }
+    self.isScrolling = false
 end
 
 function ScrollingPanel:update()
     local mouseX, mouseY = input.state.mouse.x, input.state.mouse.y
-    local function checkInBounds()
-        return mouseX >= self.innerBarPos.x-self.marginInBounds and 
-        mouseX <= self.innerBarPos.x+self.scrollBarWidth+self.marginInBounds and 
-        mouseY >= self.innerBarPos.y-self.marginInBounds and 
-        mouseY <= self.innerBarPos.y+self.scrollBarHeight+self.marginInBounds
+    
+    local function isMouseWithinScrollBar()
+        local sb = self.scrollBar
+        return mouseX >= sb.selectBar.x - self.marginInBounds and 
+               mouseX <= sb.selectBar.x + sb.rangeBar.w + self.marginInBounds and 
+               mouseY >= sb.selectBar.y - self.marginInBounds and 
+               mouseY <= sb.selectBar.y + sb.rangeBar.h + self.marginInBounds
     end
 
-    if input.state.actions.click and checkInBounds() then
-       -- print(mouseY)
-        self.innerBarPos.y = math.max(self.scrollBarPos.y+1, math.min(self.scrollBarPos.y+self.scrollBarHeight-self.innerBarDim.h-1, mouseY-self.innerBarDim.h/2))
+    if input.state.actions.click and isMouseWithinScrollBar() then
+        local sb = self.scrollBar
+        sb.selectBar.y = math.max(sb.rangeBar.y+1, math.min(sb.rangeBar.y + sb.rangeBar.h - sb.selectBar.h-1, mouseY - sb.selectBar.h/2))
     end
 end
 
 function ScrollingPanel:draw()
     love.graphics.setColor(0, 0, 0)
-    love.graphics.rectangle("line", self.scrollBarPos.x, self.scrollBarPos.y, self.scrollBarWidth, self.scrollBarHeight)
+    love.graphics.setLineWidth(3)
+    
+    local p, sb = self.panel, self.scrollBar
+    love.graphics.rectangle("line", p.x, p.y, p.w, p.h)
+    love.graphics.rectangle("line", sb.rangeBar.x, sb.rangeBar.y, sb.rangeBar.w, sb.rangeBar.h)
     love.graphics.setColor(1, 1, 1)
-
-    love.graphics.rectangle("fill", self.innerBarPos.x, self.innerBarPos.y, self.scrollBarWidth-2, 50)
+    love.graphics.rectangle("fill", sb.selectBar.x, sb.selectBar.y, sb.rangeBar.w-2, 50)
 end

@@ -1,6 +1,8 @@
 Home = class("Home")
 
 function Home:init()
+    self.canPlay = input.config.accelerometer or OS ~= "Android"
+
     self.flyingCapyAnim = anim8.newAnimation(globalAssets.animations.flyingCapyman.grid("1-6", 1), 0.1)
     self.scrollSpeed = 400
     self.offsetY = 0
@@ -22,7 +24,7 @@ function Home:init()
             math.ceil(heightWindow/2+100), 
             math.ceil(widthWindow/3.3),
             50,
-            true,
+            self.canPlay,
             "PLAY",
             nil,
             nil,
@@ -35,7 +37,7 @@ function Home:init()
         UIElements.settingsBtn = RectangleButton(
             widthWindow-110,
             11,
-            50,
+            math.max(50, SAFEZONE.Y),
             50,
             true,
             globalAssets.images.settingsIcon,
@@ -48,7 +50,7 @@ function Home:init()
         UIElements.exitBtn = RectangleButton(
             widthWindow-60,
             0,
-            50,
+            math.max(50, SAFEZONE.Y),
             50,
             true,
             "exit",
@@ -68,7 +70,7 @@ function Home:init()
             {1,1,1},
             {1,1,1, 0.5},
             false,
-            function() gameState:setState("Tutorial") end
+            function() gameState:setState("Tutorial", true) end
         )
 
 
@@ -82,7 +84,7 @@ function Home:init()
             {1,1,1},
             {1,1,1, 0.5},
             false,
-            function() end
+            function() gameState:setState("Credits", true) end
         )
 
 
@@ -93,6 +95,7 @@ function Home:init()
 end
 
 function Home:start()
+    self.canPlay = input.config.accelerometer or OS ~= "Android"
 end
 
 function Home:update(dt)
@@ -129,8 +132,17 @@ function Home:render()
         end
     end
 
-    love.graphics.print("Capy Jump", widthWindow/2-100, 130, 0, 2, 2)
+    local title = "Capy Jump"
+    Utils:printCtrTxtWScl(title, 130, 2)
 
-    love.graphics.print("Highscore : "..save.content.highscore, widthWindow/2-70, heightWindow/2+250)
+    if self.canPlay then
+        if save.content.highscore > 0 then
+            love.graphics.print("Highscore : "..save.content.highscore, widthWindow/2-70, heightWindow/2+250)
+        end
+    else
+        love.graphics.setColor(0.6, 0, 0)
+        love.graphics.printf("Sorry...\n\n Your device does not have any accelerometer. \n They are required to play to the game...", 5, heightWindow/2+150, widthWindow-10, "center")
+        love.graphics.setColor(1, 1, 1)
+    end
 
 end

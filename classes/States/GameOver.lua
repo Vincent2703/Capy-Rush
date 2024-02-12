@@ -71,9 +71,12 @@ function GameOver:init()
 end
 
 function GameOver:start()
+    local stats = gameState.states["InGame"].stats
+
     soundManager:setMusicVolume(0.4)
 
-    gameState.states["InGame"].stats:save()
+    self.highscore = stats.GUI.scores.beatingHighscore
+    stats:save()
 end
 
 function GameOver:update()
@@ -85,6 +88,8 @@ function GameOver:update()
 end
 
 function GameOver:render()
+    local stats = gameState.states["InGame"].stats
+
     love.graphics.scale(1/ratioScale, 1/ratioScale)
     love.graphics.draw(preRenderCanvas) 
     love.graphics.setColor(0, 0, 0, 0.4)
@@ -97,5 +102,16 @@ function GameOver:render()
         if ui.visible then
             ui:draw()
         end
+    end
+
+    local gameOverTxt = "Game Over !"
+    local txtHeight = Utils:getTextHeight("gameOverTxt", widthWindow)
+    local yPos = math.ceil(heightWindow/5)
+    Utils:printCtrTxtWScl(gameOverTxt, yPos, 1.5)
+    if self.highscore then
+        love.graphics.printf("You beat your highscore !", 0, txtHeight+yPos+20, widthWindow, "center")
+        love.graphics.printf("New highscore: "..math.abs(stats.scores.best), 0, txtHeight*2+yPos+20, widthWindow, "center")
+    else
+        love.graphics.printf("Your score: "..math.abs(math.ceil(stats.scores.current-0.5)).."\n\nHighscore: "..math.abs(stats.scores.best), 0, txtHeight+yPos+20, widthWindow, "center")
     end
 end

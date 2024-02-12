@@ -7,7 +7,8 @@ function GameState:init()
         Pause = Pause(),
         GameOver = GameOver(),
         Options = Options(),
-        Tutorial = Tutorial()
+        Tutorial = Tutorial(),
+        Credits = Credits()
     }
     self.prevState = nil
     self.currentState = nil

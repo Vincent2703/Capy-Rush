@@ -358,6 +358,11 @@ function Car:manageEffects(dt) --fire/explosion
             self.sfx.fire:setPosition(self.x, self.y)
         end
     end
+    if self.onFire and self.sfx.fire:isPlaying() and not gameState:isCurrentState("InGame") then
+        self.sfx.fire:stop()
+    elseif self.onFire and not self.sfx.fire:isPlaying() and gameState:isCurrentState("InGame") then
+        self.sfx.fire:play()
+    end
 
     if self.isExploding then
         self.explosionAnim:update(dt)
@@ -373,20 +378,6 @@ function Car:manageEffects(dt) --fire/explosion
     else
         self.startExplosionSFX = true
     end
-
-    --[[if self.className == "Player" then
-        if self.direction == "left" then
-            if self.sfx.wind == nil then
-                self.sfx.wind = soundManager:playSFX("wind")
-            else
-                self.sfx.wind:play()
-            end
-        else
-            if self.sfx.wind ~= nil then
-                self.sfx.wind:stop()
-            end
-        end
-    end--]]
 end
 
 function Car:manageStateCar() 

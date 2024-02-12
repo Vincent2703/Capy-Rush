@@ -27,7 +27,7 @@ function InGame:start() -- On restart
     self.player.fuel = 100
     self.player.health = self.player.maxHealth
     self.player.isExploding = false
-    self.player.posScreen = {x=0, y=0} 
+    --self.player.posScreen = {x=0, y=0} 
 
     self.UI = self:createUI()
 
@@ -46,9 +46,9 @@ function InGame:start() -- On restart
     self.eject = false
     self.ejection = nil
 
-    self.memoryCalls = 0
+    --[[self.memoryCalls = 0
     self.memoryTotal = 0
-    self.memoryMax = 0
+    self.memoryMax = 0--]]
 
     self.camMap, self.camScreen = {x=0, y=0}, {x=0, y=0}
 end
@@ -86,7 +86,6 @@ function InGame:update(dt)
                 else
                     soundManager:playSFX("vroom2")
                     local car = self.cars[self.ejection.landOn]
-                    --self.UI["fuelGauge"].visible = true
                     if car.direction == "left" then
                         soundManager:playSFX("tireScreech")
                         self.stats.multipliers.glob = 2
@@ -111,9 +110,11 @@ function InGame:update(dt)
             if self.player.onFire then
                 self.stats.multipliers.glob = 2
                 self.stats.GUI.onFire.visible = true
+                self.stats.GUI.reverse.visible = false
             elseif self.player.direction == "left" then
                 self.stats.multipliers.glob = 2
                 self.stats.GUI.reverse.visible = true
+                self.stats.GUI.onFire.visible = false
             else
                 self.stats.multipliers.glob = 1
                 self.stats.GUI.onFire.visible = false
@@ -239,9 +240,6 @@ function InGame:render()
             elem:draw(dt)
         end
     end
-
-    love.graphics.print("LVL: "..self.difficulty.id, 20, 30)
-
 --[[
     love.graphics.print("score: "..math.abs(math.ceil(self.stats.scores.current-0.5)), 150, 40)
     love.graphics.print("highscore: "..math.abs(self.stats.scores.best), 150, 60)
@@ -260,6 +258,7 @@ function InGame:render()
     love.graphics.print('Memory avg (kB): ' .. math.ceil(self.memoryTotal/self.memoryCalls-0.5), 10,600)
     love.graphics.print('Memory max (kB): ' .. self.memoryMax, 10,700)--]]
 
+    --love.graphics.line(widthWindow/2, 0, widthWindow/2, heightWindow)
 end
 
 
@@ -383,7 +382,7 @@ function InGame:createUI()
 
     UIElements.pause = CircleButton(
         math.ceil(widthWindow*0.95)-25,
-        math.ceil(heightWindow*0.05)-25,
+        math.max(math.ceil(heightWindow*0.05)-25, SAFEZONE.Y),
         50,
         50,
         true,
@@ -396,7 +395,7 @@ function InGame:createUI()
 
     UIElements.settings = RectangleButton(
         math.ceil(widthWindow*0.95)-75,
-        math.ceil(heightWindow*0.05)-17,
+        math.max(math.ceil(heightWindow*0.05)-17, SAFEZONE.Y),
         50,
         50,
         true,
@@ -440,34 +439,17 @@ function InGame:drawAllCars()
         end
     end
 end
-
 function InGame:manageCamera() 
     local player, ejection = self.player, self.ejection
     local trX, trY = 0, 0
 
-    local function calculateMiddle(entity, widthOffset)
-        widthOffset = widthOffset or 0
-        return -entity.x*self.zoom + WIDTHRES/2 - widthOffset
-    end
+    local entity = self.eject and ejection or player
+    local entityWidth = self.eject and self.lastPlayerWidth or player.widthCar
+    local entityX = entity.x - (self.eject and self.lastPlayerWidth / 2 or 0)
 
-    local function calculateCameraOffset(offsetX, middle, widthOffset)
-        widthOffset = widthOffset or 0
-        if offsetX > 0 then
-            return math.min(0, math.max(middle + (offsetX - widthOffset)*ratioScale, -WIDTHRES + offsetX/ratioScale))
-        else
-            return math.min(0, math.max(middle, -WIDTHRES*(self.zoom-1)))
-        end
-    end
+    trX = math.min(0, math.max(-entityX * self.zoom - entityWidth / 2 * self.zoom + WIDTHRES / 2, -WIDTHRES * self.zoom + widthWindow / ratioScale))
 
-    if not self.eject then
-        local playerMiddle = calculateMiddle(player, player.widthCar)
-        trX = calculateCameraOffset(offsetXCamera, playerMiddle, player.widthCar)
-        trY = math.max(heightWindow/ratioScale, -player.y*self.zoom + heightWindow*0.9)
-    elseif self.eject then
-        local ejectionMiddle = calculateMiddle(ejection)
-        trX = calculateCameraOffset(offsetXCamera, ejectionMiddle)
-        trY = math.max(heightWindow/ratioScale, -ejection.y*self.zoom + heightWindow*0.9)
-    end
+    trY = math.max(heightWindow / ratioScale, -entity.y * self.zoom + TILEDIM / ratioScale * 13.5)
 
     return trX, trY
 end
@@ -480,6 +462,7 @@ function InGame:manageEjection(ejection)
         self.eject = true
         self.ejection = Ejection(self.player.x+self.player.widthCar/2, self.player.y+self.player.heightCar/2)
         self.player.isExploding = true
+        self.lastPlayerWidth = self.player.widthCar
     else
         self.quickLanding = true
         self.landingStatus = true

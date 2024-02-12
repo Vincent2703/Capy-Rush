@@ -2,6 +2,27 @@ Tutorial = class("Tutorial")
 
 function Tutorial:init()
     local function createUI()
+        local function navigatePanels(goTo)
+            local currIdPanel = nil
+            for i, panel in ipairs(self.panels) do
+                if panel.current then
+                    currIdPanel = i
+                    break
+                end
+            end
+        
+            if currIdPanel then
+                local gotoPanel = currIdPanel + goTo
+                if gotoPanel > 0 and gotoPanel <= #self.panels then
+                    self.panels[currIdPanel].current = false
+                    self.panels[gotoPanel].current = true
+        
+                    self.UI.prevBtn.visible = gotoPanel > 1
+                    self.UI.nextBtn.visible = gotoPanel < #self.panels
+                end
+            end
+        end
+        
         local UIElements = {}
         
         UIElements["returnBtn"] = RectangleButton(
@@ -18,7 +39,8 @@ function Tutorial:init()
             "release"
         )
 
-        UIElements["tutoScrlPnl"] = ScrollingPanel()
+        UIElements["prevBtn"] = RectangleButton(widthWindow/2-70, heightWindow-55, 48, 45, false, globalAssets.images.arrowLeft, {1,1,1, 1}, {1,1,1, 0.6}, false, function() navigatePanels(-1) end)
+        UIElements["nextBtn"] = RectangleButton(widthWindow/2+32, heightWindow-55, 48, 45, true, globalAssets.images.arrowRight, {1,1,1, 1}, {1,1,1, 0.6}, false, function() navigatePanels(1) end)
 
         return UIElements
     end
@@ -27,21 +49,107 @@ function Tutorial:init()
     
     self.bgWidth = globalAssets.images.homeBackground:getWidth()
     self.zoom = widthWindow/self.bgWidth
+
+    self.direction = 1
+
+    self.animations = {
+        movingCar = {
+            direction = -1,
+            anim = anim8.newAnimation(globalAssets.animations.movingCar.grid("1-6", 1, "1-6", 2, "1-6", 3, "1-6", 4, "1-6", 5, "1-6", 6, "1-6", 7, "1-6", 8, 1, 9), {["1-48"]=1/12, ["49-49"]=1})
+        },
+        ejection = {
+            direction = -1,
+            anim = anim8.newAnimation(globalAssets.animations.ejection.grid("1-6", 1, "1-6", 2, "1-6", 3, "1-6", 4, "1-6", 5, "1-6", 6, "1-6", 7, "1-6", 8, "1-2", 9), {["1-49"]=1/12, ["50-50"]=1})
+        },
+        
+        tiltX = {
+            direction = 1,
+            anim = anim8.newAnimation(globalAssets.animations.phoneTilts.grid("1-31", 1), 0.06, 
+            function(anim, loops) 
+                if self.animations.tiltX.direction == 1 then
+                    self.animations.tiltX.direction = -1
+                    self.animations.tiltX.anim:gotoFrame(30)
+                else
+                    self.animations.tiltX.direction = 1
+                    self.animations.tiltX.anim:gotoFrame(2)
+                end 
+            end)
+        },
+
+        tiltY = {
+            direction = 1,
+            anim = anim8.newAnimation(globalAssets.animations.phoneTilts.grid("1-31", 2), 0.06, 
+            function(anim, loops) 
+                if self.animations.tiltY.direction == 1 then
+                    self.animations.tiltY.direction = -1
+                    self.animations.tiltY.anim:gotoFrame(30)
+                else
+                    self.animations.tiltY.direction = 1
+                    self.animations.tiltY.anim:gotoFrame(2)
+                end 
+            end)
+        },        
+
+        tiltZ = {
+            direction = 1,
+            anim = anim8.newAnimation(globalAssets.animations.phoneTilts.grid("1-31", 3), 0.06, 
+            function(anim, loops) 
+                if self.animations.tiltZ.direction == 1 then
+                    self.animations.tiltZ.direction = -1
+                    self.animations.tiltZ.anim:gotoFrame(30)
+                else
+                    self.animations.tiltZ.direction = 1
+                    self.animations.tiltZ.anim:gotoFrame(2)
+                end 
+            end)
+        },
+
+        touch = {
+            direction = 1,
+            anim = anim8.newAnimation(globalAssets.animations.phoneTouch.grid("1-6", 1), 0.1, 
+            function(anim, loops) 
+                if self.animations.touch.direction == 1 then
+                    self.animations.touch.direction = -1
+                    self.animations.touch.anim:gotoFrame(5)
+                else
+                    self.animations.touch.direction = 1
+                    self.animations.touch.anim:gotoFrame(2)
+                end 
+            end)
+        }
+    }
+
+    self.panels = {
+        {render = self.canvas1, current = true},
+        {render = self.canvas2, current = false},
+        {render = self.canvas3, current = false},
+    }
+    self.zonePanel = {x=25, y=90, w=widthWindow-50, h=heightWindow-160}
 end
 
 function Tutorial:start()
+    for i, panel in ipairs(self.panels) do
+        if i == 1 then
+            panel.current = true
+        else
+            panel.current = false
+        end
+    end
+    self.UI.prevBtn.visible = false
+    self.UI.nextBtn.visible = true
+    
     soundManager:setMusicVolume(0.4)
 end
 
-function Tutorial:update()
-    if input.state.actions.newPress.pause then
-        gameState:setState("InGame")
-    end
-
+function Tutorial:update(dt)
     for key, ui in pairs(self.UI) do 
         if ui.visible then
             ui:update()
         end
+    end
+
+    for _, anim in pairs(self.animations) do
+        anim.anim:update(dt*anim.direction)
     end
 end
 
@@ -50,15 +158,86 @@ function Tutorial:render()
     love.graphics.origin()
 
     love.graphics.draw(globalAssets.images.homeBackground, 0, 0, 0, self.zoom)
-    love.graphics.setColor(0, 0, 0, 0.2)
+    love.graphics.setColor(0, 0, 0, 0.3)
     love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
     love.graphics.setColor(1,1,1)
 
     love.graphics.print("Tutorial", 30, 30, 0, 1.4) --Element Title
 
+    love.graphics.setColor(0, 0, 0, 0.5)
+    love.graphics.rectangle("fill", 20, 80, widthWindow-40, heightWindow-140, 10)
+    love.graphics.setColor(1, 1, 1, 1)
+
+    for _, panel in pairs(self.panels) do
+        if panel.current then
+            panel.render(self)
+            break
+        end
+    end
+    
     for key, ui in pairs(self.UI) do
         if ui.visible then
             ui:draw()
         end
     end
+
+end
+
+function Tutorial:canvas1()
+    local font = love.graphics.getFont()
+
+    font:setLineHeight(2)
+    love.graphics.printf("Welcome !\n"..
+    "You play Capyman. The capybara with a human body.\n\n"..
+    "He is the result of an experiment and escaped from the zoological laboratory in which he was captive.\n\n"..
+    "His goal, and now yours too, is to escape as far as possible.\n\n"..
+    "To do this, you will take the fast lane reserved for autonomous vehicles. Unfortunately, you will only be able to control a vehicle for a limited time before it stops.", 
+    self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
+    font:setLineHeight(1)
+end
+
+function Tutorial:canvas2()
+    local font = love.graphics.getFont()
+    local phoneTilts = globalAssets.animations.phoneTilts
+
+    font:setLineHeight(2)
+    local txt1 = "How to 1/2\nTo move your car, tilt your phone to the right or to the left. If you are lying down, tilt the top of your phone."
+    local txt2 = "You can adjust the sensibility of these controls in the settings."
+    local txt1Height = Utils:getTextHeight(txt1, self.zonePanel.w)
+
+    love.graphics.printf(txt1, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
+    self.animations.tiltY.anim:draw(phoneTilts.spritesheet, self.zonePanel.w/2-phoneTilts.spriteWidth, self.zonePanel.y+txt1Height)
+    self.animations.tiltZ.anim:draw(phoneTilts.spritesheet, self.zonePanel.w/2+phoneTilts.spriteWidth/2, self.zonePanel.y+txt1Height)
+    love.graphics.printf(txt2, self.zonePanel.x, self.zonePanel.y+txt1Height+phoneTilts.spriteHeight+10, self.zonePanel.w, "center")
+    self.animations.movingCar.anim:draw(globalAssets.animations.movingCar.spritesheet, self.zonePanel.x+self.zonePanel.w/2-globalAssets.animations.movingCar.spriteWidth/2, self.zonePanel.y+90+txt1Height+Utils:getTextHeight(txt2, self.zonePanel.w))
+    font:setLineHeight(1)
+end
+
+function Tutorial:canvas3()
+    local font = love.graphics.getFont()
+    local phoneTilts = globalAssets.animations.phoneTilts
+
+    font:setLineHeight(2)
+    local txt1 = "How to 2/2\nTo switch to another car, you can eject yourself. Touch the screen to do so."
+    local txt2 = "You can adjust your trajectory by tilting your phone."
+    local txt3 = "Touch the screen again to land quicker."
+    local txt1Height = Utils:getTextHeight(txt1, self.zonePanel.w)
+
+    love.graphics.printf(txt1, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
+    self.animations.touch.anim:draw(globalAssets.animations.phoneTouch.spritesheet, self.zonePanel.x+self.zonePanel.w/2-globalAssets.animations.phoneTouch.spriteWidth/2, self.zonePanel.y+txt1Height)
+    
+    local yPos = self.zonePanel.y+txt1Height+globalAssets.animations.phoneTouch.spriteHeight+10
+    love.graphics.printf(txt2, self.zonePanel.x, yPos, self.zonePanel.w, "center")
+    yPos = yPos+Utils:getTextHeight(txt2, self.zonePanel.w+5)
+
+    local middleXPos = self.zonePanel.x+self.zonePanel.w/2-phoneTilts.spriteWidth/2
+    self.animations.tiltX.anim:draw(phoneTilts.spritesheet, middleXPos-phoneTilts.spriteWidth, yPos)
+    self.animations.tiltY.anim:draw(phoneTilts.spritesheet, middleXPos, yPos)
+    self.animations.tiltZ.anim:draw(phoneTilts.spritesheet, middleXPos+phoneTilts.spriteWidth, yPos)
+
+    yPos = yPos+10+phoneTilts.spriteHeight
+    self.animations.ejection.anim:draw(globalAssets.animations.ejection.spritesheet, self.zonePanel.x+self.zonePanel.w/2-globalAssets.animations.ejection.spriteWidth/2, yPos)
+    Utils:printCtrTxtWScl(txt3, yPos+globalAssets.animations.ejection.spriteHeight+5, 0.8)
+
+    font:setLineHeight(1)
 end

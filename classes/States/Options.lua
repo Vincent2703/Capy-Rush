@@ -123,7 +123,7 @@ function Options:render()
         love.graphics.setColor(1,1,1)
     end
 
-    love.graphics.print("Options", 30, 30, 0, 1.4) --Element Title
+    love.graphics.print("Settings", 30, math.max(30, SAFEZONE.Y), 0, 1.4) --Element Title
 
     for key, ui in pairs(self.UI) do
         if ui.visible then

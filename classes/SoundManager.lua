@@ -52,6 +52,9 @@ function SoundManager:updateMusics()
         end
 
         self:playMusic(getNextMusicTitle(self.currentMusic))
+        if not gameState:isCurrentState("InGame") then
+            self:setMusicVolume(0.4)
+        end
     end
 end
 
