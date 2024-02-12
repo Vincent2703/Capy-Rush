@@ -94,7 +94,15 @@ function InGame:update(dt)
                         self.stats.multipliers.glob = 1
                         self.stats.GUI.reverse.visible = false
                     end
-                    self.player = self.player:switchCar(car) --bug when the old car is already destroyed
+                    --To optimize (bug when the old car is already destroyed)
+                    if self.player then
+                        self.player = self.player:switchCar(car)
+                    else
+                        self.player = carToSwitch:cast(Player)
+                        player.direction = "right"
+                    
+                        self.UI["fuelGauge"].player = player -- optimize
+                    end
                     if self.quickLanding then
                         self.stats:addPoints("ejectionsQuickLanding")
                     else
@@ -240,7 +248,8 @@ function InGame:render()
             elem:draw(dt)
         end
     end
---[[
+
+    --[[
     love.graphics.print("score: "..math.abs(math.ceil(self.stats.scores.current-0.5)), 150, 40)
     love.graphics.print("highscore: "..math.abs(self.stats.scores.best), 150, 60)
 
@@ -382,7 +391,7 @@ function InGame:createUI()
 
     UIElements.pause = CircleButton(
         math.ceil(widthWindow*0.95)-25,
-        math.max(math.ceil(heightWindow*0.05)-25, SAFEZONE.Y),
+        math.max(math.ceil(heightWindow*0.05)-25, SAFEZONE.Y-4),
         50,
         50,
         true,

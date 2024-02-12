@@ -36,8 +36,8 @@ function Home:init()
 
         UIElements.settingsBtn = RectangleButton(
             widthWindow-110,
-            11,
-            math.max(50, SAFEZONE.Y),
+            SAFEZONE.Y+11,
+            50,
             50,
             true,
             globalAssets.images.settingsIcon,
@@ -49,8 +49,8 @@ function Home:init()
 
         UIElements.exitBtn = RectangleButton(
             widthWindow-60,
-            0,
-            math.max(50, SAFEZONE.Y),
+            SAFEZONE.Y,
+            50,
             50,
             true,
             "exit",
@@ -62,7 +62,7 @@ function Home:init()
 
         UIElements.tutoBtn = RectangleButton(
             50,
-            heightWindow-50,
+            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H-4),
             50,
             50,
             true,
@@ -76,7 +76,7 @@ function Home:init()
 
         UIElements.credits = RectangleButton(
             widthWindow-75,
-            heightWindow-50,
+            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H-4),
             50,
             50,
             true,

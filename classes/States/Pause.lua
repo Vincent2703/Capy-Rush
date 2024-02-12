@@ -36,7 +36,7 @@ function Pause:init()
         
         UIElements["ExitBtn"] = RectangleButton(
             widthWindow-60,
-            heightWindow-50, 
+            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H), 
             50,
             50,
             true,
@@ -51,7 +51,7 @@ function Pause:init()
         
         UIElements.settingsBtn = RectangleButton(
             widthWindow-50,
-            11,
+            11+SAFEZONE.Y,
             50,
             50,
             true,

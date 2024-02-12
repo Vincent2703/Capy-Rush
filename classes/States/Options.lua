@@ -59,7 +59,7 @@ function Options:init()
 end
 
 function Options:start()
-    if gameState.prevState == "Home" then
+    if gameState.prevState == "Home" or gameState.prevState == "GameOver" then
         self.UI.saveBtnRtHome.visible = true
         self.UI.saveBtnRtGame.visible = false
     else

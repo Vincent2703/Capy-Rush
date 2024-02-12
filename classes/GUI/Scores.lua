@@ -41,10 +41,10 @@ function Scores:draw()
     local widthText, heightText = self.currentFont:getWidth(self.current), self.yText
 
     --LVL
-    local x, y = 20, math.max(SAFEZONE.Y, math.floor(heightWindow*0.05 - heightText/2))
+    local x, y = 20, math.max(SAFEZONE.Y+5, math.floor(heightWindow*0.05 - heightText/2))
     love.graphics.print("LVL: "..gameState.states["InGame"].difficulty.id, 20, y)
 
-    x, y = math.floor(widthWindow/2 - widthText/2), math.max(SAFEZONE.Y, math.floor(heightWindow*0.05 - heightText/2))
+    x = math.floor(widthWindow/2 - widthText/2)
     love.graphics.print(self.current, x, y, 0, 1.2)
 
     if self.beatingHighscore and not self.blink then

@@ -63,7 +63,7 @@ function Input:init()
 
 
 	self.phoneBackPressed = false
-	self.startingJoyZ = 0
+	self.startingInclinationY = 0
 	self.diff = 0
 end
 
@@ -106,22 +106,28 @@ function Input:update()
 		self.state.accelerometer.x, self.state.accelerometer.y, self.state.accelerometer.z = x, y, z
 		local nx, ny, nz = x / normOfG, y / normOfG, z / normOfG
 		
-		inclination = math.floor(math.deg(math.acos(nz)) + 0.5)
-	
+		local inclination = math.floor(math.deg(math.acos(nz)) + 0.5)
+		
+		local inclinationY = math.deg(math.atan2(ny, nz))
+		
 		local rotation = math.deg(math.atan2(nx, ny)) / 90
+		
 		local rotationModulate = rotation
-	
-		if inclination >= 0 and inclination < 20 then
-			rotationModulate = rotation/2
+		
+		if inclination < 20 then
+			rotationModulate = rotation / 2
 		elseif inclination > 30 and inclination < 50 then
-			rotationModulate = rotation*2
-		elseif inclination >= 50 and inclination < 90 then
-			rotationModulate = rotation*3
+			rotationModulate = rotation * 2
+		elseif inclination >= 50 then
+			rotationModulate = rotation * 3
 		end
-	
-		rotationModulate = y <= 0 and rotationModulate/3 or rotationModulate
+		
+		if y <= 0 then
+			rotationModulate = rotationModulate / 3
+		end
+		
 		rotationModulate = math.min(math.abs(rotationModulate), 1)
-				
+		
 		local turnLeft, turnRight = false, false
 		
 		if x < -0.1 then
@@ -134,19 +140,15 @@ function Input:update()
 		
 		self.state.actions.right = self.state.actions.right or turnRight
 		self.state.actions.left = self.state.actions.left or turnLeft
-		self.state.accelerometer.tiltX = math.abs(rotationModulate)*self.state.accelerometer.tiltXSensibility
-	
-		local deviation = (y > 0) and (z - self.startingJoyZ) or (-(y - self.startingJoyZ)*2)
-		--local deviaNorma = math.abs(deviation)
-		--local deviaBoost = math.min(1, deviaNorma*2)
-
-		self.state.accelerometer.tiltZ = 0.85
-	
-		self.state.actions.up = self.state.actions.up or (deviation > 0)
-		self.state.actions.down = self.state.actions.down or (deviation < 0)
+		self.state.accelerometer.tiltX = math.abs(rotationModulate) * self.state.accelerometer.tiltXSensibility
+		
+		local deviation = self.startingInclinationY - inclinationY
+		
+		self.state.actions.up = self.state.actions.up or (deviation > 4)
+		self.state.actions.down = self.state.actions.down or (deviation < -4)
+		
+		self.state.accelerometer.tiltZ = 1		
 	end
-	
-	
 	
 end
 
@@ -188,10 +190,12 @@ end
 
 function Input:setCurrentJoyZ()
 	if self.config.accelerometer ~= nil then
-		if z ~= 1 then
-			self.startingJoyZ = self.config.accelerometer:getAxis(3)
-		else
-			self.startingJoyZ = -(self.config.accelerometer:getAxis(2))
-		end
+		local x, y, z = self.config.accelerometer:getAxes()
+		local normOfG = math.sqrt(x*x + y*y + z*z)
+		
+		self.state.accelerometer.x, self.state.accelerometer.y, self.state.accelerometer.z = x, y, z
+		local nx, ny, nz = x / normOfG, y / normOfG, z / normOfG
+				
+		self.startingInclinationY = math.deg(math.atan2(ny, nz))
 	end
 end

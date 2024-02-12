@@ -39,12 +39,12 @@ function Ejection:update(dt)
         local velX, velY = self.velocity.x, self.velocity.y
         local accX, accY = self.accX, self.accY
 
-        local ratio = math.min(self.count / (self.ejectTime/2), (self.ejectTime - self.count) / (0.5*self.ejectTime))
+        local ratio = math.min(self.count / (self.ejectTime/2), (self.ejectTime - self.count) / (self.ejectTime/2))
         ratio = math.max(0, math.min(1, ratio))
         
         self.scale = (self.maxScale - self.minScale) * ratio + self.minScale
 
-        local speed = self.maxSpeed*math.min(0.8, ratio)        
+        local speed = self.maxSpeed*math.min(0.55, ratio)        
         local targetVelY = (input.state.actions.up and speed) or (input.state.actions.down and -speed) or 0
         local targetVelX = (input.state.actions.right and speed) or (input.state.actions.left and -speed) or 0
         

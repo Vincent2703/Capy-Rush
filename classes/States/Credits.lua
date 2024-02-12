@@ -27,7 +27,7 @@ function Credits:init()
         
         UIElements["returnBtn"] = RectangleButton(
             widthWindow-60,
-            heightWindow-50, 
+            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H-4), --Function utils ? get min/max y...
             50,
             50,
             true,
@@ -39,8 +39,8 @@ function Credits:init()
             "release"
         )
 
-        UIElements["prevBtn"] = RectangleButton(widthWindow/2-70, heightWindow-55, 48, 45, false, globalAssets.images.arrowLeft, {1,1,1, 1}, {1,1,1, 0.6}, false, function() navigatePanels(-1) end)
-        UIElements["nextBtn"] = RectangleButton(widthWindow/2+32, heightWindow-55, 48, 45, true, globalAssets.images.arrowRight, {1,1,1, 1}, {1,1,1, 0.6}, false, function() navigatePanels(1) end)
+        UIElements["prevBtn"] = RectangleButton(widthWindow/2-70, math.min(heightWindow-55, SAFEZONE.Y+SAFEZONE.H), 48, 45, false, globalAssets.images.arrowLeft, {1,1,1, 1}, {1,1,1, 0.6}, false, function() navigatePanels(-1) end)
+        UIElements["nextBtn"] = RectangleButton(widthWindow/2+32, math.min(heightWindow-55, SAFEZONE.Y+SAFEZONE.H), 48, 45, true, globalAssets.images.arrowRight, {1,1,1, 1}, {1,1,1, 0.6}, false, function() navigatePanels(1) end)
 
         return UIElements
     end
@@ -89,7 +89,7 @@ function Credits:render()
     love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
     love.graphics.setColor(1,1,1)
 
-    love.graphics.print("Credits", 30, 30, 0, 1.4)
+    love.graphics.print("Credits", 30, math.max(30, SAFEZONE.Y)+4, 0, 1.4)
 
     love.graphics.setColor(0, 0, 0, 0.5)
     love.graphics.rectangle("fill", 20, 80, widthWindow-40, heightWindow-140, 10)

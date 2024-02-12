@@ -3,8 +3,7 @@ function love.load()
     OS = love.system.getOS()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
     WIDTHRES, HEIGHTRES = 432, 650
-    SAFEZONE = {}
-    SAFEZONE.X, SAFEZONE.Y, SAFEZONE.W, SAFEZONE.H = love.window.getSafeArea()
+    
     TILEDIM = 48
 
     loadLibraries()
@@ -185,6 +184,9 @@ function initScreen()
     end
 
     preRenderCanvas = love.graphics.newCanvas(widthWindow, heightWindow) --Rename to game/map canvas ?
+
+    SAFEZONE = {}
+    SAFEZONE.X, SAFEZONE.Y, SAFEZONE.W, SAFEZONE.H = love.window.getSafeArea()
 end
 
 function setSave()
