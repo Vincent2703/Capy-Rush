@@ -7,11 +7,11 @@ function Police:init(spritesData, maxSpeed, maxHealth, consumptionFactor, direct
     self.inPursuit = false
 
     self.direction = direction
-    self.currMaxSpeed = self.maxSpeed*0.65
+    self.currMaxSpeed = self.maxSpeed*0.7 --Save this value in car
     if direction == "left" then
         self.currMaxSpeed = -self.currMaxSpeed
     end
-    self.velocity.y = self.currMaxSpeed
+    self.velocity.y = self.currMaxSpeed*0.7
 end
 
 function Police:update(dt)
@@ -90,7 +90,7 @@ function Police:pursuit()
     if player ~= nil then
         velX = player.x-self.x
         if player.y > self.y then
-            velY = velY/2
+            velY = self.maxSpeed/2
         end
     end
     return velX, velY

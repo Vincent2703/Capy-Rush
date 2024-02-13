@@ -33,11 +33,16 @@ function Ejection:init(x, y)
 end
 
 function Ejection:update(dt)
-    self.count = self.count+dt
+    local diffSpeed = gameState.states["InGame"].difficulty.speed
+    if diffSpeed > 1 then
+        diffSpeed = diffSpeed+0.3
+    end
+    
+    self.count = self.count+dt*diffSpeed
 
     if self.count <= self.ejectTime then
         local velX, velY = self.velocity.x, self.velocity.y
-        local accX, accY = self.accX, self.accY
+        local accX, accY = self.accX*diffSpeed, self.accY*diffSpeed
 
         local ratio = math.min(self.count / (self.ejectTime/2), (self.ejectTime - self.count) / (self.ejectTime/2))
         ratio = math.max(0, math.min(1, ratio))

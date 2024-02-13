@@ -64,8 +64,13 @@ function love.draw()
 end
 
 function love.focus(f)
-    if not f and gameState:isCurrentState("InGame") then
-        gameState:setState("Pause", true)
+    if not f then
+        soundManager:pauseMusic()
+        if gameState:isCurrentState("InGame") then
+            gameState:setState("Pause", true)
+        end
+    elseif save.content.music then
+        soundManager:resumeMusic()
     end
 end
 
@@ -162,7 +167,7 @@ function initScreen()
         flags.resizable = false
         flags.fullscreen = true
     else
-        widthWindow, heightWindow = 392, 850-- 392x850
+        widthWindow, heightWindow = 392, 850-- 392x850 --367x850 4/3
         flags.resizable = true
         flags.fullscreen = false
     end

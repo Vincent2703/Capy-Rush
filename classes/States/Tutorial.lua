@@ -123,6 +123,7 @@ function Tutorial:init()
         {render = self.canvas1, current = true},
         {render = self.canvas2, current = false},
         {render = self.canvas3, current = false},
+        {render = self.canvas4, current = false}
     }
     self.zonePanel = {x=25, y=90, w=widthWindow-50, h=heightWindow-160}
 end
@@ -201,7 +202,7 @@ function Tutorial:canvas2()
     local phoneTilts = globalAssets.animations.phoneTilts
 
     font:setLineHeight(2)
-    local txt1 = "How to 1/2\nTo move your car, tilt your phone to the right or to the left. If you are lying down, tilt the top of your phone."
+    local txt1 = "How to 1/3\nTo move your car, tilt your phone to the right or to the left. If you are lying down, tilt the top of your phone."
     local txt2 = "You can adjust the sensibility of these controls in the settings."
     local txt1Height = Utils:getTextHeight(txt1, self.zonePanel.w)
 
@@ -218,7 +219,7 @@ function Tutorial:canvas3()
     local phoneTilts = globalAssets.animations.phoneTilts
 
     font:setLineHeight(2)
-    local txt1 = "How to 2/2\nTo switch to another car, you can eject yourself. Touch the screen to do so."
+    local txt1 = "How to 2/3\nTo switch to another car, you can eject yourself. Touch the screen to do so."
     local txt2 = "You can adjust your trajectory by tilting your phone."
     local txt3 = "Touch the screen again to land quicker."
     local txt1Height = Utils:getTextHeight(txt1, self.zonePanel.w)
@@ -238,6 +239,29 @@ function Tutorial:canvas3()
     yPos = yPos+10+phoneTilts.spriteHeight
     self.animations.ejection.anim:draw(globalAssets.animations.ejection.spritesheet, self.zonePanel.x+self.zonePanel.w/2-globalAssets.animations.ejection.spriteWidth/2, yPos)
     Utils:printCtrTxtWScl(txt3, yPos+globalAssets.animations.ejection.spriteHeight+5, 0.8)
+
+    font:setLineHeight(1)
+end
+
+function Tutorial:canvas4()
+    local font = love.graphics.getFont()
+    local phoneTilts = globalAssets.animations.phoneTilts
+
+    font:setLineHeight(2)
+    local txt1 = "How to 3/3\nThe current level of difficulty is displayed on the upper left corner of the screen."
+    local txt2 = "The red bar at the bottom of the screen represents the car's autonomy. You need to switch to another car before it becomes empty."
+    local txt3 = "Be careful to the road signs to know which lane to take."
+    local txt1Height = Utils:getTextHeight(txt1, self.zonePanel.w)
+    local txt2Height = Utils:getTextHeight(txt2, self.zonePanel.w)
+
+    love.graphics.printf(txt1, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
+    
+    local yPos = self.zonePanel.y+txt1Height+10
+    love.graphics.printf(txt2, self.zonePanel.x, yPos, self.zonePanel.w, "center")
+
+    yPos = yPos+txt2Height+10
+    love.graphics.printf(txt3, self.zonePanel.x, yPos, self.zonePanel.w, "center")
+
 
     font:setLineHeight(1)
 end

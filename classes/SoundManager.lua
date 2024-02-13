@@ -9,6 +9,8 @@ function SoundManager:init(musics, sfx)
     self.attenuation = {min=5, max=120}
     love.audio.setDopplerScale(2)
     love.audio.setDistanceModel("linearclamped")
+
+    self.pause = false
 end
 
 function SoundManager:playMusic(title)
@@ -30,7 +32,7 @@ function SoundManager:updateMusics()
     if self.currentMusic == nil then
         local firstTitle = "postHardcore"
         self:playMusic(firstTitle)
-    elseif not self.musics[self.currentMusic]:isPlaying() then
+    elseif not self.musics[self.currentMusic]:isPlaying() and not self.pause then
         local function getNextMusicTitle(inputKey)
             local keys = {}
             for k, _ in pairs(self.musics) do
@@ -60,11 +62,13 @@ end
 
 function SoundManager:pauseMusic()
     self.musics[self.currentMusic]:pause()
+    self.pause = true
 end
 
 function SoundManager:resumeMusic()
     self.musics[self.currentMusic]:setRelative(true)
     self.musics[self.currentMusic]:play()
+    self.pause = false
 end
 
 function SoundManager:setMusicVolume(vol)

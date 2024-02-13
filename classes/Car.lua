@@ -231,7 +231,7 @@ function Car:manageTrajectory(velX, velY)
     local velX = velX or 0
     local velY = velY or self.currMaxSpeed
     if self.direction == "left" then
-        velY = velY/2
+        velY = velY*0.4
     end
 
     local inGame = gameState.states["InGame"]
@@ -246,7 +246,7 @@ function Car:manageTrajectory(velX, velY)
     end
 
     local filterPaths = function(item) --Detect paths
-        return item.isPath
+        return item.isPath and item.direction == self.direction
     end
 
     local queryTopPathsY
@@ -259,7 +259,7 @@ function Car:manageTrajectory(velX, velY)
         queryTopCarsY = self.y+self.heightCar*3
     end
     local _, lenTopPaths = world:queryPoint(self.x+self.widthCar/2, queryTopPathsY, filterPaths)
-    local cars, lenTopCars = world:queryRect(self.x, queryTopCarsY, self.widthCar, self.heightCar*2, filterCars)
+    local _, lenTopCars = world:queryRect(self.x, queryTopCarsY, self.widthCar, self.heightCar*2, filterCars)
 
     if (lenTopPaths == 0 or lenTopCars > 0) and self.targetX == nil then -- No path or car(s) and no target already defined
 
@@ -308,18 +308,6 @@ function Car:manageTrajectory(velX, velY)
         else --Car is at targetX position
             self.targetX = nil
         end
-    --[[elseif lenTopPaths == 1 and lenTopCars == 0 and self.targetX == nil and self.correctTrajectory then -- Path, no car and no target
-        --if self.lastCollision > 1 then
-            local currentPath, lenPath = world:queryPoint(self.x, self.y, filterPaths)
-            if lenPath == 1 then
-                local targetX = currentPath[1].x+currentPath[1].width/2-self.widthCar/2 
-                if targetX ~= self.x then
-                    self.targetX = targetX
-                    velX = targetX - self.x
-                    self.correctTrajectory = false
-                end
-            end
-        --end--]]
     end
 
     return velX, velY

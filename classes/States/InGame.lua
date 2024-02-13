@@ -1,7 +1,7 @@
 InGame = class("InGame")
 
 function InGame:init()
-    self.zoom = 2.5
+    self.zoom = ratioScale >= 1 and 2.5/ratioScale or 2.5
     
     self.difficulties = {
         {id = 1, rate = 0.6, nbMaxCars = 2, speed = 1},
@@ -27,7 +27,6 @@ function InGame:start() -- On restart
     self.player.fuel = 100
     self.player.health = self.player.maxHealth
     self.player.isExploding = false
-    --self.player.posScreen = {x=0, y=0} 
 
     self.UI = self:createUI()
 
@@ -51,6 +50,24 @@ function InGame:start() -- On restart
     self.memoryMax = 0--]]
 
     self.camMap, self.camScreen = {x=0, y=0}, {x=0, y=0}
+
+    -- To refactorize : (spawn a car at startup)
+
+    local randCarModel = self:getRandomCarModel()
+
+    local filterPaths = function(item) 
+        return item.isPath and item.direction == "right"
+    end
+
+    local posY = -HEIGHTRES/self.zoom*2
+
+    local paths, lenPaths = self.world:querySegment(0, posY, self.lvl.mapConfig.width*TILEDIM, posY, filterPaths)
+
+    if lenPaths > 0 then
+        randNbPath = math.random(1, lenPaths)
+        randomPath = paths[randNbPath]
+        self:addCarToPathAtPosY(randCarModel, randomPath, posY)
+    end
 end
 
 function InGame:update(dt)
@@ -98,7 +115,7 @@ function InGame:update(dt)
                     if self.player then
                         self.player = self.player:switchCar(car)
                     else
-                        self.player = carToSwitch:cast(Player)
+                        self.player = car:cast(Player)
                         player.direction = "right"
                     
                         self.UI["fuelGauge"].player = player -- optimize
@@ -170,8 +187,19 @@ function InGame:update(dt)
                 local rand = math.random()
                 if rand <= self.difficulty.rate then
                     local nbCars = math.random(1, self.difficulty.nbMaxCars)
+                    local nbCarsRight, nbCarsLeft = 0, 0
                     for i=1, nbCars do
-                        self:addCarRandomly()
+                        local car = self:addCarRandomly()
+                        if car and car.direction == "left" then
+                            nbCarsLeft = nbCarsLeft+1
+                        else
+                            nbCarsRight = nbCarsRight+1
+                        end
+                    end
+                    if nbCarsLeft == 0 then
+                        self:addCarRandomly("left")
+                    elseif nbCarsRight == 0 then
+                        self:addCarRandomly("right")
                     end
                 end
             end
@@ -211,15 +239,15 @@ function InGame:render()
         end
     end
 
-    --[[love.graphics.setColor(255, 0, 0)
+   --[[love.graphics.setColor(255, 0, 0, 0.2)
    local items, len = gameState.states["InGame"].world:getItems()
     for i = 1, len do
         local x, y, w, h = gameState.states["InGame"].world:getRect(items[i])
-        if items[i].isObstacle or items[i].health ~= nil then
-            love.graphics.rectangle("line", x, y, w, h)
+        if items[i].isPath then
+            love.graphics.rectangle("fill", x, y, w, h)
         end
     end
-    love.graphics.setColor(255, 255, 255)--]]
+    love.graphics.setColor(255, 255, 255, 1)--]]
 
     if self.eject then
         self.ejection:draw()
@@ -288,14 +316,14 @@ function InGame:createMap()
     local lvl = Map(
     "assets/textures/tiles/spritesheet.png",
     {
-        chunk1 = {data=getDataLvl("chunk1"), ratio=0.1},
-        chunk2 = {data=getDataLvl("chunk2"), ratio=0.05},
-        chunk3 = {data=getDataLvl("chunk3"), ratio=0.05},
+        chunk1 = {data=getDataLvl("chunk1"), ratio=0.2},
+        chunk2 = {data=getDataLvl("chunk2"), ratio=0.075},
+        chunk3 = {data=getDataLvl("chunk3"), ratio=0.075},
         chunk4 = {data=getDataLvl("chunk4"), ratio=0.4},
         chunk5 = {data=getDataLvl("chunk5"), ratio=0.05},
-        chunk6 = {data=getDataLvl("chunk6"), ratio=0.025},
-        --chunk7 = {data=getDataLvl("chunk7"), ratio=0.025},
-        chunk8 = {data=getDataLvl("chunk8"), ratio=0.3},
+        chunk6 = {data=getDataLvl("chunk6"), ratio=0.075},
+        chunk7 = {data=getDataLvl("chunk7"), ratio=0.025},
+        chunk8 = {data=getDataLvl("chunk8"), ratio=0.1},
     }, 5, "chunk4")
 
     return lvl
@@ -315,12 +343,12 @@ function InGame:createCarsModels()
     end
 
     local carModels = {
-        car1 = {car = Car(getSpritesData("car1", 32, 35), 315, 5, 4, -2), ratio=0.2},
-        car2 = {car = Car(getSpritesData("car2", 28, 32), 305, 6, 4.5, -2), ratio=0.1},
-        car3 = {car = Car(getSpritesData("car3", 28, 37), 280, 5, 3.7, -2), ratio=0.5},
-        taxi = {car = Car(getSpritesData("taxi", 28, 37), 275, 6, 3.5, -2), ratio=0.1},
-        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 325, 3, 5.5), ratio=0.05},
-        police = {car = Car(getSpritesData("police1", 28, 35), 320, 5, 3.5, -2, true), ratio=0.05}
+        car1 = {car = Car(getSpritesData("car1", 32, 35), 310, 5, 4, -2), ratio=0.2},
+        car2 = {car = Car(getSpritesData("car2", 28, 32), 300, 6, 4.5, -2), ratio=0.1},
+        car3 = {car = Car(getSpritesData("car3", 28, 37), 275, 5, 3.7, -2), ratio=0.5},
+        taxi = {car = Car(getSpritesData("taxi", 28, 37), 270, 6, 3.5, -2), ratio=0.1},
+        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 320, 3, 5.5), ratio=0.05},
+        police = {car = Car(getSpritesData("police1", 28, 35), 315, 5, 3.5, -2, true), ratio=0.05}
     }
 
     return carModels
@@ -347,15 +375,21 @@ function InGame:addCarToPathAtPosY(car, path, posY)
         c = car:castToPolice(x, posY, path.direction)
     end
     table.insert(self.cars, c)
+
+    return c
 end
 
-function InGame:addCarRandomly()
+function InGame:addCarRandomly(direction)
     local randCarModel = self:getRandomCarModel()
     local min = self.player.y+offsetYMap-HEIGHTRES
     local randPosY = math.random(min-HEIGHTRES, min)
 
-    local filterPaths = function(item) --Detect paths
-        return item.isPath
+    local filterPaths = function(item, direction) --Detect paths
+        if direction then
+            return item.isPath and item.direction == direction
+        else
+            return item.isPath
+        end
     end
 
     local paths, lenPaths = self.world:querySegment(0, randPosY, self.lvl.mapConfig.width*TILEDIM, randPosY, filterPaths)
@@ -368,12 +402,12 @@ function InGame:addCarRandomly()
             return item.className == "RoadUser" or item.className == "Police"
         end
 
-        local _, nbNearCars = self.world:querySegment(randomPath.x+randomPath.width/2, randPosY-randCarModel.heightCar*3, randomPath.x+randomPath.width/2, randPosY+randCarModel.heightCar*4, filterCars)
+        local _, nbNearCars = self.world:querySegment(randomPath.x+randomPath.width/2, randPosY-randCarModel.heightCar*3, randomPath.x+randomPath.width/2, randPosY+randCarModel.heightCar*5, filterCars)
         if nbNearCars == 0 then
-            self:addCarToPathAtPosY(randCarModel, randomPath, randPosY)
+            return self:addCarToPathAtPosY(randCarModel, randomPath, randPosY)
         end
-        
     end
+    return false
 end
 
 function InGame:deleteOldCars(posYStartingRemoving)
@@ -432,7 +466,7 @@ function InGame:updateAllCars(dt)
     end
 
     for _, car in ipairs(self.cars) do
-        if car.y < self.camMap.y+offsetYMap and car.y > self.camMap.y-heightWindow and car.x > self.camMap.x-widthWindow and car.x < self.camMap.x+widthWindow then
+        if car.y < self.camMap.y+offsetYMap+heightWindow and car.y > self.camMap.y-heightWindow and car.x > self.camMap.x-widthWindow and car.x < self.camMap.x+widthWindow then
             car:update(dt)
         end
     end
@@ -443,7 +477,7 @@ function InGame:drawAllCars()
         self.player:draw()
     end
     for _, car in ipairs(self.cars) do
-        if car.y < self.camMap.y+offsetYMap and car.y > self.camMap.y-heightWindow and car.x > self.camMap.x-widthWindow and car.x < self.camMap.x+widthWindow then
+        if car.y < self.camMap.y+offsetYMap+heightWindow/2 and car.y > self.camMap.y-heightWindow and car.x > self.camMap.x-widthWindow and car.x < self.camMap.x+widthWindow then
             car:draw()
         end
     end

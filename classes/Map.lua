@@ -109,7 +109,7 @@ function Map:addChunk(chunkName)
             local direction = (pathGroup == chunkAsset.layers.objects.rightPaths) and "right" or "left"
             local p = {
                 x = path.x,
-                y = currentHeight-path.y,
+                y = currentHeight-chunkAsset.height*TILEDIM+path.y,
                 width = path.w,
                 height = path.h,
                 direction = direction,
