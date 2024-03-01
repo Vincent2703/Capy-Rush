@@ -71,7 +71,7 @@ function Police:startPursuit()
 
     self.currCarAnim = self.animations.flashingLights
     self.inPursuit = true
-    self.currMaxSpeed = self.maxSpeed
+    self.currMaxSpeed = self.maxSpeed*1.15
     if self.direction == "left" then 
         self.direction = "right"
     end

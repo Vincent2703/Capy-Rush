@@ -61,9 +61,9 @@ function Home:init()
         )
 
         UIElements.tutoBtn = RectangleButton(
-            50,
-            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H-4),
-            50,
+            30,
+            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H-10),
+            100,
             50,
             true,
             "How to play?",
@@ -75,9 +75,9 @@ function Home:init()
 
 
         UIElements.credits = RectangleButton(
-            widthWindow-75,
-            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H-4),
-            50,
+            widthWindow-85,
+            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H-10),
+            60,
             50,
             true,
             "Credits",
@@ -96,6 +96,7 @@ end
 
 function Home:start()
     self.canPlay = input.config.accelerometer or OS ~= "Android"
+    soundManager:setMusicVolume(0.4)
 end
 
 function Home:update(dt)
@@ -137,7 +138,7 @@ function Home:render()
 
     if self.canPlay then
         if save.content.highscore > 0 then
-            love.graphics.print("Highscore : "..save.content.highscore, widthWindow/2-70, heightWindow/2+250)
+            Utils:printCtrTxtWScl("Highscore : "..save.content.highscore, heightWindow/2+250)
         end
     else
         love.graphics.setColor(0.6, 0, 0)

@@ -9,6 +9,7 @@ function Utils:getTextHeight(text, width)
 end
 
 function Utils:printCtrTxtWScl(text, y, scale)
+    scale = scale or 1
     local font = love.graphics.getFont()
     local textWidth = font:getWidth(text) * scale
     local centerX = math.ceil((widthWindow - textWidth)/2)

@@ -26,8 +26,8 @@ function Credits:init()
         local UIElements = {}
         
         UIElements["returnBtn"] = RectangleButton(
-            widthWindow-60,
-            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H-4), --Function utils ? get min/max y...
+            widthWindow-70,
+            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H-10), --Function utils ? get min/max y...
             50,
             50,
             true,
@@ -114,7 +114,9 @@ end
 function Credits:canvasDev()
     local font = love.graphics.getFont()
     font:setLineHeight(2)
-    love.graphics.printf("Development\n\n"..
+    local title = "Development"
+    love.graphics.printf(title, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
+    love.graphics.printf(
     "Game's creator : Tenecifer\n"..
     "Game engine : Love2D\n\n"..
     "Library used : \n"..
@@ -122,7 +124,7 @@ function Credits:canvasDev()
     "Anim8 and Bump by Kikito\n"..
     "JSON by RXI\n"..
     "STI by Landon Manning",
-    self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
+    self.zonePanel.x, self.zonePanel.y+Utils:getTextHeight(title, self.zonePanel.w), self.zonePanel.w)
     font:setLineHeight(1)
 end
 
@@ -136,8 +138,7 @@ function Credits:canvasArt()
     "- Cars by Kaneko\n"..
     "- Fire and explosion by BenHickling\n"..
     "- Smoke from FreePik\n"..
-    "- Body of capyman by\n"..
-    "- Tiles...\n"..
+    "- Body of capyman by\nbluecarrot16, Evert, TheraHedwig, MuffinElZangano, Durrani, castelonia, BenCreating, ElizaWy, dalonedrau, Redshrike, Nila122, JaidynReiman, Joe White, makrohn, wulax\n"..
     "\n",
     self.zonePanel.x, self.zonePanel.y+Utils:getTextHeight(title, self.zonePanel.w), self.zonePanel.w)
     font:setLineHeight(1)
@@ -146,7 +147,9 @@ end
 function Credits:canvasSounds()
     local font = love.graphics.getFont()
     font:setLineHeight(2)
-    love.graphics.printf("Sounds\n\n"..
+    local title = "Sounds\n"
+    love.graphics.printf(title, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
+    love.graphics.printf(
     "Musics by AudioDollar\n"..
     "Splatter by Independent.nu\n"..
     "Fire and obstacle collision by Jute\n"..
@@ -155,6 +158,6 @@ function Credits:canvasSounds()
     "Cheering by ParadoxMirror\n"..
     "Car acceleration by B. Good Sounds\n"..
     "Horns by Car Features",
-    self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
+    self.zonePanel.x, self.zonePanel.y+Utils:getTextHeight(title, self.zonePanel.w), self.zonePanel.w)
     font:setLineHeight(1)
 end

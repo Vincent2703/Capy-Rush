@@ -72,7 +72,9 @@ function SoundManager:resumeMusic()
 end
 
 function SoundManager:setMusicVolume(vol)
-    self.musics[self.currentMusic]:setVolume(vol)
+    if self.musics[self.currentMusic] then
+        self.musics[self.currentMusic]:setVolume(vol)
+    end
 end
 
 function SoundManager:playSFX(name, loop, posX, posY, attMin, attMax)

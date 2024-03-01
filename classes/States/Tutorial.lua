@@ -26,8 +26,8 @@ function Tutorial:init()
         local UIElements = {}
         
         UIElements["returnBtn"] = RectangleButton(
-            widthWindow-60,
-            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H), 
+            widthWindow-70,
+            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H-10), 
             50,
             50,
             true,
@@ -192,7 +192,7 @@ function Tutorial:canvas1()
     "You play Capyman. The capybara with a human body.\n\n"..
     "He is the result of an experiment and escaped from the zoological laboratory in which he was captive.\n\n"..
     "His goal, and now yours too, is to escape as far as possible.\n\n"..
-    "To do this, you will take the fast lane reserved for autonomous vehicles. Unfortunately, you will only be able to control a vehicle for a limited time before it stops.", 
+    "To do this, you will take the highway reserved for autonomous vehicles. Unfortunately, you will only be able to control a vehicle for a limited time before it stops.", 
     self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
     font:setLineHeight(1)
 end
@@ -231,7 +231,7 @@ function Tutorial:canvas3()
     love.graphics.printf(txt2, self.zonePanel.x, yPos, self.zonePanel.w, "center")
     yPos = yPos+Utils:getTextHeight(txt2, self.zonePanel.w+5)
 
-    local middleXPos = self.zonePanel.x+self.zonePanel.w/2-phoneTilts.spriteWidth/2
+    local middleXPos = math.ceil(self.zonePanel.x+self.zonePanel.w/2-phoneTilts.spriteWidth/2)
     self.animations.tiltX.anim:draw(phoneTilts.spritesheet, middleXPos-phoneTilts.spriteWidth, yPos)
     self.animations.tiltY.anim:draw(phoneTilts.spritesheet, middleXPos, yPos)
     self.animations.tiltZ.anim:draw(phoneTilts.spritesheet, middleXPos+phoneTilts.spriteWidth, yPos)
@@ -245,22 +245,30 @@ end
 
 function Tutorial:canvas4()
     local font = love.graphics.getFont()
-    local phoneTilts = globalAssets.animations.phoneTilts
+    local globalImgs = globalAssets.images
+    local lvl = globalImgs.lvl
+    local fuel = globalImgs.fuel
+    local signs = globalImgs.signs
 
     font:setLineHeight(2)
     local txt1 = "How to 3/3\nThe current level of difficulty is displayed on the upper left corner of the screen."
     local txt2 = "The red bar at the bottom of the screen represents the car's autonomy. You need to switch to another car before it becomes empty."
     local txt3 = "Be careful to the road signs to know which lane to take."
-    local txt1Height = Utils:getTextHeight(txt1, self.zonePanel.w)
-    local txt2Height = Utils:getTextHeight(txt2, self.zonePanel.w)
+    local txt1Height = Utils:getTextHeight(txt1, self.zonePanel.w) -10
+    local txt2Height = Utils:getTextHeight(txt2, self.zonePanel.w) -10
+    local txt3Height = Utils:getTextHeight(txt3, self.zonePanel.w) -10
+    local middleXPos = self.zonePanel.x+self.zonePanel.w/2
 
     love.graphics.printf(txt1, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
+    love.graphics.draw(lvl, math.ceil(middleXPos-lvl:getWidth()/2), self.zonePanel.y+txt1Height)
     
-    local yPos = self.zonePanel.y+txt1Height+10
+    local yPos = self.zonePanel.y+txt1Height+lvl:getHeight()+15
     love.graphics.printf(txt2, self.zonePanel.x, yPos, self.zonePanel.w, "center")
+    love.graphics.draw(fuel, math.ceil(middleXPos-fuel:getWidth()/2), yPos+txt2Height)
 
-    yPos = yPos+txt2Height+10
+    yPos = yPos+txt2Height+fuel:getHeight()+15
     love.graphics.printf(txt3, self.zonePanel.x, yPos, self.zonePanel.w, "center")
+    love.graphics.draw(signs, math.ceil(middleXPos-signs:getWidth()/2), yPos+txt3Height)
 
 
     font:setLineHeight(1)

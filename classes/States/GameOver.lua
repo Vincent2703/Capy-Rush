@@ -19,7 +19,14 @@ function GameOver:init()
             nil,
             nil,
             true,
-            function() replay() end,
+            function()
+                if love_admob and nbRuns>0 and nbRuns%5 == 0 then
+                    adm.tryShowInterstitial(nil, replay(), replay())
+                else
+                    replay() 
+                end
+                nbRuns = nbRuns+1
+            end,
             "release"
         )
 
@@ -39,7 +46,7 @@ function GameOver:init()
 
         UIElements["ExitBtn"] = RectangleButton(
             widthWindow-60,
-            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H), 
+            math.min(heightWindow-50, SAFEZONE.Y+SAFEZONE.H-10), 
             50,
             50,
             true,
@@ -71,6 +78,9 @@ function GameOver:init()
 end
 
 function GameOver:start()
+    if love_admob then
+        adm.showBanner()
+    end
     local stats = gameState.states["InGame"].stats
 
     soundManager:setMusicVolume(0.4)

@@ -31,7 +31,8 @@ function Button:update()
 
     local function checkInBounds()
         if self:instanceOf(RectangleButton) then
-            return mouseX >= self.x and mouseX <= self.x + self.width and mouseY >= self.y and mouseY <= self.y + self.height
+            local margin = self.background == nil and 20 or 0
+            return mouseX >= self.x-margin and mouseX <= self.x + self.width + margin and mouseY >= self.y - margin and mouseY <= self.y + self.height + margin
         elseif self:instanceOf(CircleButton) then
             return math.sqrt((mouseX-self.centerX)^2 + (mouseY-self.centerY)^2) <= self.radius
         end

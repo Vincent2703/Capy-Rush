@@ -343,12 +343,12 @@ function InGame:createCarsModels()
     end
 
     local carModels = {
-        car1 = {car = Car(getSpritesData("car1", 32, 35), 310, 5, 4, -2), ratio=0.2},
-        car2 = {car = Car(getSpritesData("car2", 28, 32), 300, 6, 4.5, -2), ratio=0.1},
-        car3 = {car = Car(getSpritesData("car3", 28, 37), 275, 5, 3.7, -2), ratio=0.5},
-        taxi = {car = Car(getSpritesData("taxi", 28, 37), 270, 6, 3.5, -2), ratio=0.1},
+        car1 = {car = Car(getSpritesData("car1", 32, 35), 310, 4, 4, -2), ratio=0.2},
+        car2 = {car = Car(getSpritesData("car2", 28, 32), 300, 4, 4.5, -2), ratio=0.1},
+        car3 = {car = Car(getSpritesData("car3", 28, 37), 275, 4, 3.7, -2), ratio=0.5},
+        taxi = {car = Car(getSpritesData("taxi", 28, 37), 270, 5, 3.5, -2), ratio=0.1},
         sport1 = {car = Car(getSpritesData("sport1", 30, 31), 320, 3, 5.5), ratio=0.05},
-        police = {car = Car(getSpritesData("police1", 28, 35), 315, 5, 3.5, -2, true), ratio=0.05}
+        police = {car = Car(getSpritesData("police1", 28, 35), 315, 4, 3.5, -2, true), ratio=0.05}
     }
 
     return carModels
@@ -425,7 +425,7 @@ function InGame:createUI()
 
     UIElements.pause = CircleButton(
         math.ceil(widthWindow*0.95)-25,
-        math.max(math.ceil(heightWindow*0.05)-25, SAFEZONE.Y-4),
+        math.max(math.ceil(heightWindow*0.05)-15, SAFEZONE.Y-4),
         50,
         50,
         true,
@@ -438,7 +438,7 @@ function InGame:createUI()
 
     UIElements.settings = RectangleButton(
         math.ceil(widthWindow*0.95)-75,
-        math.max(math.ceil(heightWindow*0.05)-17, SAFEZONE.Y),
+        math.max(math.ceil(heightWindow*0.05)-7, SAFEZONE.Y),
         50,
         50,
         true,

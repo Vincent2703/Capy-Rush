@@ -9,7 +9,7 @@ function Ejection:init(x, y)
     self.maxSpeed = 800
 
     self.velocity = {x=gameState.states["InGame"].player.velocity.x*10, y=gameState.states["InGame"].player.velocity.y*10}
-    self.accX, self.accY = 0.08, 0.05 --tester accY 
+    self.accX, self.accY = 0.08, 0.05 
 
     self.ejectTime = 0.25
     self.count = 0
@@ -35,7 +35,7 @@ end
 function Ejection:update(dt)
     local diffSpeed = gameState.states["InGame"].difficulty.speed
     if diffSpeed > 1 then
-        diffSpeed = diffSpeed+0.3
+        diffSpeed = diffSpeed*1.25
     end
     
     self.count = self.count+dt*diffSpeed

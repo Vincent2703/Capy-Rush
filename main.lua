@@ -1,8 +1,12 @@
 function love.load()
+    _test = false
+    
     VERSION = 0.1
     OS = love.system.getOS()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
     WIDTHRES, HEIGHTRES = 432, 650
+
+    nbRuns = 0
     
     TILEDIM = 48
 
@@ -42,7 +46,17 @@ function love.load()
 
     gameState = GameState()
     gameState:setState("Home", true)
+
+    if love_admob then
+        adm.init(ads.ads.banner, "bottom", ads.ads.inter, true, ads.ads.reward)
+
+        --[[if save.content.firstTime then
+            love_admob.changeEUConsent()
+        end--]]
+	end
+
 end
+
 
 function love.keypressed(key, scancode, isrepeat)
     if OS == "Android" and key == "escape" then
@@ -51,6 +65,8 @@ function love.keypressed(key, scancode, isrepeat)
 end
 
 function love.update(dt)
+    if love_admob then love_admob.update(dt) end
+
     input:update()
 
     soundManager:updateMusics()
@@ -65,12 +81,12 @@ end
 
 function love.focus(f)
     if not f then
-        soundManager:pauseMusic()
+        --soundManager:pauseMusic()
         if gameState:isCurrentState("InGame") then
             gameState:setState("Pause", true)
         end
-    elseif save.content.music then
-        soundManager:resumeMusic()
+    --elseif save.content.music then
+      --  soundManager:resumeMusic()
     end
 end
 
@@ -82,6 +98,14 @@ function loadLibraries()
 	class = require("libraries/30log/30log-clean")
 	sti = require("libraries/sti")
     bump = require("libraries/bump/bump")
+    adm = require("libraries/adm/adm")
+
+    if OS == "Android" then
+        love_admob = require("classes/love_admob")
+        ads = adMobKeys()
+
+    end
+
 end
 
 function loadClasses()
@@ -132,7 +156,10 @@ function loadGlobalAssets()
             settingsIcon = love.graphics.newImage("assets/textures/misc/settingsIcon.png"),
             homeBackground = love.graphics.newImage("assets/textures/misc/sky2.png"),
             arrowRight = love.graphics.newImage("assets/textures/misc/tuto/arrowRight.png"),
-            arrowLeft = love.graphics.newImage("assets/textures/misc/tuto/arrowLeft.png")
+            arrowLeft = love.graphics.newImage("assets/textures/misc/tuto/arrowLeft.png"),
+            lvl = love.graphics.newImage("assets/textures/misc/tuto/lvl.png"),
+            fuel = love.graphics.newImage("assets/textures/misc/tuto/fuel.png"),
+            signs = love.graphics.newImage("assets/textures/misc/tuto/signs.png")
         }
     }
 
@@ -192,6 +219,9 @@ function initScreen()
 
     SAFEZONE = {}
     SAFEZONE.X, SAFEZONE.Y, SAFEZONE.W, SAFEZONE.H = love.window.getSafeArea()
+    if OS == "Android" then --temp fix
+        SAFEZONE.Y = 15
+    end
 end
 
 function setSave()
@@ -210,13 +240,15 @@ function setSave()
         lastVersionPlayed=VERSION,
         lastTimePlayed=os.time(),
         highscore=saveContent and saveContent.highscore or 0,
-        friend=saveContent and saveContent.friend or false,
+        vip=saveContent and saveContent.vip or false,
+        firstTime = saveContent.firstTime == nil,
         options = {
             music = music,
             SFX = SFX,
             sensibility = saveContent.options and saveContent.options.sensibility or 1
         }
     }
+
     save:write(saveTable)
 
 end
@@ -232,4 +264,28 @@ function manageMusic()
             love.audio.pause(musics.postHardcore)
         end
     end
+end
+
+function adMobKeys()
+    local ads = {}
+
+    local ids = {
+        banner = "ca-app-pub-4779033455963740/6293276100",
+        inter = "ca-app-pub-4779033455963740/3332070844",
+        reward = "ca-app-pub-4779033455963740/1040949421",
+    }
+    
+    local test = {
+        banner = "ca-app-pub-3940256099942544/6300978111",
+        inter = "ca-app-pub-3940256099942544/1033173712",
+        reward = "ca-app-pub-3940256099942544/5224354917",
+    }
+    
+    if _test then
+        ads.ads = test
+    else
+        ads.ads = ids
+    end
+    
+    return ads
 end

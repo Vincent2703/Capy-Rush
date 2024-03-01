@@ -145,6 +145,7 @@ end
 function Car:updatePosition(x, y)
     self.x, self.y = x, y
     gameState.states["InGame"].world:update(self, x, y)
+    self.opacity = 1 -- temp fix
 end
 
 function Car:castToPlayer(x, y)
@@ -252,11 +253,11 @@ function Car:manageTrajectory(velX, velY)
     local queryTopPathsY
     local queryTopCarsY
     if self.direction == "right" then
-        queryTopPathsY = self.y-self.heightCar*3
-        queryTopCarsY = self.y-self.heightCar*2
+        queryTopPathsY = self.y-self.heightCar*4
+        queryTopCarsY = self.y-self.heightCar*2.5
     else
-        queryTopPathsY = self.y+self.heightCar*4
-        queryTopCarsY = self.y+self.heightCar*3
+        queryTopPathsY = self.y+self.heightCar*5
+        queryTopCarsY = self.y+self.heightCar*3.5
     end
     local _, lenTopPaths = world:queryPoint(self.x+self.widthCar/2, queryTopPathsY, filterPaths)
     local _, lenTopCars = world:queryRect(self.x, queryTopCarsY, self.widthCar, self.heightCar*2, filterCars)
