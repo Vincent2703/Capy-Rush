@@ -25,10 +25,14 @@ function Police:update(dt)
     local velX, velY = self.velocity.x, self.velocity.y
 
     local targetVelX, targetVelY = 0, self.currMaxSpeed
-    if self.inPursuit then
-        targetVelX, targetVelY = self:pursuit()
-    end
+
     targetVelX, targetVelY = self:manageTrajectory(targetVelX, targetVelY)
+    if self.inPursuit then
+        targetPursuitVelX, targetVelY = self:pursuit()
+        if targetVelX == 0 then
+            targetVelX = targetPursuitVelX
+        end
+    end
 
     velX = accX * targetVelX + (1 - accX) * velX
     velY = accY * targetVelY + (1 - accY) * velY

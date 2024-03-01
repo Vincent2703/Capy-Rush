@@ -1,12 +1,12 @@
 function love.load()
     _test = false
     
-    VERSION = 0.1
+    VERSION = 0.3
     OS = love.system.getOS()
     math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
     WIDTHRES, HEIGHTRES = 432, 650
 
-    nbRuns = 0
+    nbRuns = 1
     
     TILEDIM = 48
 

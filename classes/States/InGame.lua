@@ -17,6 +17,11 @@ function InGame:init()
 end
 
 function InGame:start() -- On restart
+    if love_admob and nbRuns>1 and nbRuns%4 == 0 then
+        -- TEMP
+        love_admob.requestInterstitial("ca-app-pub-4779033455963740/3332070844")
+    end
+
     self.world = self:createWorld()
 
     self.lvl = self:createMap()
@@ -488,11 +493,12 @@ function InGame:manageCamera()
 
     local entity = self.eject and ejection or player
     local entityWidth = self.eject and self.lastPlayerWidth or player.widthCar
+    local entityHeight = self.eject and self.lastPlayerHeight or player.heightCar
     local entityX = entity.x - (self.eject and self.lastPlayerWidth / 2 or 0)
 
     trX = math.min(0, math.max(-entityX * self.zoom - entityWidth / 2 * self.zoom + WIDTHRES / 2, -WIDTHRES * self.zoom + widthWindow / ratioScale))
 
-    trY = math.max(heightWindow / ratioScale, -entity.y * self.zoom + TILEDIM / ratioScale * 13.5)
+    trY = math.max(heightWindow / ratioScale, -entity.y * self.zoom + heightWindow/ratioScale-entityHeight*2*self.zoom)
 
     return trX, trY
 end
@@ -506,6 +512,7 @@ function InGame:manageEjection(ejection)
         self.ejection = Ejection(self.player.x+self.player.widthCar/2, self.player.y+self.player.heightCar/2)
         self.player.isExploding = true
         self.lastPlayerWidth = self.player.widthCar
+        self.lastPlayerHeight = self.player.heightCar
     else
         self.quickLanding = true
         self.landingStatus = true

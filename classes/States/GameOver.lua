@@ -19,9 +19,14 @@ function GameOver:init()
             nil,
             nil,
             true,
-            function()
-                if love_admob and nbRuns>0 and nbRuns%5 == 0 then
-                    adm.tryShowInterstitial(nil, replay(), replay())
+            function() --TEMP
+                if love_admob and nbRuns>1 and nbRuns%4 == 0 then
+                    local result = love_admob.isInterstitialLoaded()
+                    if result then
+                        love_admob.showInterstitial()
+                    else
+                        replay()
+                    end
                 else
                     replay() 
                 end
@@ -78,9 +83,6 @@ function GameOver:init()
 end
 
 function GameOver:start()
-    if love_admob then
-        adm.showBanner()
-    end
     local stats = gameState.states["InGame"].stats
 
     soundManager:setMusicVolume(0.4)

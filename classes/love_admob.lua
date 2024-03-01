@@ -2,9 +2,9 @@ local love_admob = require("admob")
 
 love_admob.timer = 0
 love_admob.updateTime = 1 --Seconds
-love_admob.debugging = true
+love_admob.debugging = false
 
-local test_done = false
+local test_done = true
 
 --[[
 	debugging: bool = false
@@ -39,6 +39,7 @@ function love_admob.update(dt)
 		if not test_done and love_admob.debugging then
 			--print(Inspect(love_admob))
 			test_done = love_admob.test()
+			print("coucou", test_done)
 		end
 		love_admob.checkForAdsCallbacks()
 		love_admob.timer = 0

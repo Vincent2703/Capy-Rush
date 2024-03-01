@@ -163,7 +163,7 @@ function Tutorial:render()
     love.graphics.rectangle("fill", 0, 0, widthWindow, heightWindow)
     love.graphics.setColor(1,1,1)
 
-    love.graphics.print("Tutorial", 30, math.max(30, SAFEZONE.Y), 0, 1.4) --Element Title
+    love.graphics.print("Tutorial", 30, math.max(40, SAFEZONE.Y+5), 0, 1.4) --Element Title
 
     love.graphics.setColor(0, 0, 0, 0.5)
     love.graphics.rectangle("fill", 20, 80, widthWindow-40, heightWindow-140, 10)
