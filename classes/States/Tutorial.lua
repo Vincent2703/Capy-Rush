@@ -46,6 +46,8 @@ function Tutorial:init()
     end
 
     self.UI = createUI()
+
+    self.scaleLineHeight = heightWindow/HEIGHTRES
     
     self.bgWidth = globalAssets.images.homeBackground:getWidth()
     self.zoom = widthWindow/self.bgWidth
@@ -171,7 +173,10 @@ function Tutorial:render()
 
     for _, panel in pairs(self.panels) do
         if panel.current then
+            local font = love.graphics.getFont()
+            font:setLineHeight(1.5*self.scaleLineHeight)
             panel.render(self)
+            font:setLineHeight(1)
             break
         end
     end
@@ -185,23 +190,18 @@ function Tutorial:render()
 end
 
 function Tutorial:canvas1()
-    local font = love.graphics.getFont()
-
-    font:setLineHeight(2)
     love.graphics.printf("Welcome !\n"..
     "You play Capyman. The capybara with a human body.\n\n"..
     "He is the result of an experiment and escaped from the zoological laboratory in which he was captive.\n\n"..
-    "His goal, and now yours too, is to escape as far as possible.\n\n"..
-    "To do this, you will take the highway reserved for autonomous vehicles. Unfortunately, you will only be able to control a vehicle for a limited time before it stops.", 
+    "His goal, and now yours too, is to escape as far as possible via the highway.\n\n"..
+    "Unfortunately, you will only be able to control a vehicle for a limited time before it stops.", 
     self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
-    font:setLineHeight(1)
 end
 
 function Tutorial:canvas2()
     local font = love.graphics.getFont()
     local phoneTilts = globalAssets.animations.phoneTilts
 
-    font:setLineHeight(2)
     local txt1 = "How to 1/3\nTo move your car, tilt your phone to the right or to the left. If you are lying down, tilt the top of your phone."
     local txt2 = "You can adjust the sensibility of these controls in the settings."
     local txt1Height = Utils:getTextHeight(txt1, self.zonePanel.w)
@@ -211,14 +211,12 @@ function Tutorial:canvas2()
     self.animations.tiltZ.anim:draw(phoneTilts.spritesheet, self.zonePanel.w/2+phoneTilts.spriteWidth/2, self.zonePanel.y+txt1Height)
     love.graphics.printf(txt2, self.zonePanel.x, self.zonePanel.y+txt1Height+phoneTilts.spriteHeight+10, self.zonePanel.w, "center")
     self.animations.movingCar.anim:draw(globalAssets.animations.movingCar.spritesheet, self.zonePanel.x+self.zonePanel.w/2-globalAssets.animations.movingCar.spriteWidth/2, self.zonePanel.y+90+txt1Height+Utils:getTextHeight(txt2, self.zonePanel.w))
-    font:setLineHeight(1)
 end
 
 function Tutorial:canvas3()
     local font = love.graphics.getFont()
     local phoneTilts = globalAssets.animations.phoneTilts
 
-    font:setLineHeight(2)
     local txt1 = "How to 2/3\nTo switch to another car, you can eject yourself. Touch the screen to do so."
     local txt2 = "You can adjust your trajectory by tilting your phone."
     local txt3 = "Touch the screen again to land quicker."
@@ -239,8 +237,6 @@ function Tutorial:canvas3()
     yPos = yPos+10+phoneTilts.spriteHeight
     self.animations.ejection.anim:draw(globalAssets.animations.ejection.spritesheet, self.zonePanel.x+self.zonePanel.w/2-globalAssets.animations.ejection.spriteWidth/2, yPos)
     Utils:printCtrTxtWScl(txt3, yPos+globalAssets.animations.ejection.spriteHeight+5, 0.8)
-
-    font:setLineHeight(1)
 end
 
 function Tutorial:canvas4()
@@ -250,13 +246,14 @@ function Tutorial:canvas4()
     local fuel = globalImgs.fuel
     local signs = globalImgs.signs
 
-    font:setLineHeight(2)
     local txt1 = "How to 3/3\nThe current level of difficulty is displayed on the upper left corner of the screen."
     local txt2 = "The red bar at the bottom of the screen represents the car's autonomy. You need to switch to another car before it becomes empty."
     local txt3 = "Be careful to the road signs to know which lane to take."
+    local txt4 = "Drive on the crates to earn a bonus... Or a malus"
     local txt1Height = Utils:getTextHeight(txt1, self.zonePanel.w) -10
     local txt2Height = Utils:getTextHeight(txt2, self.zonePanel.w) -10
     local txt3Height = Utils:getTextHeight(txt3, self.zonePanel.w) -10
+    local txt4Height = Utils:getTextHeight(txt4, self.zonePanel.w) -10
     local middleXPos = self.zonePanel.x+self.zonePanel.w/2
 
     love.graphics.printf(txt1, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
@@ -271,5 +268,7 @@ function Tutorial:canvas4()
     love.graphics.draw(signs, math.ceil(middleXPos-signs:getWidth()/2), yPos+txt3Height)
 
 
-    font:setLineHeight(1)
+    yPos = yPos+txt3Height+signs:getHeight()+15
+    love.graphics.printf(txt4, self.zonePanel.x, yPos, self.zonePanel.w, "center")
+
 end

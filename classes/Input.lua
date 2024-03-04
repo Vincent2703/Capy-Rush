@@ -115,11 +115,11 @@ function Input:update()
 		local rotationModulate = rotation
 		
 		if inclination < 20 then
-			rotationModulate = rotation / 1.8
+			rotationModulate = rotation / 1.7
 		elseif inclination > 30 and inclination < 50 then
-			rotationModulate = rotation * 2.2
+			rotationModulate = rotation * 2
 		elseif inclination >= 50 then
-			rotationModulate = rotation * 3.2
+			rotationModulate = rotation * 3
 		end
 		
 		if y <= 0 then

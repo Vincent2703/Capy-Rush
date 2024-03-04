@@ -14,12 +14,131 @@ function InGame:init()
     }
 
     self.carModels = self:createCarsModels()
+
+    self.items = { --To put elsewhere ?
+        upDiff = {
+            proba = 0.1,
+            fn = function() 
+                if self.difficulty.id < #self.difficulties then
+                    self:setDifficulty(self.difficulty.id+1)
+                    table.insert(self.notifs, ShortNotif("Difficulty up", nil, {1, 0.39, 0}))
+                    return true
+                end
+                return false
+            end
+        },
+        downDiff = {
+            proba = 0.05,
+            fn = function()
+                if self.difficulty.id > 1 then
+                    self:setDifficulty(self.difficulty.id-1)
+                    table.insert(self.notifs, ShortNotif("Difficulty down", nil, {0.40, 0.59, 0.45}))
+                    return true
+                end
+                return false
+            end
+        },
+        repair = {
+            proba = 0.15,
+            fn = function()
+                if self.player.health < self.player.maxHealth then
+                    self.player.health = self.player.maxHealth
+                    table.insert(self.notifs, ShortNotif("Repaired", nil, {0.40, 0.59, 0.45}))
+                    soundManager:playSFX("repair")
+                    return true
+                end
+                return false
+            end
+        },
+        damage = {
+            proba = 0.05,
+            fn = function()
+                if self.player.health > 1 then
+                    self.player.health = self.player.health-1
+                    table.insert(self.notifs, ShortNotif("Run over a nail", "-1 health", {1, 0.39, 0}))
+                    soundManager:playSFX("tireBurst")
+                    return true
+                end
+                return false
+            end
+        },
+        refuel = {
+            proba = 0.15,
+            fn = function()
+                if self.player.fuel < 100 then
+                    self.player.fuel = 100
+                    table.insert(self.notifs, ShortNotif("Refueled", nil, {0.40, 0.59, 0.45}))
+                    soundManager:playSFX("refuel")
+                    return true
+                end
+                return false
+            end
+        },
+        leak = {
+            proba = 0.05,
+            fn = function()
+                if self.player.fuel >= 20 then
+                    self.player.fuel = self.player.fuel-10
+                    table.insert(self.notifs, ShortNotif("Leak", "-10 fuel", {1, 0.39, 0}))
+                    soundManager:playSFX("leak")
+                    return true
+                end
+                return false
+            end
+        },
+        teleport = {
+            proba = 0.1,
+            fn = function()
+                if self.player.direction == "right" then
+                    table.insert(self.notifs, ShortNotif("Teleported", nil, {1, 0.39, 0}))
+                    soundManager:playSFX("teleport")
+
+                    local filterPaths = function(item) 
+                        return item.isPath and item.direction == "left"
+                    end
+
+                    local paths, lenPaths = self.world:querySegment(0, self.player.y, self.lvl.mapConfig.width*TILEDIM, self.player.y, filterPaths)
+
+                    if lenPaths > 0 then
+                        randNbPath = math.random(1, lenPaths)
+                        randomPath = paths[randNbPath]
+
+                        self.player:updatePosition(randomPath.x, self.player.y)
+                        return true
+                    end
+                end
+                return false
+            end
+        },
+        bonusPoints = {
+            proba = 0.25,
+            fn = function()
+                self.stats.scores.current = self.stats.scores.current+10
+                print("bonus points")
+                table.insert(self.notifs, ShortNotif("Bonus points", "+5", {0.40, 0.59, 0.45}))
+                return true
+            end
+        },
+        malusPoints = {
+            proba = 0.1,
+            fn = function()
+                if self.stats.scores.current >= 10 then
+                    self.stats.scores.current = self.stats.scores.current-10
+                    print("malus points")
+                    table.insert(self.notifs, ShortNotif("Malus points", "-5", {1, 0.39, 0}))
+                    return true
+                end
+                return false
+            end
+        }
+
+    }
 end
 
 function InGame:start() -- On restart
     if love_admob and nbRuns>1 and nbRuns%4 == 0 then
         -- TEMP
-        love_admob.requestInterstitial("ca-app-pub-4779033455963740/3332070844")
+        love_admob.requestInterstitial(ads.ads.inter)
     end
 
     self.world = self:createWorld()
@@ -34,6 +153,7 @@ function InGame:start() -- On restart
     self.player.isExploding = false
 
     self.UI = self:createUI()
+    self.notifs = {}
 
     self.difficulty = self.difficulties[1]
 
@@ -44,6 +164,8 @@ function InGame:start() -- On restart
     self.prevYPos = 0
 
     self.cars = {}
+
+    self.crates = {}
 
     self.landingStatus = false
     self.quickLanding = false
@@ -81,7 +203,7 @@ function InGame:update(dt)
 
         if (input.state.actions.newPress.eject 
         or (input.state.actions.newPress.click and input.state.mouse.y <= 0.9*heightWindow and input.state.mouse.y >= 0.1*heightWindow)) 
-        and not self.eject then
+        and not self.eject and not self.player.isExploding then
             self:manageEjection(true)
         elseif (input.state.actions.newPress.eject 
         or (input.state.actions.newPress.click and input.state.mouse.y <= 0.9*heightWindow and input.state.mouse.y >= 0.1*heightWindow)) 
@@ -152,9 +274,24 @@ function InGame:update(dt)
             end
         end
 
-        --to refactorise
+        --to refactorize
+        for i, crate in ipairs(self.crates) do
+            crate:update(dt)
+            if not crate.active or crate.y > self.player.y+heightWindow/2 then
+                table.remove(self.crates, i)
+                self.world:remove(crate)
+            end
+        end
+
+        for i, notif in ipairs(self.notifs) do
+            notif:update(dt)
+            if notif.finished then
+                table.remove(self.UI, i)
+            end
+        end
+
         for _, ui in pairs(self.UI) do 
-            if not self.eject --[[and ui.visible--]] then
+            if not self.eject then
                 ui:update()
             end
         end
@@ -207,6 +344,24 @@ function InGame:update(dt)
                         self:addCarRandomly("right")
                     end
                 end
+
+                rand = math.random()
+                if rand <= 0.06 then
+                    local posY = self.player.y+offsetYMap-HEIGHTRES
+
+                    local filterPaths = function(item) --Detect paths
+                        return item.isPath and item.direction == self.player.direction
+                    end
+                
+                    local paths, lenPaths = self.world:querySegment(0, posY, self.lvl.mapConfig.width*TILEDIM, posY, filterPaths)
+                
+                    if lenPaths > 0 then
+                        randNbPath = math.random(1, lenPaths)
+                        randomPath = paths[randNbPath]
+
+                        table.insert(self.crates, Crate(randomPath.x, self.player.y+offsetYMap-HEIGHTRES))
+                    end
+                end
             end
 
         end
@@ -237,7 +392,10 @@ function InGame:render()
             end
 
             if layer.name == "vegetation" then
-                -- Draw the player and road users
+                -- Draw the player, road users and crates
+                for _, crate in pairs(self.crates) do
+                    crate:draw()
+                end
                 self:drawAllCars()
             end
             self.lvl.map:drawLayer(layer)
@@ -269,6 +427,12 @@ function InGame:render()
 
 
     -- Draw UI elements
+    for _, notif in ipairs(self.notifs) do
+        if not notif.finished  then
+            notif:draw()
+        end
+    end
+
     for _, ui in pairs(self.UI) do
         if not self.eject --[[and ui.visible--]] then
             ui:draw()

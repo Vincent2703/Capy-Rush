@@ -6,6 +6,8 @@ function ShortNotif:init(text, subtitle, colorText, colorBorder, size, delay)
     self.delay = delay or 1.5
     self.time = 0
     self.distanceAnim = 50
+    self.size = size or 1
+    self.finished = false
 end
 
 function ShortNotif:update(dt)
@@ -19,6 +21,7 @@ function ShortNotif:update(dt)
     if self.time >= self.delay then
         self.time = 0
         self.visible = false
+        self.finished = true
     end
 end
 

@@ -42,10 +42,28 @@ function Credits:init()
         UIElements["prevBtn"] = RectangleButton(widthWindow/2-70, math.min(heightWindow-55, SAFEZONE.Y+SAFEZONE.H), 48, 45, false, globalAssets.images.arrowLeft, {1,1,1, 1}, {1,1,1, 0.6}, false, function() navigatePanels(-1) end)
         UIElements["nextBtn"] = RectangleButton(widthWindow/2+32, math.min(heightWindow-55, SAFEZONE.Y+SAFEZONE.H), 48, 45, true, globalAssets.images.arrowRight, {1,1,1, 1}, {1,1,1, 0.6}, false, function() navigatePanels(1) end)
 
+
+        UIElements["adBtn"] = RectangleButton(
+            widthWindow/2-36,
+            math.min(heightWindow-200, SAFEZONE.Y+SAFEZONE.H-10),
+            72,
+            50,
+            love_admob,
+            "Support me",
+            {1,1,1},
+            {1,1,1, 0.5},
+            false,
+            function() love_admob.showRewardedAd() end,
+            "release"
+        )   
+
+
         return UIElements
     end
 
     self.UI = createUI()
+
+    self.scaleLineHeight = heightWindow/HEIGHTRES
     
     self.bgWidth = globalAssets.images.homeBackground:getWidth()
     self.zoom = widthWindow/self.bgWidth
@@ -54,8 +72,13 @@ function Credits:init()
         {render = self.canvasDev, current = true},
         {render = self.canvasArt, current = false},
         {render = self.canvasSounds, current = false},
+        {render = self.canvasSpecialThanks, current = false}
     }
     self.zonePanel = {x=25, y=90, w=widthWindow-50, h=heightWindow-160}
+
+    if love_admob then
+        love_admob.requestRewardedAd(ads.ads.reward)
+    end
 end
 
 function Credits:start()
@@ -97,7 +120,10 @@ function Credits:render()
 
     for _, panel in pairs(self.panels) do
         if panel.current then
+            local font = love.graphics.getFont()
+            font:setLineHeight(1.5*self.scaleLineHeight)
             panel.render(self)
+            font:setLineHeight(1)
             break
         end
     end
@@ -112,8 +138,6 @@ end
 
 
 function Credits:canvasDev()
-    local font = love.graphics.getFont()
-    font:setLineHeight(2)
     local title = "Development"
     love.graphics.printf(title, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
     love.graphics.printf(
@@ -125,12 +149,9 @@ function Credits:canvasDev()
     "JSON by RXI\n"..
     "STI by Landon Manning",
     self.zonePanel.x, self.zonePanel.y+Utils:getTextHeight(title, self.zonePanel.w), self.zonePanel.w)
-    font:setLineHeight(1)
 end
 
 function Credits:canvasArt()
-    local font = love.graphics.getFont()
-    font:setLineHeight(2)
     local title = "Art\n"
     love.graphics.printf(title, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
     love.graphics.printf(
@@ -141,23 +162,33 @@ function Credits:canvasArt()
     "- Body of capyman by\nbluecarrot16, Evert, TheraHedwig, MuffinElZangano, Durrani, castelonia, BenCreating, ElizaWy, dalonedrau, Redshrike, Nila122, JaidynReiman, Joe White, makrohn, wulax\n"..
     "\n",
     self.zonePanel.x, self.zonePanel.y+Utils:getTextHeight(title, self.zonePanel.w), self.zonePanel.w)
-    font:setLineHeight(1)
 end
 
 function Credits:canvasSounds()
-    local font = love.graphics.getFont()
-    font:setLineHeight(2)
     local title = "Sounds\n"
     love.graphics.printf(title, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
     love.graphics.printf(
-    "Musics by AudioDollar\n"..
-    "Splatter by Independent.nu\n"..
-    "Fire and obstacle collision by Jute\n"..
-    "Explosion by Michel Baradari\n"..
-    "Police siren, crash and motor from Pixabay \n"..
-    "Cheering by ParadoxMirror\n"..
-    "Car acceleration by B. Good Sounds\n"..
-    "Horns by Car Features",
+    "- Musics by AudioDollar\n"..
+    "- Splatter by Independent.nu\n"..
+    "- Fire and obstacle collision by Jute\n"..
+    "- Explosion by Michel Baradari\n"..
+    "- Police siren, crash and motor from Pixabay \n"..
+    "- Cheering by ParadoxMirror\n"..
+    "- Car acceleration by B. Good Sounds\n"..
+    "- Horns by Car Features\n"..
+    "- Repair by Fronbondi_Skegs\n"..
+    "- Tire burst by JustSoundSFX",
     self.zonePanel.x, self.zonePanel.y+Utils:getTextHeight(title, self.zonePanel.w), self.zonePanel.w)
-    font:setLineHeight(1)
+end
+
+function Credits:canvasSpecialThanks()
+    local title = "Special thanks\n"
+    love.graphics.printf(title, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
+    love.graphics.printf(
+    "Thanks to my partner Marion for her support and testing the game\n\n"..
+    "Thanks to my sister Ludivine for testing the game\n\n"..
+    "Thank YOU to play my game !\n",
+    self.zonePanel.x, self.zonePanel.y+Utils:getTextHeight(title, self.zonePanel.w), self.zonePanel.w)
+
+
 end

@@ -1,9 +1,9 @@
 function love.load()
     _test = false
     
-    VERSION = 0.3
+    VERSION = 0.5
     OS = love.system.getOS()
-    math.randomseed(os.time()) -- To pick different random values with math.random() at each execution
+    math.randomseed(os.time() .. os.clock()) -- To pick different random values with math.random() at each execution
     WIDTHRES, HEIGHTRES = 432, 650
 
     nbRuns = 1
@@ -32,6 +32,11 @@ function love.load()
             vroom2 = love.audio.newSource("assets/sounds/SFX/vroom2.ogg", "static"),
             horn1 = love.audio.newSource("assets/sounds/SFX/horn1.ogg", "static"),
             horn2 = love.audio.newSource("assets/sounds/SFX/horn2.ogg", "static"),
+            repair = love.audio.newSource("assets/sounds/SFX/repair.mp3", "static"),
+            leak = love.audio.newSource("assets/sounds/SFX/leak.mp3", "static"),
+            refuel = love.audio.newSource("assets/sounds/SFX/refuel.mp3", "static"),
+            teleport = love.audio.newSource("assets/sounds/SFX/teleport.mp3", "static"),
+            tireBurst = love.audio.newSource("assets/sounds/SFX/tireBurst.mp3", "static"),
         }
     )
 
@@ -49,10 +54,6 @@ function love.load()
 
     if love_admob then
         adm.init(ads.ads.banner, "bottom", ads.ads.inter, true, ads.ads.reward)
-
-        --[[if save.content.firstTime then
-            love_admob.changeEUConsent()
-        end--]]
 	end
 
 end
@@ -125,6 +126,9 @@ function loadClasses()
     require("classes/Ejection")
 
     require("classes/Stats")
+
+    require("classes/Crate")
+
     require("classes/GUI/Notif")
     require("classes/GUI/NotifSubclasses/ShortNotif")
     require("classes/GUI/NotifSubclasses/PersistNotif")
@@ -159,7 +163,9 @@ function loadGlobalAssets()
             arrowLeft = love.graphics.newImage("assets/textures/misc/tuto/arrowLeft.png"),
             lvl = love.graphics.newImage("assets/textures/misc/tuto/lvl.png"),
             fuel = love.graphics.newImage("assets/textures/misc/tuto/fuel.png"),
-            signs = love.graphics.newImage("assets/textures/misc/tuto/signs.png")
+            signs = love.graphics.newImage("assets/textures/misc/tuto/signs.png"),
+
+            crate = love.graphics.newImage("assets/textures/items/crate.png")
         }
     }
 
@@ -194,7 +200,7 @@ function initScreen()
         flags.resizable = false
         flags.fullscreen = true
     else
-        widthWindow, heightWindow = 392, 850-- 392x850 --367x850 4/3
+        widthWindow, heightWindow = 392, 650-- 392x850 --367x850 4/3
         flags.resizable = true
         flags.fullscreen = false
     end

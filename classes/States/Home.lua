@@ -133,7 +133,7 @@ function Home:render()
         end
     end
 
-    local title = "Capy Jump"
+    local title = "Capy Dash"
     Utils:printCtrTxtWScl(title, 130, 2)
 
     if self.canPlay then
