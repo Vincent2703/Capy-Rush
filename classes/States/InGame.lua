@@ -77,9 +77,9 @@ function InGame:init()
         leak = {
             proba = 0.05,
             fn = function()
-                if self.player.fuel >= 20 then
-                    self.player.fuel = self.player.fuel-10
-                    table.insert(self.notifs, ShortNotif("Leak", "-10 fuel", {1, 0.39, 0}))
+                if self.player.fuel >= 25 then
+                    self.player.fuel = self.player.fuel-20
+                    table.insert(self.notifs, ShortNotif("Leak", "-20 fuel", {1, 0.39, 0}))
                     soundManager:playSFX("leak")
                     return true
                 end
@@ -136,7 +136,7 @@ function InGame:init()
 end
 
 function InGame:start() -- On restart
-    if love_admob and nbRuns>1 and nbRuns%4 == 0 then
+    if love_admob and nbRuns>1 and nbRuns%3 == 0 then
         -- TEMP
         love_admob.requestInterstitial(ads.ads.inter)
     end
@@ -346,7 +346,7 @@ function InGame:update(dt)
                 end
 
                 rand = math.random()
-                if rand <= 0.06 then
+                if rand <= 0.08 then
                     local posY = self.player.y+offsetYMap-HEIGHTRES
 
                     local filterPaths = function(item) --Detect paths
@@ -512,12 +512,12 @@ function InGame:createCarsModels()
     end
 
     local carModels = {
-        car1 = {car = Car(getSpritesData("car1", 32, 35), 310, 4, 4, -2), ratio=0.2},
-        car2 = {car = Car(getSpritesData("car2", 28, 32), 300, 4, 4.5, -2), ratio=0.1},
-        car3 = {car = Car(getSpritesData("car3", 28, 37), 275, 4, 3.7, -2), ratio=0.5},
-        taxi = {car = Car(getSpritesData("taxi", 28, 37), 270, 5, 3.5, -2), ratio=0.1},
-        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 320, 3, 5.5), ratio=0.05},
-        police = {car = Car(getSpritesData("police1", 28, 35), 315, 4, 3.5, -2, true), ratio=0.05}
+        car1 = {car = Car(getSpritesData("car1", 32, 35), 305, 4, 4, -2), ratio=0.2},
+        car2 = {car = Car(getSpritesData("car2", 28, 32), 295, 4, 4.5, -2), ratio=0.1},
+        car3 = {car = Car(getSpritesData("car3", 28, 37), 270, 4, 3.7, -2), ratio=0.5},
+        taxi = {car = Car(getSpritesData("taxi", 28, 37), 265, 5, 3.5, -2), ratio=0.1},
+        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 315, 3, 5.5), ratio=0.05},
+        police = {car = Car(getSpritesData("police1", 28, 35), 310, 4, 3.5, -2, true), ratio=0.05}
     }
 
     return carModels

@@ -44,9 +44,9 @@ function Credits:init()
 
 
         UIElements["adBtn"] = RectangleButton(
-            widthWindow/2-36,
+            widthWindow/2-45,
             math.min(heightWindow-200, SAFEZONE.Y+SAFEZONE.H-10),
-            72,
+            90,
             50,
             love_admob,
             "Support me",
@@ -75,10 +75,6 @@ function Credits:init()
         {render = self.canvasSpecialThanks, current = false}
     }
     self.zonePanel = {x=25, y=90, w=widthWindow-50, h=heightWindow-160}
-
-    if love_admob then
-        love_admob.requestRewardedAd(ads.ads.reward)
-    end
 end
 
 function Credits:start()
@@ -93,6 +89,10 @@ function Credits:start()
     self.UI.nextBtn.visible = true
     
     soundManager:setMusicVolume(0.4)
+
+    if love_admob then
+        love_admob.requestRewardedAd(ads.ads.reward)
+    end
 end
 
 function Credits:update(dt)

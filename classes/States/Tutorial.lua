@@ -249,7 +249,7 @@ function Tutorial:canvas4()
     local txt1 = "How to 3/3\nThe current level of difficulty is displayed on the upper left corner of the screen."
     local txt2 = "The red bar at the bottom of the screen represents the car's autonomy. You need to switch to another car before it becomes empty."
     local txt3 = "Be careful to the road signs to know which lane to take."
-    local txt4 = "Drive on the crates to earn a bonus... Or a malus"
+    local txt4 = "Drive over the crates to earn a bonus... Or a malus."
     local txt1Height = Utils:getTextHeight(txt1, self.zonePanel.w) -10
     local txt2Height = Utils:getTextHeight(txt2, self.zonePanel.w) -10
     local txt3Height = Utils:getTextHeight(txt3, self.zonePanel.w) -10

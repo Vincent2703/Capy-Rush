@@ -84,11 +84,17 @@ end
 
 function GameOver:start()
     local stats = gameState.states["InGame"].stats
+    for _, car in pairs(gameState.states["InGame"].cars) do
+        if car.isPolice then
+            car.sfx.policeSiren:stop()
+        end
+    end
 
     soundManager:setMusicVolume(0.4)
 
     self.highscore = stats.GUI.scores.beatingHighscore
     stats:save()
+    
 end
 
 function GameOver:update()

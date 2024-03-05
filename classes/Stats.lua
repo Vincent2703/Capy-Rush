@@ -5,7 +5,7 @@ function Stats:init()
         glob = 1,
         distance = 0.003,
         ejectionsNoQuickLanding = 5,
-        ejectionsQuickLanding = 7
+        ejectionsQuickLanding = 6
     }
 
     self.achievements = {

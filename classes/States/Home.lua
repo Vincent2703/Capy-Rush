@@ -68,7 +68,7 @@ function Home:init()
             true,
             "How to play?",
             {1,1,1},
-            {1,1,1, 0.5},
+            not save.content.firstTime and {1,1,1, 0.5} or {1,1,0, 1},
             false,
             function() gameState:setState("Tutorial", true) end
         )
@@ -86,6 +86,11 @@ function Home:init()
             false,
             function() gameState:setState("Credits", true) end
         )
+
+        --[[UIElements.messageBox = MessageBox(
+            "Welcome !",
+            widthWindow*0.4
+        )--]]
 
 
         return UIElements

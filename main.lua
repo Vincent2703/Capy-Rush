@@ -1,7 +1,7 @@
 function love.load()
     _test = false
     
-    VERSION = 0.5
+    VERSION = 1
     OS = love.system.getOS()
     math.randomseed(os.time() .. os.clock()) -- To pick different random values with math.random() at each execution
     WIDTHRES, HEIGHTRES = 432, 650
@@ -140,6 +140,7 @@ function loadClasses()
     require("classes/GUI/Checkbox")
     require("classes/GUI/Range")
     require("classes/GUI/ScrollingPanel")
+    --require("classes/GUI/MessageBox")
 
     require("classes/GameState")
     require("classes/States/Home") --Rename to screens ?
@@ -165,7 +166,7 @@ function loadGlobalAssets()
             fuel = love.graphics.newImage("assets/textures/misc/tuto/fuel.png"),
             signs = love.graphics.newImage("assets/textures/misc/tuto/signs.png"),
 
-            crate = love.graphics.newImage("assets/textures/items/crate.png")
+            crate = love.graphics.newImage("assets/textures/items/crate2.png")
         }
     }
 
@@ -200,7 +201,7 @@ function initScreen()
         flags.resizable = false
         flags.fullscreen = true
     else
-        widthWindow, heightWindow = 392, 650-- 392x850 --367x850 4/3
+        widthWindow, heightWindow = 392, 850-- 392x850 --367x850 4/3
         flags.resizable = true
         flags.fullscreen = false
     end
@@ -242,6 +243,7 @@ function setSave()
     if saveContent.options and saveContent.options.SFX ~= nil then
         SFX = saveContent.options.SFX
     end
+
     local saveTable = {
         lastVersionPlayed=VERSION,
         lastTimePlayed=os.time(),

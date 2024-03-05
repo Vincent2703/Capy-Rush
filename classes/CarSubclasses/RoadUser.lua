@@ -3,7 +3,7 @@ RoadUser = Car:extend("RoadUser")
 function RoadUser:init(spritesData, maxSpeed, maxHealth, consumptionFactor, direction)
     RoadUser.super.init(self, spritesData, maxSpeed, maxHealth, consumptionFactor)
     self.direction = direction
-    self.currMaxSpeed = self.maxSpeed*0.7 --Save this value in Car
+    self.currMaxSpeed = self.maxSpeed*0.65 --Save this value in Car
     if direction == "left" then
         self.currMaxSpeed = -self.currMaxSpeed
     end

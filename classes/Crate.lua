@@ -26,7 +26,7 @@ function Crate:update(dt)
 end
 
 function Crate:draw()
-    love.graphics.draw(self.sprite, self.x+math.ceil(self.spriteWidth/2), math.ceil(self.y+self.spriteHeight/2))
+    love.graphics.draw(self.sprite, self.x+math.ceil(self.spriteWidth/2), math.ceil(self.y+self.spriteHeight/2), 0, 0.5)
 end
 
 

@@ -7,7 +7,7 @@ function Police:init(spritesData, maxSpeed, maxHealth, consumptionFactor, direct
     self.inPursuit = false
 
     self.direction = direction
-    self.currMaxSpeed = self.maxSpeed*0.7 --Save this value in car
+    self.currMaxSpeed = self.maxSpeed*0.65 --Save this value in car
     if direction == "left" then
         self.currMaxSpeed = -self.currMaxSpeed
     end
