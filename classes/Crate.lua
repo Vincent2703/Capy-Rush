@@ -36,17 +36,7 @@ function Crate:openCrate()
 
     local result = false
     repeat
-        local randItem = nil
-        local cumulativeProba = 0
-        local randomValue = math.random()
-    
-        for _, item in pairs(items) do
-            cumulativeProba = cumulativeProba + item.proba
-            if randomValue <= cumulativeProba then
-                randItem = item
-                break
-            end
-        end
+        local randItem = Utils:weightedRandom(items)
 
         result = randItem and randItem.fn() or false
 

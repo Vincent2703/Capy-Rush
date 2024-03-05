@@ -53,7 +53,7 @@ function Credits:init()
             {1,1,1},
             {1,1,1, 0.5},
             false,
-            function() love_admob.showRewardedAd() end,
+            function() love_admob.showRewardedAd(); love_admob.requestRewardedAd(ads.ads.reward) end,
             "release"
         )   
 
@@ -90,7 +90,7 @@ function Credits:start()
     
     soundManager:setMusicVolume(0.4)
 
-    if love_admob then
+    if love_admob and not love_admob.isRewardedAdLoaded() then
         love_admob.requestRewardedAd(ads.ads.reward)
     end
 end
@@ -101,6 +101,7 @@ function Credits:update(dt)
             ui:update()
         end
     end
+    self.UI.adBtn.visible = love_admob and love_admob.isRewardedAdLoaded()
 end
 
 function Credits:render()
@@ -185,6 +186,7 @@ function Credits:canvasSpecialThanks()
     local title = "Special thanks\n"
     love.graphics.printf(title, self.zonePanel.x, self.zonePanel.y, self.zonePanel.w, "center")
     love.graphics.printf(
+    "Inspired by 'Freeway Fury' by Serius Games\n\n"..    
     "Thanks to my partner Marion for her support and testing the game\n\n"..
     "Thanks to my sister Ludivine for testing the game\n\n"..
     "Thank YOU to play my game !\n",

@@ -17,7 +17,7 @@ function InGame:init()
 
     self.items = { --To put elsewhere ?
         upDiff = {
-            proba = 0.1,
+            proba = 10,
             fn = function() 
                 if self.difficulty.id < #self.difficulties then
                     self:setDifficulty(self.difficulty.id+1)
@@ -28,7 +28,7 @@ function InGame:init()
             end
         },
         downDiff = {
-            proba = 0.05,
+            proba = 5,
             fn = function()
                 if self.difficulty.id > 1 then
                     self:setDifficulty(self.difficulty.id-1)
@@ -39,7 +39,7 @@ function InGame:init()
             end
         },
         repair = {
-            proba = 0.15,
+            proba = 15,
             fn = function()
                 if self.player.health < self.player.maxHealth then
                     self.player.health = self.player.maxHealth
@@ -51,7 +51,7 @@ function InGame:init()
             end
         },
         damage = {
-            proba = 0.05,
+            proba = 5,
             fn = function()
                 if self.player.health > 1 then
                     self.player.health = self.player.health-1
@@ -63,7 +63,7 @@ function InGame:init()
             end
         },
         refuel = {
-            proba = 0.15,
+            proba = 15,
             fn = function()
                 if self.player.fuel < 100 then
                     self.player.fuel = 100
@@ -75,7 +75,7 @@ function InGame:init()
             end
         },
         leak = {
-            proba = 0.05,
+            proba = 5,
             fn = function()
                 if self.player.fuel >= 25 then
                     self.player.fuel = self.player.fuel-20
@@ -87,7 +87,7 @@ function InGame:init()
             end
         },
         teleport = {
-            proba = 0.1,
+            proba = 10,
             fn = function()
                 if self.player.direction == "right" then
                     table.insert(self.notifs, ShortNotif("Teleported", nil, {1, 0.39, 0}))
@@ -111,7 +111,7 @@ function InGame:init()
             end
         },
         bonusPoints = {
-            proba = 0.25,
+            proba = 25,
             fn = function()
                 self.stats.scores.current = self.stats.scores.current+10
                 print("bonus points")
@@ -120,7 +120,7 @@ function InGame:init()
             end
         },
         malusPoints = {
-            proba = 0.1,
+            proba = 10,
             fn = function()
                 if self.stats.scores.current >= 10 then
                     self.stats.scores.current = self.stats.scores.current-10
@@ -359,7 +359,7 @@ function InGame:update(dt)
                         randNbPath = math.random(1, lenPaths)
                         randomPath = paths[randNbPath]
 
-                        table.insert(self.crates, Crate(randomPath.x, self.player.y+offsetYMap-HEIGHTRES))
+                        table.insert(self.crates, Crate(randomPath.x, self.player.y+offsetYMap-HEIGHTRES-math.random(0, heightWindow)))
                     end
                 end
             end
@@ -485,14 +485,14 @@ function InGame:createMap()
     local lvl = Map(
     "assets/textures/tiles/spritesheet.png",
     {
-        chunk1 = {data=getDataLvl("chunk1"), ratio=0.2},
-        chunk2 = {data=getDataLvl("chunk2"), ratio=0.075},
-        chunk3 = {data=getDataLvl("chunk3"), ratio=0.075},
-        chunk4 = {data=getDataLvl("chunk4"), ratio=0.4},
-        chunk5 = {data=getDataLvl("chunk5"), ratio=0.05},
-        chunk6 = {data=getDataLvl("chunk6"), ratio=0.075},
-        chunk7 = {data=getDataLvl("chunk7"), ratio=0.025},
-        chunk8 = {data=getDataLvl("chunk8"), ratio=0.1},
+        chunk1 = {data=getDataLvl("chunk1"), proba=20},
+        chunk2 = {data=getDataLvl("chunk2"), proba=7.5},
+        chunk3 = {data=getDataLvl("chunk3"), proba=7.5},
+        chunk4 = {data=getDataLvl("chunk4"), proba=40},
+        chunk5 = {data=getDataLvl("chunk5"), proba=5},
+        chunk6 = {data=getDataLvl("chunk6"), proba=7.5},
+        chunk7 = {data=getDataLvl("chunk7"), proba=2.5},
+        chunk8 = {data=getDataLvl("chunk8"), proba=10},
     }, 5, "chunk4")
 
     return lvl
@@ -512,28 +512,19 @@ function InGame:createCarsModels()
     end
 
     local carModels = {
-        car1 = {car = Car(getSpritesData("car1", 32, 35), 305, 4, 4, -2), ratio=0.2},
-        car2 = {car = Car(getSpritesData("car2", 28, 32), 295, 4, 4.5, -2), ratio=0.1},
-        car3 = {car = Car(getSpritesData("car3", 28, 37), 270, 4, 3.7, -2), ratio=0.5},
-        taxi = {car = Car(getSpritesData("taxi", 28, 37), 265, 5, 3.5, -2), ratio=0.1},
-        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 315, 3, 5.5), ratio=0.05},
-        police = {car = Car(getSpritesData("police1", 28, 35), 310, 4, 3.5, -2, true), ratio=0.05}
+        car1 = {car = Car(getSpritesData("car1", 32, 35), 305, 4, 4, -2), proba=20},
+        car2 = {car = Car(getSpritesData("car2", 28, 32), 295, 4, 4.5, -2), proba=11},
+        car3 = {car = Car(getSpritesData("car3", 28, 37), 270, 4, 3.7, -2), proba=50},
+        taxi = {car = Car(getSpritesData("taxi", 28, 37), 265, 5, 3.5, -2), proba=11},
+        sport1 = {car = Car(getSpritesData("sport1", 30, 31), 315, 3, 5.5), proba=5},
+        police = {car = Car(getSpritesData("police1", 28, 35), 310, 4, 3.5, -2, true), proba=3}
     }
 
     return carModels
 end
 
 function InGame:getRandomCarModel()
-    local randCar = nil
-    local cumulativeRatio = 0
-    local randomValue = math.random()
-
-    for _, model in pairs(self.carModels) do
-        cumulativeRatio = cumulativeRatio + model.ratio
-        if randomValue <= cumulativeRatio then
-            return model.car
-        end
-    end
+    return Utils:weightedRandom(self.carModels).car
 end
 
 function InGame:addCarToPathAtPosY(car, path, posY)
@@ -657,7 +648,7 @@ function InGame:manageCamera()
 
     local entity = self.eject and ejection or player
     local entityWidth = self.eject and self.lastPlayerWidth or player.widthCar
-    local entityHeight = self.eject and self.lastPlayerHeight or player.heightCar
+    local entityHeight = self.eject and self.lastPlayerHeight*0.75 or player.heightCar
     local entityX = entity.x - (self.eject and self.lastPlayerWidth / 2 or 0)
 
     trX = math.min(0, math.max(-entityX * self.zoom - entityWidth / 2 * self.zoom + WIDTHRES / 2, -WIDTHRES * self.zoom + widthWindow / ratioScale))

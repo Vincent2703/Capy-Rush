@@ -29,7 +29,13 @@ function Pause:init()
             nil,
             nil,
             true,
-            function() gameState.states["InGame"].stats:save();gameState:setState("Home") end,
+            function() gameState.states["InGame"].stats:save();gameState:setState("Home") 
+                for _, car in pairs(gameState.states["InGame"].cars) do --temp
+                    if car.isPolice and car.sfx.policeSiren then
+                        car.sfx.policeSiren:stop()
+                    end
+                end
+            end,
             "release"
         )
 

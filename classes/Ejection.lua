@@ -6,12 +6,12 @@ function Ejection:init(x, y)
     self.scale = self.minScale
     self.maxScale = 1
     
-    self.maxSpeed = 800
+    self.maxSpeed = 900
 
     self.velocity = {x=gameState.states["InGame"].player.velocity.x*10, y=gameState.states["InGame"].player.velocity.y*10}
     self.accX, self.accY = 0.08, 0.05 
 
-    self.ejectTime = 0.25
+    self.ejectTime = 0.22
     self.count = 0
 
     self.landOn = nil
@@ -49,7 +49,7 @@ function Ejection:update(dt)
         
         self.scale = (self.maxScale - self.minScale) * ratio + self.minScale
 
-        local speed = self.maxSpeed*math.min(0.55, ratio)        
+        local speed = self.maxSpeed*math.min(0.6, ratio)        
         local targetVelY = (input.state.actions.up and speed) or (input.state.actions.down and -speed) or 0
         local targetVelX = (input.state.actions.right and speed) or (input.state.actions.left and -speed) or 0
         
@@ -116,6 +116,5 @@ end
 function Ejection:draw()
     local offsetX, offsetY = self.widthSprite*self.scale/2, self.heightSprite*self.scale/2
 
-    --love.graphics.circle("line", self.x, self.y, math.max(offsetX, offsetY))
     self.currAnim.anim:draw(globalAssets.animations.capyman.spritesheet, self.x-offsetX, self.y-offsetY, 0, self.scale)
 end

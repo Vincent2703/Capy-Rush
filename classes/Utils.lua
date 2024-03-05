@@ -16,3 +16,17 @@ function Utils:printCtrTxtWScl(text, y, scale)
 
     love.graphics.print(text, centerX, y, 0, scale)
 end
+
+function Utils:weightedRandom(table) --Must have a proba key
+    local poolsize = 0
+    for _, v in pairs(table) do
+        poolsize = poolsize + v.proba
+    end
+    local selection = math.random(1, poolsize)
+    for _, v in pairs(table) do
+        selection = selection - v.proba
+        if (selection <= 0) then
+            return v
+        end
+    end
+end

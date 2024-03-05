@@ -85,7 +85,7 @@ end
 function GameOver:start()
     local stats = gameState.states["InGame"].stats
     for _, car in pairs(gameState.states["InGame"].cars) do
-        if car.isPolice then
+        if car.isPolice and car.sfx.policeSiren then
             car.sfx.policeSiren:stop()
         end
     end

@@ -37,16 +37,7 @@ end
 
 function Map:addRandomChunks()
     for i=1, self.nbChunksPerIter do
-        local randomValue = math.random()
-        local cumulativeRatio = 0
-
-        for chunkName, chunk in pairs(self.predefinedChunks) do
-            cumulativeRatio = cumulativeRatio + chunk.ratio
-            if randomValue <= cumulativeRatio then
-                self:addChunk(chunkName)
-                break
-            end
-        end
+        self:addChunk(Utils:weightedRandom(self.predefinedChunks))
     end
 end
 
@@ -70,8 +61,8 @@ function Map:manageChunks()
     self.map = self:updateMap()
 end
 
-function Map:addChunk(chunkName)
-    local chunkAsset = self.predefinedChunks[chunkName].data
+function Map:addChunk(chunk)
+    local chunkAsset = type(chunk) == "string" and self.predefinedChunks[chunk].data or chunk.data
     local chunkMap = {
         layers = {},
         obstacles = {},

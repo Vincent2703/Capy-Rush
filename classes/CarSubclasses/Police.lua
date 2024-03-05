@@ -12,6 +12,8 @@ function Police:init(spritesData, maxSpeed, maxHealth, consumptionFactor, direct
         self.currMaxSpeed = -self.currMaxSpeed
     end
     self.velocity.y = self.currMaxSpeed*0.7
+
+    self.isPolice = true
 end
 
 function Police:update(dt)
