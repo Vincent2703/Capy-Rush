@@ -94,16 +94,17 @@ function InGame:init()
                     soundManager:playSFX("teleport")
 
                     local filterPaths = function(item) 
-                        return item.isPath and item.direction == "left"
+                        return item.isPath and item.direction == "left" and not item.isCar and not item.isObstacle
                     end
 
-                    local paths, lenPaths = self.world:querySegment(0, self.player.y, self.lvl.mapConfig.width*TILEDIM, self.player.y, filterPaths)
+                    local paths, lenPaths = self.world:queryRect(0, self.player.y-TILEDIM*5, self.lvl.mapConfig.width*TILEDIM, TILEDIM*5, filterPaths)
 
                     if lenPaths > 0 then
                         randNbPath = math.random(1, lenPaths)
                         randomPath = paths[randNbPath]
 
                         self.player:updatePosition(randomPath.x, self.player.y)
+                        self.player.velX = 0
                         return true
                     end
                 end
@@ -136,7 +137,10 @@ function InGame:init()
 end
 
 function InGame:start() -- On restart
-    if love_admob and nbRuns>1 and nbRuns%3 == 0 then
+    self.tuto = true--save.content.firstTime
+    self.freeze = false
+
+    if not self.tuto and love_admob and nbRuns>1 and nbRuns%3 == 0 then
         -- TEMP
         love_admob.requestInterstitial(ads.ads.inter)
     end
@@ -166,17 +170,38 @@ function InGame:start() -- On restart
     self.cars = {}
 
     self.crates = {}
+    if self.tuto then
+        table.insert(self.crates, Crate(self.lvl.mapChunks[1].paths[1].x, -TILEDIM*12))
+    end
 
     self.landingStatus = false
     self.quickLanding = false
     self.eject = false
     self.ejection = nil
 
-    --[[self.memoryCalls = 0
-    self.memoryTotal = 0
-    self.memoryMax = 0--]]
-
     self.camMap, self.camScreen = {x=0, y=0}, {x=0, y=0}
+
+
+    if self.tuto then --TODO : class objective
+        self.tutoParts = {
+            moving = {
+                status = nil,
+                yStart = 0,
+                height = TILEDIM*10,
+                ui = MessageBox("To move the car, tilt your phone to the left or to the right.", Utils:round(widthWindow*0.75), function() self.freeze = false end), --Should be a canvas instead
+                callback = function() return self.player and self.player.y < -TILEDIM*10 end
+            },
+            crate = {
+                status = nil,
+                yStart = -TILEDIM*10,
+                height = TILEDIM*15,
+                ui = MessageBox("Try to drive over the crate.", Utils:round(widthWindow*0.75), function() self.freeze = false end),
+                callback = function() return self.player and 
+                    self.player.x >= self.lvl.mapChunks[1].paths[1].x-10 and self.player.x <= self.lvl.mapChunks[1].paths[1].x+10 and self.player.y <= TILEDIM*12+20 and self.player.y >= TILEDIM*12-20 
+                    end
+            }
+        }
+    end
 
     -- To refactorize : (spawn a car at startup)
 
@@ -190,7 +215,7 @@ function InGame:start() -- On restart
 
     local paths, lenPaths = self.world:querySegment(0, posY, self.lvl.mapConfig.width*TILEDIM, posY, filterPaths)
 
-    if lenPaths > 0 then
+    if not self.tuto and lenPaths > 0 then
         randNbPath = math.random(1, lenPaths)
         randomPath = paths[randNbPath]
         self:addCarToPathAtPosY(randCarModel, randomPath, posY)
@@ -203,7 +228,7 @@ function InGame:update(dt)
 
         if (input.state.actions.newPress.eject 
         or (input.state.actions.newPress.click and input.state.mouse.y <= 0.9*heightWindow and input.state.mouse.y >= 0.1*heightWindow)) 
-        and not self.eject and not self.player.isExploding then
+        and not self.eject and self.player and not self.player.isExploding and not self.freeze then
             self:manageEjection(true)
         elseif (input.state.actions.newPress.eject 
         or (input.state.actions.newPress.click and input.state.mouse.y <= 0.9*heightWindow and input.state.mouse.y >= 0.1*heightWindow)) 
@@ -225,7 +250,11 @@ function InGame:update(dt)
                 self.eject = false
                 if self.ejection.landOn == 0 then
                     soundManager:playSFX("splatter")
-                    gameState:setState("GameOver", true)
+                    if not self.tuto then
+                        gameState:setState("GameOver", true)
+                    else
+                        self:tutoResetPart()
+                    end
                     return
                 else
                     soundManager:playSFX("vroom2")
@@ -254,7 +283,7 @@ function InGame:update(dt)
                     end
                 end
             end
-        else
+        elseif self.player then
             if self.stats.scores.current >= self.difficulty.id*50 and self.difficulty.id < #self.difficulties then
                 self:setDifficulty(self.difficulty.id+1)
             end
@@ -271,6 +300,24 @@ function InGame:update(dt)
                 self.stats.multipliers.glob = 1
                 self.stats.GUI.onFire.visible = false
                 self.stats.GUI.reverse.visible = false
+            end
+        end
+
+        if self.tuto then
+            for _, tutoPart in pairs(self.tutoParts) do
+                if self.player and self.player.y < tutoPart.yStart and self.player.y > tutoPart.yStart-tutoPart.height and tutoPart.status == nil then
+                    tutoPart.status = "current"
+                    tutoPart.ui.visible = true
+                    self.freeze = true
+                end
+                if tutoPart.status == "current" then
+                    if tutoPart.callback() then
+                        tutoPart.status = "done"
+                    end
+                    if tutoPart.status == "current" and tutoPart.ui.visible then
+                        tutoPart.ui:update(dt)
+                    end
+                end
             end
         end
 
@@ -292,7 +339,7 @@ function InGame:update(dt)
 
         for _, ui in pairs(self.UI) do 
             if not self.eject then
-                ui:update()
+                ui:update(dt)
             end
         end
 
@@ -302,19 +349,30 @@ function InGame:update(dt)
             end
         end
 
-        self:updateAllCars(dt)
+        if not self.freeze then
+            self:updateAllCars(dt)
+        end
+
         if self.player == nil and not self.eject then
-            gameState:setState("GameOver", true)
+            if not self.tuto then
+                gameState:setState("GameOver", true)
+            else
+                self:tutoResetPart()
+            end
             return
         end
 
         if not self.eject then
             if self.player.fuel <= 0 and self.player.velocity.y == 0 then
-                gameState:setState("GameOver", true)
+                if not self.tuto then
+                    gameState:setState("GameOver", true)
+                else
+                    self:tutoResetPart()
+                end
                 return
             end
 
-            if self.player.y <= -self.lvl.map.height*TILEDIM + HEIGHTRES*1.5 then
+            if not self.tuto and self.player.y <= -self.lvl.map.height*TILEDIM + HEIGHTRES*1.5 then
                 self.check = false
                 self.lvl:manageChunks()
                 self:deleteOldCars(self.player.y+HEIGHTRES)
@@ -324,7 +382,7 @@ function InGame:update(dt)
             self.stats:addPoints("distance", dist)
             self.distanceCount = self.distanceCount + dist
             self.prevYPos = self.player.y
-            if self.distanceCount >= self.spawningDistance then
+            if self.distanceCount >= self.spawningDistance and not self.tuto then
                 self.distanceCount = 0
                 local rand = math.random()
                 if rand <= self.difficulty.rate then
@@ -376,7 +434,9 @@ function InGame:render()
     -- Set the canvas as the render target
     love.graphics.setCanvas(preRenderCanvas)
 
-    love.graphics.translate(self:manageCamera())
+    if self.player or self.eject then
+        love.graphics.translate(self:manageCamera())
+    end
     love.graphics.scale(self.zoom, self.zoom)
 
 
@@ -402,16 +462,6 @@ function InGame:render()
         end
     end
 
-   --[[love.graphics.setColor(255, 0, 0, 0.2)
-   local items, len = gameState.states["InGame"].world:getItems()
-    for i = 1, len do
-        local x, y, w, h = gameState.states["InGame"].world:getRect(items[i])
-        if items[i].isPath then
-            love.graphics.rectangle("fill", x, y, w, h)
-        end
-    end
-    love.graphics.setColor(255, 255, 255, 1)--]]
-
     if self.eject then
         self.ejection:draw()
     end
@@ -427,6 +477,16 @@ function InGame:render()
 
 
     -- Draw UI elements
+
+    if self.tuto then
+        for _, tutoPart in pairs(self.tutoParts) do
+            if tutoPart.status == "current" and tutoPart.ui.visible then
+                tutoPart.ui:draw()
+            end
+        end
+    end
+
+
     for _, notif in ipairs(self.notifs) do
         if not notif.finished  then
             notif:draw()
@@ -445,26 +505,6 @@ function InGame:render()
             elem:draw(dt)
         end
     end
-
-    --[[
-    love.graphics.print("score: "..math.abs(math.ceil(self.stats.scores.current-0.5)), 150, 40)
-    love.graphics.print("highscore: "..math.abs(self.stats.scores.best), 150, 60)
-
-    --love.graphics.print('x: '..input.state.accelerometer.x..'\n\ny: '..input.state.accelerometer.y..'\n\nz: '..input.state.accelerometer.z.."\nrotX: "..rotation, 5, 80)
-
-    --]]
-
-    --[[self.memoryCalls = self.memoryCalls+1 
-    local memory = math.ceil(collectgarbage('count')-0.5)
-    if self.memoryMax < memory then
-        self.memoryMax = memory
-    end
-    self.memoryTotal = self.memoryTotal + memory
-    love.graphics.print('Memory (kB): ' .. memory, 10,500)
-    love.graphics.print('Memory avg (kB): ' .. math.ceil(self.memoryTotal/self.memoryCalls-0.5), 10,600)
-    love.graphics.print('Memory max (kB): ' .. self.memoryMax, 10,700)--]]
-
-    --love.graphics.line(widthWindow/2, 0, widthWindow/2, heightWindow)
 end
 
 
@@ -482,18 +522,28 @@ function InGame:createMap()
     local function getDataLvl(name)
         return require("assets/maps/"..name)
     end
-    local lvl = Map(
-    "assets/textures/tiles/spritesheet.png",
-    {
-        chunk1 = {data=getDataLvl("chunk1"), proba=20},
-        chunk2 = {data=getDataLvl("chunk2"), proba=7.5},
-        chunk3 = {data=getDataLvl("chunk3"), proba=7.5},
-        chunk4 = {data=getDataLvl("chunk4"), proba=40},
-        chunk5 = {data=getDataLvl("chunk5"), proba=5},
-        chunk6 = {data=getDataLvl("chunk6"), proba=7.5},
-        chunk7 = {data=getDataLvl("chunk7"), proba=2.5},
-        chunk8 = {data=getDataLvl("chunk8"), proba=10},
-    }, 5, "chunk4")
+    local lvl
+    
+    if self.tuto then
+        lvl = Map(
+        "assets/textures/tiles/spritesheet.png",
+        {
+            tuto = {data=getDataLvl("tuto"), proba=100}
+        }, 5, "tuto")
+    else
+        lvl = Map(
+        "assets/textures/tiles/spritesheet.png",
+        {
+            chunk1 = {data=getDataLvl("chunk1"), proba=20},
+            chunk2 = {data=getDataLvl("chunk2"), proba=7.5},
+            chunk3 = {data=getDataLvl("chunk3"), proba=7.5},
+            chunk4 = {data=getDataLvl("chunk4"), proba=40},
+            chunk5 = {data=getDataLvl("chunk5"), proba=5},
+            chunk6 = {data=getDataLvl("chunk6"), proba=7.5},
+            chunk7 = {data=getDataLvl("chunk7"), proba=2.5},
+            chunk8 = {data=getDataLvl("chunk8"), proba=10},
+        }, 5, "chunk4")
+    end
 
     return lvl
 end
@@ -655,6 +705,10 @@ function InGame:manageCamera()
 
     trY = math.max(heightWindow / ratioScale, -entity.y * self.zoom + heightWindow/ratioScale-entityHeight*2*self.zoom)
 
+    if self.tuto then
+        trY = math.min(self.lvl.mapConfig.height*TILEDIM*self.zoom, trY)
+    end
+
     return trX, trY
 end
 
@@ -673,5 +727,28 @@ function InGame:manageEjection(ejection)
         self.landingStatus = true
         self.ejection.velocity.x, self.ejection.velocity.y = self.ejection.velocity.x/2, self.ejection.velocity.y/2
         self.ejection.maxSpeed = self.ejection.maxSpeed/2
+    end
+end
+
+function InGame:tutoResetPart()
+    local items, len = self.world:getItems()
+    for i=1, len do
+        if items[i].isCar then
+            self.world:remove(items[i])
+        end
+    end
+    self.player = nil
+
+    for _, tutoPart in pairs(self.tutoParts) do
+        if tutoPart.status == "current" then
+            local modelCar = self.carModels.car3.car
+            self.player = modelCar:castToPlayer(self.lvl.mapChunks[1].paths[1].x+TILEDIM/2-modelCar.widthCar/2, tutoPart.yStart)
+            self.player.velocity.y, self.player.velocity.x = 0, 0
+            self.player.fuel = 100
+            self.player.health = self.player.maxHealth
+            self.player.isExploding = false
+            tutoPart.ui.visible = true
+            self.freeze = true
+        end
     end
 end

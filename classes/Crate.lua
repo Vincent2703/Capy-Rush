@@ -1,7 +1,8 @@
 Crate = class("Crate")
 
-function Crate:init(x, y)
+function Crate:init(x, y, content)
     self.x, self.y = x, y
+    self.content = content
     self.sprite = globalAssets.images.crate
     self.spriteWidth, self.spriteHeight = self.sprite:getWidth(), self.sprite:getHeight()
 
@@ -34,12 +35,16 @@ function Crate:openCrate()
     local inGame = gameState.states["InGame"]
     local items = inGame.items
 
-    local result = false
-    repeat
-        local randItem = Utils:weightedRandom(items)
+    if self.content then
+        items[self.content].fn()
+    else
+        local result = false
+        repeat
+            local randItem = Utils:weightedRandom(items)
 
-        result = randItem and randItem.fn() or false
+            result = randItem and randItem.fn() or false
 
-    until(result)
+        until(result)
+    end
     self.active = false
 end

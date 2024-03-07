@@ -30,3 +30,7 @@ function Utils:weightedRandom(table) --Must have a proba key
         end
     end
 end
+
+function Utils:round(val)
+    return math.ceil(val-0.5)
+end

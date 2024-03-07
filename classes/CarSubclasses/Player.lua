@@ -2,6 +2,9 @@ Player = Car:extend("Player")
 
 function Player:update(dt)
     local inGame = gameState.states["InGame"]
+    if inGame.player == nil then
+        return
+    end
     local accX = 0.06
     local accY = 0.02
     local maxSpeed = self.maxSpeed*inGame.difficulty.speed

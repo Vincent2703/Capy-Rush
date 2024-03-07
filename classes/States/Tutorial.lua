@@ -42,6 +42,10 @@ function Tutorial:init()
         UIElements["prevBtn"] = RectangleButton(widthWindow/2-70, math.min(heightWindow-55, SAFEZONE.Y+SAFEZONE.H), 48, 45, false, globalAssets.images.arrowLeft, {1,1,1, 1}, {1,1,1, 0.6}, false, function() navigatePanels(-1) end)
         UIElements["nextBtn"] = RectangleButton(widthWindow/2+32, math.min(heightWindow-55, SAFEZONE.Y+SAFEZONE.H), 48, 45, true, globalAssets.images.arrowRight, {1,1,1, 1}, {1,1,1, 0.6}, false, function() navigatePanels(1) end)
 
+        local txtPlayTuto = "play the tutorial"
+        local btnPlayTutoWidth = love.graphics.getFont():getWidth(txtPlayTuto)+10
+        UIElements["playableTuto"] = RectangleButton(widthWindow-btnPlayTutoWidth-10, 25, btnPlayTutoWidth, 50, true, txtPlayTuto, nil, nil, false, false, "release", false)
+
         return UIElements
     end
 

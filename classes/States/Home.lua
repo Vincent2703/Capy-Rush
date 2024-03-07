@@ -87,12 +87,6 @@ function Home:init()
             function() gameState:setState("Credits", true) end
         )
 
-        --[[UIElements.messageBox = MessageBox(
-            "Welcome !",
-            widthWindow*0.4
-        )--]]
-
-
         return UIElements
     end
 

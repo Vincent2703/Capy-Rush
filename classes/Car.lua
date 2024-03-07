@@ -110,7 +110,6 @@ function Car:manageCollisions(velX, velY, dt)
                 velX, velY = velX / 2, velY / 2
                 other.velocity.y = other.velocity.y + self.velocity.y / 3
             end
-            --other.onFire = other.health == 1
         -- Check if the colliding item is an obstacle
         elseif other.isObstacle then
 
@@ -130,11 +129,6 @@ function Car:manageCollisions(velX, velY, dt)
             end
         end
 
-        --To put elsewhere ?
-        --[[self.onFire = self.health == 1
-        other.onFire = other.health == 1
-        self.isExploding = (self.health <= 0) and "currently" or "none"
-        other.isExploding = (other.health <= 0) and "currently" or "none"--]]
     end
 
     return velX, velY, goalX, goalY, playerCollidesCar

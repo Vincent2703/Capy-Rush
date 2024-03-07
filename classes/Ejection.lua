@@ -11,7 +11,7 @@ function Ejection:init(x, y)
     self.velocity = {x=gameState.states["InGame"].player.velocity.x*10, y=gameState.states["InGame"].player.velocity.y*10}
     self.accX, self.accY = 0.08, 0.05 
 
-    self.ejectTime = 0.22
+    self.ejectTime = 0.25
     self.count = 0
 
     self.landOn = nil
@@ -117,4 +117,10 @@ function Ejection:draw()
     local offsetX, offsetY = self.widthSprite*self.scale/2, self.heightSprite*self.scale/2
 
     self.currAnim.anim:draw(globalAssets.animations.capyman.spritesheet, self.x-offsetX, self.y-offsetY, 0, self.scale)
+
+    -- Shadown
+
+    love.graphics.setColor(0, 0, 0, 0.5)
+    love.graphics.ellipse("fill", self.x, self.y+self.heightSprite*self.scale/2, 10*self.scale, 7*self.scale)
+    love.graphics.setColor(1, 1, 1, 1)
 end

@@ -37,6 +37,7 @@ function love.load()
             refuel = love.audio.newSource("assets/sounds/SFX/refuel.mp3", "static"),
             teleport = love.audio.newSource("assets/sounds/SFX/teleport.mp3", "static"),
             tireBurst = love.audio.newSource("assets/sounds/SFX/tireBurst.mp3", "static"),
+            lowFuel = love.audio.newSource("assets/sounds/SFX/lowFuel.mp3", "static"),
         }
     )
 
@@ -82,12 +83,9 @@ end
 
 function love.focus(f)
     if not f then
-        --soundManager:pauseMusic()
         if gameState:isCurrentState("InGame") then
             gameState:setState("Pause", true)
         end
-    --elseif save.content.music then
-      --  soundManager:resumeMusic()
     end
 end
 
@@ -140,7 +138,7 @@ function loadClasses()
     require("classes/GUI/Checkbox")
     require("classes/GUI/Range")
     require("classes/GUI/ScrollingPanel")
-    --require("classes/GUI/MessageBox")
+    require("classes/GUI/MessageBox")
 
     require("classes/GameState")
     require("classes/States/Home") --Rename to screens ?
