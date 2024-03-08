@@ -7,8 +7,10 @@ function MessageBox:init(text, width, callback, borderColor, bgColor, txtColor)
     self.bgColor = bgColor or {0, 0, 0, 0.4}
     self.txtColor = txtColor or {1, 1, 1, 1}
     self.callback = callback or false
-    self.marginHeight = 200
-    self.height = Utils:getTextHeight(self.text, self.width)+self.marginHeight
+    self.marginTop = 30
+    self.marginBottom = 70
+    self.lineHeightVal = 1.1*heightWindow/HEIGHTRES
+    self.height = Utils:getTextHeight(self.text, self.width, self.lineHeightVal)+self.marginTop+self.marginBottom
 
     self.x = math.ceil(widthWindow/2-self.width/2-0.5)
     self.y = math.ceil(heightWindow/2-self.height/2-0.5)
@@ -42,7 +44,10 @@ function MessageBox:draw()
     local halfLineWidth = math.ceil(self.lineWidth/2)
     love.graphics.rectangle("fill", self.x+halfLineWidth, self.y+halfLineWidth, self.width-self.lineWidth, self.height-self.lineWidth)
     love.graphics.setColor(self.txtColor)
-    love.graphics.printf(self.text, self.x+halfLineWidth, self.y+halfLineWidth+self.marginHeight/2, self.width-self.lineWidth, "center")
+    local font = love.graphics.getFont()
+    font:setLineHeight(self.lineHeightVal)
+    love.graphics.printf(self.text, self.x+halfLineWidth, self.y+halfLineWidth+self.marginTop, self.width-self.lineWidth, "center")
+    font:setLineHeight(1)
     love.graphics.setColor(1, 1, 1)
     self.closeBtn:draw()
 end

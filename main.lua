@@ -1,7 +1,7 @@
 function love.load()
     _test = false
     
-    VERSION = 1
+    VERSION = 1.1
     OS = love.system.getOS()
     math.randomseed(os.time() .. os.clock()) -- To pick different random values with math.random() at each execution
     WIDTHRES, HEIGHTRES = 432, 650

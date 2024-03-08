@@ -1,9 +1,10 @@
 Utils = class("Utils")
 
-function Utils:getTextHeight(text, width)
+function Utils:getTextHeight(text, width, lineHeight)
     local font = love.graphics.getFont()
+    local LH = lineHeight and font:getLineHeight()*lineHeight or font:getLineHeight()
     local _, wrappedText = font:getWrap(text, width)
-    local totalTextHeight = #wrappedText * font:getHeight()*font:getLineHeight()
+    local totalTextHeight = #wrappedText * font:getHeight()*LH
     local spacing = 5
     return totalTextHeight + spacing
 end

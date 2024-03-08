@@ -44,7 +44,12 @@ function Tutorial:init()
 
         local txtPlayTuto = "play the tutorial"
         local btnPlayTutoWidth = love.graphics.getFont():getWidth(txtPlayTuto)+10
-        UIElements["playableTuto"] = RectangleButton(widthWindow-btnPlayTutoWidth-10, 25, btnPlayTutoWidth, 50, true, txtPlayTuto, nil, nil, false, false, "release", false)
+        UIElements["playableTuto"] = RectangleButton(widthWindow-btnPlayTutoWidth-10, 25, btnPlayTutoWidth, 50, true, txtPlayTuto, nil, nil, false, function() 
+            local content = save:read()
+            content.firstTime = true
+            save:write(content)
+            gameState:setState("InGame", true)
+        end, "release", false)
 
         return UIElements
     end

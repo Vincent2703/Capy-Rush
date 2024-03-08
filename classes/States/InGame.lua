@@ -137,7 +137,12 @@ function InGame:init()
 end
 
 function InGame:start() -- On restart
-    self.tuto = true--save.content.firstTime
+    self.tuto = save.content.firstTime
+    if self.tuto then
+        local content = save:read()
+        content.firstTime = false --Must rename this "tuto"
+        save:write(content)
+    end
     self.freeze = false
 
     if not self.tuto and love_admob and nbRuns>1 and nbRuns%3 == 0 then
@@ -150,7 +155,7 @@ function InGame:start() -- On restart
     self.lvl = self:createMap()
 
     local modelCar = self.carModels.car3.car
-    self.player = modelCar:castToPlayer(self.lvl.mapChunks[1].paths[1].x+TILEDIM/2-modelCar.widthCar/2, -50)
+    self.player = modelCar:castToPlayer(self.lvl.mapChunks[1].paths[2].x+TILEDIM/2-modelCar.widthCar/2, -50)
     self.player.velocity.y, self.player.velocity.x = 0, 0
     self.player.fuel = 100
     self.player.health = self.player.maxHealth
@@ -170,9 +175,6 @@ function InGame:start() -- On restart
     self.cars = {}
 
     self.crates = {}
-    if self.tuto then
-        table.insert(self.crates, Crate(self.lvl.mapChunks[1].paths[1].x, -TILEDIM*12))
-    end
 
     self.landingStatus = false
     self.quickLanding = false
@@ -182,23 +184,145 @@ function InGame:start() -- On restart
     self.camMap, self.camScreen = {x=0, y=0}, {x=0, y=0}
 
 
-    if self.tuto then --TODO : class objective
+    if self.tuto then --TODO : class objective ? instead of cbafterfail : use last callbacksuccess
+        self.tutoNoEjection = true
         self.tutoParts = {
             moving = {
                 status = nil,
                 yStart = 0,
-                height = TILEDIM*10,
+                height = TILEDIM*15,
                 ui = MessageBox("To move the car, tilt your phone to the left or to the right.", Utils:round(widthWindow*0.75), function() self.freeze = false end), --Should be a canvas instead
-                callback = function() return self.player and self.player.y < -TILEDIM*10 end
+                callbackSuccess = function() return self.player and self.player.y < -TILEDIM*15 end
+            },
+            gui = {
+                status = nil,
+                yStart = -TILEDIM*15,
+                height = TILEDIM*2,
+                ui = MessageBox("The current level of difficulty is displayed in the top left screen's corner.\n\nNext to it, your current score and highscore are also displayed.\n\nFinally, the car's autonomy is represented by the red gauge in the screen's bottom.", Utils:round(widthWindow*0.75), function() self.freeze = false end),
+                callbackSuccess = function() return self.player and self.player.y < -TILEDIM*17 end,
+                callbackAfterSuccess = function() table.insert(self.crates, Crate(self.lvl.mapChunks[1].paths[3].x, -TILEDIM*30, "refuel")) end
             },
             crate = {
                 status = nil,
-                yStart = -TILEDIM*10,
+                yStart = -TILEDIM*18,
                 height = TILEDIM*15,
                 ui = MessageBox("Try to drive over the crate.", Utils:round(widthWindow*0.75), function() self.freeze = false end),
-                callback = function() return self.player and 
-                    self.player.x >= self.lvl.mapChunks[1].paths[1].x-10 and self.player.x <= self.lvl.mapChunks[1].paths[1].x+10 and self.player.y <= TILEDIM*12+20 and self.player.y >= TILEDIM*12-20 
-                    end
+                callbackSuccess = function() return self.player and 
+                    self.player.x >= self.lvl.mapChunks[1].paths[3].x-20 and self.player.x <= self.lvl.mapChunks[1].paths[3].x+20 and self.player.y <= -TILEDIM*30+20 and self.player.y >= -TILEDIM*30-20 
+                end,
+                callbackFail = function() return self.player and self.player.y <= -TILEDIM*33 end,
+                callbackAfterSuccess = function() 
+                    self.tutoNoEjection = false
+                    local carModel = self.carModels.taxi.car
+                    local path = self.lvl.mapChunks[1].paths[2]
+                    local x = path.x+TILEDIM/2-carModel.widthCar/2
+                    local car = carModel:castToRoadUser(x, -TILEDIM*41, "right")
+                    car.isTutoCar = true
+                    table.insert(self.cars, car)
+                end
+            },
+            ejection = {
+                status = nil,
+                yStart = -TILEDIM*33,
+                height = TILEDIM*29,
+                ui = MessageBox("To eject yourself from the car to land on another one, touch the screen when you are close enough. Then, tilt your phone to handle the jump and fall.", Utils:round(widthWindow*0.75), function() self.freeze = false end),
+                callbackSuccess = function() return self.player and self.player.isTutoCar and self.player.y <= -TILEDIM*62 end,
+                callbackFail = function() return self.player and self.player.y < -TILEDIM*63 end,
+                callbackAfterFail = function() 
+                    local carModel = self.carModels.taxi.car
+                    local path = self.lvl.mapChunks[1].paths[2]
+                    local x = path.x+TILEDIM/2-carModel.widthCar/2
+                    local car = carModel:castToRoadUser(x, -TILEDIM*41, "right")
+                    car.isTutoCar = true
+                    table.insert(self.cars, car)
+                end
+            },
+            signs = {
+                status = nil,
+                yStart = -TILEDIM*62,
+                height = TILEDIM*66,
+                ui = MessageBox("Follow the signs for directions.\n\nA skull means a dead end or an obstacle.\nA horizontal arrow means a lane's narrowing or expending.", Utils:round(widthWindow*0.75), function() self.freeze = false end),
+                callbackSuccess = function() return self.player and self.player.y < -TILEDIM*128 end,
+                callbackAfterSuccess = function() 
+                    local carModel = self.carModels.taxi.car
+                    local path = self.lvl.mapChunks[1].paths[3]
+                    local x = path.x+TILEDIM/2-carModel.widthCar/2
+                    local car = carModel:castToRoadUser(x, -TILEDIM*140, "right")
+                    table.insert(self.cars, car)
+
+                    local carModel = self.carModels.car3.car
+                    local path = self.lvl.mapChunks[1].paths[2]
+                    local x = path.x+TILEDIM/2-carModel.widthCar/2
+                    local car = carModel:castToRoadUser(x, -TILEDIM*155, "right")
+                    table.insert(self.cars, car)
+                    table.insert(self.crates, Crate(self.lvl.mapChunks[1].paths[1].x, -TILEDIM*140, "damage"))
+                end
+            },
+            ejectionAndCrate = {
+                status = nil,
+                yStart = -TILEDIM*128,
+                height = TILEDIM*80,
+                ui = MessageBox("Try to take the next crate and jump on the cars.", Utils:round(widthWindow*0.75), function() self.freeze = false end),
+                callbackSuccess = function() return self.player and self.player.y < -TILEDIM*208 end,
+                callbackAfterFail = function()
+                    local carModel = self.carModels.taxi.car
+                    local path = self.lvl.mapChunks[1].paths[3]
+                    local x = path.x+TILEDIM/2-carModel.widthCar/2
+                    local car = carModel:castToRoadUser(x, -TILEDIM*140, "right")
+                    table.insert(self.cars, car)
+
+                    local carModel = self.carModels.car3.car
+                    local path = self.lvl.mapChunks[1].paths[2]
+                    local x = path.x+TILEDIM/2-carModel.widthCar/2
+                    local car = carModel:castToRoadUser(x, -TILEDIM*155, "right")
+                    table.insert(self.cars, car)
+                    table.insert(self.crates, Crate(self.lvl.mapChunks[1].paths[1].x, -TILEDIM*140, "damage"))
+                end,
+                callbackAfterSuccess = function()
+                    local carModel = self.carModels.taxi.car
+                    local path = self.lvl.mapChunks[1].paths[5]
+                    local x = path.x+TILEDIM/2-carModel.widthCar/2
+                    local car = carModel:castToRoadUser(x, -TILEDIM*280, "left")
+                    table.insert(self.cars, car)
+
+                    local carModel = self.carModels.car3.car
+                    local path = self.lvl.mapChunks[1].paths[6]
+                    local x = path.x+TILEDIM/2-carModel.widthCar/2
+                    local car = carModel:castToRoadUser(x, -TILEDIM*315, "left")
+                    table.insert(self.cars, car)
+                end
+            },
+            reverse = {
+                status = nil,
+                yStart = -TILEDIM*208,
+                height = TILEDIM*121,
+                ui = MessageBox("A prohibited direction sign means that the lane designated by the arrow can be used with cars coming from the front.", Utils:round(widthWindow*0.75), function() self.freeze = false end),
+                callbackSuccess = function() return self.player and self.player.y < -TILEDIM*329 end,
+                callbackAfterFail = function() 
+                    local carModel = self.carModels.taxi.car
+                    local path = self.lvl.mapChunks[1].paths[5]
+                    local x = path.x+TILEDIM/2-carModel.widthCar/2
+                    local car = carModel:castToRoadUser(x, -TILEDIM*280, "left")
+                    table.insert(self.cars, car)
+
+                    local carModel = self.carModels.car3.car
+                    local path = self.lvl.mapChunks[1].paths[6]
+                    local x = path.x+TILEDIM/2-carModel.widthCar/2
+                    local car = carModel:castToRoadUser(x, -TILEDIM*315, "left")
+                    table.insert(self.cars, car)
+                end
+            },
+            finished = {
+                status = nil,
+                yStart = -TILEDIM*329,
+                height = TILEDIM,
+                ui = MessageBox("You have completed the tutorial. Let's play for real now !", Utils:round(widthWindow*0.75), function() 
+                    self.freeze = false 
+                    self.lvl:reset()
+                    gameState:setState("InGame", true) 
+                    self.tuto = false 
+                end),
+                callbackSuccess = function() return self.player and self.player.y < -TILEDIM*330 end
             }
         }
     end
@@ -228,7 +352,7 @@ function InGame:update(dt)
 
         if (input.state.actions.newPress.eject 
         or (input.state.actions.newPress.click and input.state.mouse.y <= 0.9*heightWindow and input.state.mouse.y >= 0.1*heightWindow)) 
-        and not self.eject and self.player and not self.player.isExploding and not self.freeze then
+        and not self.eject and self.player and not self.player.isExploding and not self.freeze and not self.tutoNoEjection then
             self:manageEjection(true)
         elseif (input.state.actions.newPress.eject 
         or (input.state.actions.newPress.click and input.state.mouse.y <= 0.9*heightWindow and input.state.mouse.y >= 0.1*heightWindow)) 
@@ -311,7 +435,16 @@ function InGame:update(dt)
                     self.freeze = true
                 end
                 if tutoPart.status == "current" then
-                    if tutoPart.callback() then
+                    if tutoPart.callbackFail then
+                        if tutoPart.callbackFail() then
+                            self:tutoResetPart()
+                            return
+                        end
+                    end
+                    if tutoPart.callbackSuccess() then
+                        if tutoPart.callbackAfterSuccess then
+                            tutoPart.callbackAfterSuccess()
+                        end
                         tutoPart.status = "done"
                     end
                     if tutoPart.status == "current" and tutoPart.ui.visible then
@@ -732,23 +865,33 @@ end
 
 function InGame:tutoResetPart()
     local items, len = self.world:getItems()
-    for i=1, len do
-        if items[i].isCar then
-            self.world:remove(items[i])
+    if self.player then
+        self.world:remove(self.player) 
+        self.player = nil
+    end
+    if #self.cars > 0 then
+        self.cars = {}
+        for i=1, len do
+            if items[i].isCar and items[i].className ~= "Player" then
+                self.world:remove(items[i])
+            end
         end
     end
-    self.player = nil
 
     for _, tutoPart in pairs(self.tutoParts) do
         if tutoPart.status == "current" then
             local modelCar = self.carModels.car3.car
-            self.player = modelCar:castToPlayer(self.lvl.mapChunks[1].paths[1].x+TILEDIM/2-modelCar.widthCar/2, tutoPart.yStart)
+            self.player = modelCar:castToPlayer(self.lvl.mapChunks[1].paths[2].x+TILEDIM/2-modelCar.widthCar/2, tutoPart.yStart)
             self.player.velocity.y, self.player.velocity.x = 0, 0
             self.player.fuel = 100
             self.player.health = self.player.maxHealth
             self.player.isExploding = false
             tutoPart.ui.visible = true
             self.freeze = true
+            if tutoPart.callbackAfterFail then
+                tutoPart.callbackAfterFail()
+            end
+            return
         end
     end
 end
